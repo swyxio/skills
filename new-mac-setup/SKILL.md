@@ -124,7 +124,7 @@ openssl@3, readline, sqlite, xz, zstd
 postgresql@14, rabbitmq
 
 # Misc CLI
-honcho, pipx, flyctl, entr, tig
+honcho, pipx, flyctl, entr, tig, mas
 
 # Libraries
 cairo, glib, harfbuzz, libvmaf, webp
@@ -280,7 +280,6 @@ The .zshrc should include:
 - Python aliases (pip → uv pip, venv → uv venv)
 - Docker aliases (dstart → colima start, dstop → colima stop)
 - Editor set to Cursor
-- Trash alias for rm (safer deletes)
 
 The Ghostty config should include:
 - Font: "Meslo LG M for Powerline" at 14pt

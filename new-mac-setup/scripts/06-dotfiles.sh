@@ -63,7 +63,6 @@ eval "$(fnm env --use-on-cd)"
 alias mv="mv -iv"
 alias cp="cp -iv"
 alias lsd="ls -ltr"
-alias rm=trash
 
 # =============================================================================
 # ALIASES — Shell Management

@@ -60,6 +60,9 @@ FORMULAE=(
     entr            # File watcher
     tig             # Git TUI
 
+    # Mac App Store CLI
+    mas             # Install App Store apps from CLI
+
     # Claude-suggested modern CLI replacements
     fzf             # Fuzzy finder (Ctrl+R history, file search)
     ripgrep         # Fast grep replacement (rg)
@@ -158,6 +161,19 @@ if brew list --cask cmux &>/dev/null; then
     echo "   ✅ cmux already installed"
 else
     brew install --cask cmux || echo "   ⚠️  Failed to install cmux"
+fi
+
+# =============================================================================
+# MAC APP STORE APPS (via mas)
+# =============================================================================
+echo ""
+echo "📦 Installing Mac App Store apps..."
+if command -v mas &>/dev/null; then
+    # Okta Verify — 2FA/MFA for work SSO (Okta, Auth0, etc.)
+    mas install 490179405 2>/dev/null || echo "   ⚠️  Okta Verify install failed (sign into App Store first: mas signin)"
+    echo "   ✅ Mac App Store apps installed"
+else
+    echo "   ⚠️  mas not found — install via: brew install mas"
 fi
 
 echo ""
