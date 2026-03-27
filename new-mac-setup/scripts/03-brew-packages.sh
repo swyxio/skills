@@ -115,6 +115,7 @@ CASKS=(
     rectangle
     obsidian
     notion
+    notion-calendar
 
     # AI & ML
     ollama
