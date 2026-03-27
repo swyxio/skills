@@ -116,7 +116,6 @@ CASKS=(
     obsidian
     notion
     notion-calendar
-    notion-calendar
 
     # AI & ML
     ollama
