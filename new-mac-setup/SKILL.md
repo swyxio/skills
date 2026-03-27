@@ -146,7 +146,7 @@ thebrowsercompany-dia
 slack, discord, zoom
 
 # Productivity
-raycast, rectangle, obsidian, notion
+raycast, rectangle, obsidian, notion, notion-calendar
 
 # AI & ML
 ollama
