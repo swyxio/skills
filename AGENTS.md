@@ -1,0 +1,1 @@
+For long-running scripts or commands, always report elapsed times for major steps and batches when giving progress updates. Prefer concrete timing like `Pass 1 complete in 18.4s`, `Batch 2/6 in 41.2s`, and `Total runtime: 2m 13s` over vague status messages.
