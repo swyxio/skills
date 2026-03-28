@@ -1,7 +1,7 @@
 ---
 name: youtube-api
 description: |
-  Manage YouTube videos programmatically via the YouTube Data API v3 — upload custom thumbnails, update video metadata (titles, descriptions, tags), and query video/channel info without touching YouTube Studio's browser UI. Use this skill whenever the user wants to: set, update, or change a YouTube video's thumbnail from a local image file; batch-set thumbnails across multiple videos; update video titles, descriptions, or tags programmatically; query their channel's video list; or do anything involving the YouTube Data API. Triggers: "set thumbnail", "upload thumbnail", "change thumbnail", "YouTube API", "batch thumbnails", "update video title", "update video description", "youtube metadata", or any reference to programmatically managing YouTube videos. Also use when the browser-based YouTube Studio upload is unreliable or slow.
+  Manage YouTube videos programmatically via the YouTube Data API v3 — upload video files, upload custom thumbnails, update video metadata (titles, descriptions, tags), and query video/channel info without touching YouTube Studio's browser UI. Use this skill whenever the user wants to: upload a local video file to YouTube; set, update, or change a YouTube video's thumbnail from a local image file; batch-set thumbnails across multiple videos; update video titles, descriptions, or tags programmatically; query their channel's video list; or do anything involving the YouTube Data API. Triggers: "upload to youtube", "upload video", "set thumbnail", "upload thumbnail", "change thumbnail", "YouTube API", "batch thumbnails", "update video title", "update video description", "youtube metadata", or any reference to programmatically managing YouTube videos. Also use when the browser-based YouTube Studio upload is unreliable or slow.
 license: MIT
 compatibility: |
   Requires Python 3.8+ with google-api-python-client, google-auth-oauthlib, and google-auth.
@@ -17,11 +17,11 @@ metadata:
 
 # YouTube API
 
-Manage YouTube videos programmatically — thumbnails, metadata, and queries — via the YouTube Data API v3, completely bypassing the YouTube Studio browser UI.
+Manage YouTube videos programmatically — uploads, thumbnails, metadata, and queries — via the YouTube Data API v3, completely bypassing the YouTube Studio browser UI.
 
 ## Why This Skill Exists
 
-YouTube Studio's browser UI is unreliable for bulk operations and impossible to automate. The file picker for thumbnails is flaky, editing metadata for multiple videos is tedious, and there's no way to script it. This skill wraps the YouTube Data API v3 with OAuth2 authentication and persistent token caching, so once set up, all operations are fully automatic — including across Cowork VM resets.
+YouTube Studio's browser UI is unreliable for bulk operations and awkward for automation. The file picker for thumbnails is flaky, editing metadata for multiple videos is tedious, and browser uploads can stall or reset. This skill wraps the YouTube Data API v3 with OAuth2 authentication and persistent token caching, so once set up, uploads and follow-up edits are fully scriptable — including across Cowork VM resets.
 
 ## Prerequisites
 
@@ -118,6 +118,25 @@ python <skill-path>/scripts/set_thumbnail.py \
 - Max size: 2 MB (compress with `convert input.jpg -resize 1280x720 -quality 85 output.jpg`)
 - Formats: JPEG (recommended), PNG
 - Dimensions: 1280x720 recommended (16:9 aspect ratio)
+
+### Upload Videos
+
+Upload a finished local video file directly to YouTube.
+
+```bash
+python <skill-path>/scripts/upload_video.py --file /path/to/video.mp4 --privacy unlisted
+```
+
+Optional metadata at upload time:
+
+```bash
+python <skill-path>/scripts/upload_video.py \
+  --file /path/to/video.mp4 \
+  --privacy unlisted \
+  --title "Video Title" \
+  --description "Optional description" \
+  --tags "tag1,tag2"
+```
 
 ### Update Video Metadata
 

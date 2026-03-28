@@ -2,7 +2,7 @@
 
 Manage YouTube videos programmatically through the YouTube Data API v3. This skill is for cases where YouTube Studio's browser UI is too slow, unreliable, or manual for the job at hand.
 
-It covers the full flow: one-time OAuth setup, persistent credential storage, custom thumbnail uploads, metadata updates, and listing videos from the authenticated channel.
+It covers the full flow: one-time OAuth setup, persistent credential storage, direct video uploads, custom thumbnail uploads, metadata updates, and listing videos from the authenticated channel.
 
 ## What This Skill Is Good For
 
@@ -11,6 +11,7 @@ It covers the full flow: one-time OAuth setup, persistent credential storage, cu
 - Updating titles, descriptions, and tags without opening YouTube Studio
 - Listing your channel videos so you can build scripted update jobs
 - Reusing OAuth credentials across Cowork or other headless sessions
+- Uploading a finished local video file directly as private, unlisted, or public
 
 ## Quick Start
 
@@ -40,6 +41,9 @@ python3 scripts/setup_auth.py
 ### 3. Use
 
 ```bash
+# Upload a video as unlisted
+python3 scripts/upload_video.py --file /path/to/video.mp4 --privacy unlisted
+
 # Set a thumbnail
 python3 scripts/set_thumbnail.py --video-id VIDEO_ID --thumbnail thumb.jpg
 
