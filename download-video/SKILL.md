@@ -7,7 +7,7 @@ compatibility: |
   Requires macOS or Linux with yt-dlp installed (brew install yt-dlp). curl_cffi Python package recommended for impersonation support (pip3 install curl_cffi). Internet connection required.
 metadata:
   author: swyxio
-  version: "1.0"
+  version: "1.1"
   last-updated: "2026-03-28"
   primary-tools: yt-dlp, WebFetch
 ---
@@ -22,17 +22,20 @@ Many event replays, webinars, and talks are embedded on pages using private/unli
 
 ## Prerequisites
 
-Ensure yt-dlp is installed:
+Ensure yt-dlp is installed and up to date (older versions hit different errors):
 
 ```bash
 which yt-dlp || brew install yt-dlp
+brew upgrade yt-dlp
 ```
 
-For best results, install the impersonation library (avoids OAuth token errors):
+Install the impersonation library. On modern macOS (Python installed via Homebrew), the `--break-system-packages` flag is required:
 
 ```bash
-pip3 install curl_cffi
+pip3 install --break-system-packages curl_cffi
 ```
+
+Note: `curl_cffi` alone does not fix private Vimeo downloads. The embed URL approach (Step 2) is what actually works. But `curl_cffi` prevents a misleading OAuth 400 error that obscures the real issue.
 
 ## How to Use This Skill
 
@@ -71,26 +74,26 @@ https://player.vimeo.com/video/{id}?h={hash}
 
 ### Step 3: Download with yt-dlp
 
-Try these approaches in order. Stop at the first one that works.
+For Vimeo specifically, **skip the direct URL and go straight to the embed URL**. The direct URL almost always fails for private/unlisted videos. For other hosts, try in order and stop at the first that works.
 
-**Attempt 1 — Direct URL:**
-```bash
-yt-dlp "{video_url}"
-```
-
-**Attempt 2 — Embed/player URL:**
+**Attempt 1 — Embed/player URL (start here for Vimeo):**
 ```bash
 yt-dlp "https://player.vimeo.com/video/{id}"
 ```
 
-**Attempt 3 — With referer header** (for private embeds):
+**Attempt 2 — With referer header** (if Attempt 1 returns 403):
 ```bash
 yt-dlp --referer "{source_page_url}" "https://player.vimeo.com/video/{id}"
 ```
 
-**Attempt 4 — With referer + origin headers:**
+**Attempt 3 — With referer + origin headers:**
 ```bash
 yt-dlp --referer "{source_page_url}" --add-header "Origin: {source_origin}" "https://player.vimeo.com/video/{id}"
+```
+
+**Attempt 4 — Direct URL (only for public videos or non-Vimeo hosts):**
+```bash
+yt-dlp "{video_url}"
 ```
 
 ### Step 4: Quality Selection (Optional)
@@ -121,22 +124,22 @@ yt-dlp -o "~/Downloads/%(title)s.%(ext)s" "{url}"
 
 ## Troubleshooting
 
-### OAuth Token Error
+### OAuth Token Error (Vimeo)
 ```
-ERROR: Failed to fetch OAuth token: HTTP Error 400
+ERROR: Failed to fetch OAuth token: HTTP Error 400: Bad Request
 ```
-**Fix**: Install `curl_cffi` for impersonation support:
-```bash
-pip3 install curl_cffi
-```
-If that doesn't help, use the embed/player URL instead of the direct URL.
+This happens when yt-dlp tries the direct `vimeo.com/{id}` URL without impersonation support. Two things to do:
+1. Install `curl_cffi`: `pip3 install --break-system-packages curl_cffi`
+2. More importantly, **switch to the embed URL** — this is the actual fix. Even with `curl_cffi`, the direct URL will likely fail with a 404 (see below) because the video is private.
 
-### 404 Not Found
+### 404 Not Found (Vimeo)
 ```
-ERROR: Unable to download API JSON: HTTP Error 404
+ERROR: Unable to download macos API JSON: HTTP Error 404: Not Found
 ```
-**Fix**: The video is private/unlisted. Switch to the embed URL:
+This is what you get after installing `curl_cffi` and updating yt-dlp — the OAuth error goes away but the video still can't be found because it's private/unlisted on the direct URL. **Switch to the embed URL**:
 - `vimeo.com/{id}` -> `player.vimeo.com/video/{id}`
+
+The typical Vimeo error progression is: OAuth 400 -> (install curl_cffi + update yt-dlp) -> 404 -> (use embed URL) -> success.
 
 ### 403 Forbidden
 ```
@@ -162,12 +165,30 @@ ERROR: This video is not available in your country
 yt-dlp --proxy socks5://127.0.0.1:1080 "{url}"
 ```
 
+## Real-World Example: OpenAI Forum Vimeo Embed
+
+This is the exact sequence that works, tested on `forum.openai.com` event replay pages (2026-03-28):
+
+```bash
+# 1. Page has schema.org VideoObject with contentUrl: https://vimeo.com/1174947711
+#    Direct URL fails (private video).
+
+# 2. This works — use the player embed URL:
+yt-dlp --referer "https://forum.openai.com/" "https://player.vimeo.com/video/1174947711"
+
+# 3. yt-dlp downloads HLS fragments (484 in this case), merges video+audio.
+#    Result: ~683MB MP4 file.
+```
+
+The referer wasn't strictly required for this specific video (Attempt 1 worked), but including it is good practice for Vimeo embeds.
+
 ## Common Video Page Patterns
 
 ### OpenAI Forum Events
-- Videos are Vimeo embeds
+- Videos are Vimeo embeds, video ID found in schema.org `contentUrl`
 - Direct Vimeo URLs return 404 (private)
-- Use `player.vimeo.com/video/{id}` with the forum page as referer
+- Use `player.vimeo.com/video/{id}` — referer optional but recommended
+- Downloads as HLS stream (many fragments), yt-dlp merges automatically
 
 ### Conference Talk Pages
 - Often use Vimeo or YouTube embeds
@@ -178,3 +199,9 @@ yt-dlp --proxy socks5://127.0.0.1:1080 "{url}"
 - Often use Wistia or Vimeo with domain restrictions
 - Referer header is usually required
 - May require cookies — use `--cookies-from-browser chrome` if needed
+
+### Gradual/Event Platforms
+- Many event replay platforms (like the one OpenAI Forum uses) are built on Gradual
+- They store video metadata in schema.org VideoObject in the page head
+- The `contentUrl` field has the Vimeo URL, but it's the public-facing URL that won't work for download
+- Always convert to the `player.vimeo.com` embed form
