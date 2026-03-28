@@ -7,7 +7,10 @@ version: 0.1.0
 # Video Thumbnail Extraction
 
 ## Overview
-Automatically scan a local MP4 video (or YouTube URL via yt-dlp) and extract the 4 most visually interesting frames — prioritizing expressive faces (laughing, shocked, smiling) and engaging presentation slides. Outputs full frames, face crops, and background-removed transparent PNGs ready for compositing. When `--extract-slides` is enabled, it also exports one representative JPG per detected slide. If OpenCV sees no slides, the script can fall back to a VLM provider (`ollama`, `gemini`, `openai`, `anthropic`, `openrouter`) over sampled frames.
+Automatically scan a local MP4 video (or YouTube URL via yt-dlp) and extract the 4 most visually interesting frames — prioritizing expressive faces (laughing, shocked, smiling) and engaging presentation slides. Outputs full frames, face crops, and background-removed transparent PNGs ready for compositing. When `--extract-slides` is enabled, it now uses a fast heuristic cascade:
+1. `ffmpeg` scene-cut detection for slide-dominant recordings
+2. OpenCV presentation grouping as the secondary path
+3. VLM classification only as the expensive fallback
 
 ## When to Use
 - Before creating YouTube thumbnails (feeds into `youtube-thumbnails` skill)
@@ -50,7 +53,7 @@ pip3 install 'rembg[cpu]' pillow --break-system-packages
   - Detect presentation slides (high edge density + low color saturation)
 - Score each frame based on: face count, smile count, smile size, visual variance
 - Select top 12 diverse candidates using **quadrant system**: divide video into N time segments, pick best from each → ensures temporal spread
-- If `--extract-slides` is enabled, reuse the same pass-1 presentation heuristic to collect slide-like samples for later grouping
+- If `--extract-slides` is enabled, reuse pass-1 signals for fallback logic, but prefer the faster scene-cut path first
 
 **Pass 2 — Deep Analysis** (DeepFace, only on top 12 candidates)
 - Re-read only the selected frames from video
@@ -66,10 +69,11 @@ pip3 install 'rembg[cpu]' pillow --break-system-packages
 - Generate manifest JSON with metadata
 
 **Optional Slide Export**
-- Filter pass-1 samples to slide-like frames
-- Group consecutive slide-like samples by time proximity and perceptual hash similarity
-- Save one highest-scoring representative JPG per unique slide group
-- This is the lowest-overhead approach because it avoids a full-video VLM pass
+- First try `ffmpeg` scene-cut detection to find slide transitions cheaply
+- If the scene-cut count looks plausible for the video length, save one frame per cut plus an initial stable slide frame
+- If scene-cut extraction is not plausible, fall back to OpenCV slide-like grouping
+- Save one representative JPG per detected slide transition or grouped slide segment
+- This is faster end to end on slide-dominant videos because it avoids expensive per-frame reasoning
 
 **Optional VLM Fallback**
 - If OpenCV sees no slides, the script can classify sampled frames with a VLM

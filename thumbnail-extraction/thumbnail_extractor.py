@@ -12,6 +12,10 @@ import sys
 import os
 import json
 import base64
+import time
+import traceback
+import re
+import subprocess
 import cv2
 import numpy as np
 import urllib.request
@@ -30,6 +34,13 @@ VLM_DEFAULT_PROVIDER = None
 VLM_DEFAULT_MODEL = None
 VLM_BATCH_SIZE = 8
 VLM_MAX_SAMPLES = 120
+VLM_REQUEST_TIMEOUT_SEC = 90
+VLM_IMAGE_MAX_DIM = 960
+SCENE_CUT_THRESHOLD = 0.10
+SCENE_MIN_SLIDES = 6
+SCENE_MAX_SLIDES_PER_MIN = 2.5
+SCENE_CAPTURE_OFFSET_SEC = 0.2
+SCENE_MIN_GAP_SEC = 0.5
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 smile_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_smile.xml')
@@ -42,6 +53,7 @@ def parse_args(argv):
     vlm_model = VLM_DEFAULT_MODEL
     vlm_batch_size = VLM_BATCH_SIZE
     vlm_max_samples = VLM_MAX_SAMPLES
+    vlm_timeout_sec = VLM_REQUEST_TIMEOUT_SEC
 
     args = argv[1:]
     i = 0
@@ -61,6 +73,9 @@ def parse_args(argv):
         elif arg == "--vlm-max-samples":
             i += 1
             vlm_max_samples = int(args[i])
+        elif arg == "--vlm-timeout-sec":
+            i += 1
+            vlm_timeout_sec = int(args[i])
         else:
             positional.append(arg)
         i += 1
@@ -78,6 +93,7 @@ def parse_args(argv):
         "vlm_model": vlm_model,
         "vlm_batch_size": vlm_batch_size,
         "vlm_max_samples": vlm_max_samples,
+        "vlm_timeout_sec": vlm_timeout_sec,
     }
 
 
@@ -90,6 +106,7 @@ VLM_PROVIDER = ARGS["vlm_provider"]
 VLM_MODEL = ARGS["vlm_model"]
 VLM_BATCH_SIZE = ARGS["vlm_batch_size"]
 VLM_MAX_SAMPLES = ARGS["vlm_max_samples"]
+VLM_TIMEOUT_SEC = ARGS["vlm_timeout_sec"]
 
 
 def get_video_info(video_path):
@@ -127,7 +144,28 @@ def chunked(items, size):
         yield items[i:i + size]
 
 
-def frame_to_data_url(frame):
+def format_elapsed(seconds):
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    minutes = int(seconds // 60)
+    remainder = seconds - minutes * 60
+    return f"{minutes}m {remainder:.1f}s"
+
+
+def resize_for_vlm(frame, max_dim=VLM_IMAGE_MAX_DIM):
+    height, width = frame.shape[:2]
+    longest = max(height, width)
+    if longest <= max_dim:
+        return frame
+    scale = max_dim / float(longest)
+    new_width = max(1, int(round(width * scale)))
+    new_height = max(1, int(round(height * scale)))
+    return cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+def frame_to_data_url(frame, max_dim=None):
+    if max_dim:
+        frame = resize_for_vlm(frame, max_dim=max_dim)
     ok, encoded = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 82])
     if not ok:
         raise RuntimeError("Could not encode frame as JPEG")
@@ -135,10 +173,10 @@ def frame_to_data_url(frame):
     return f"data:image/jpeg;base64,{b64}", b64
 
 
-def json_http_post(url, body, headers):
+def json_http_post(url, body, headers, timeout=180):
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -159,6 +197,19 @@ def vlm_default_model(provider):
         "openrouter": "google/gemini-2.5-flash-lite",
     }
     return defaults.get(provider)
+
+
+def ffmpeg_exists():
+    try:
+        subprocess.run(
+            ["ffmpeg", "-version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def offer_vlm_options():
@@ -185,6 +236,137 @@ def select_vlm_samples(scored_frames, max_samples):
     if samples[-1] is not scored_frames[-1]:
         samples.append(scored_frames[-1])
     return samples[:max_samples]
+
+
+def dedupe_sorted_timestamps(times, min_gap_sec=SCENE_MIN_GAP_SEC):
+    deduped = []
+    for ts in sorted(times):
+        if not deduped or ts - deduped[-1] >= min_gap_sec:
+            deduped.append(ts)
+    return deduped
+
+
+def detect_scene_cut_times_ffmpeg(video_path, threshold=SCENE_CUT_THRESHOLD):
+    started = time.time()
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-i",
+        video_path,
+        "-filter:v",
+        f"select='gt(scene,{threshold})',metadata=print",
+        "-an",
+        "-f",
+        "null",
+        "-",
+    ]
+    print(f"  [Scene Detect] Running ffmpeg scene detection at threshold {threshold:.2f}...")
+    proc = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        errors="ignore",
+        check=False,
+    )
+    if proc.returncode != 0:
+        print(f"  [Scene Detect] ffmpeg exited with code {proc.returncode} after {format_elapsed(time.time() - started)}.")
+        return []
+
+    raw_times = [
+        float(match.group(1))
+        for match in re.finditer(r"pts_time:([0-9.]+)", proc.stdout)
+    ]
+    times = dedupe_sorted_timestamps(raw_times, min_gap_sec=SCENE_MIN_GAP_SEC)
+    print(
+        f"  [Scene Detect] Found {len(times)} candidate cut(s) in {format_elapsed(time.time() - started)}."
+    )
+    return times
+
+
+def scene_cut_count_is_plausible(count, duration_sec):
+    if count < SCENE_MIN_SLIDES:
+        return False
+    duration_min = max(duration_sec / 60.0, 1.0)
+    max_reasonable = max(SCENE_MIN_SLIDES, int(duration_min * SCENE_MAX_SLIDES_PER_MIN))
+    return count <= max_reasonable
+
+
+def extract_slide_frames_from_scene_cuts(video_path, info, output_dir, video_name, threshold=SCENE_CUT_THRESHOLD):
+    if not ffmpeg_exists():
+        print("  [Scene Detect] ffmpeg not available, skipping fast scene-based extraction.")
+        return []
+
+    started = time.time()
+    times = detect_scene_cut_times_ffmpeg(video_path, threshold=threshold)
+    if not times:
+        return []
+
+    if not scene_cut_count_is_plausible(len(times), info["duration_sec"]):
+        duration_min = info["duration_sec"] / 60.0
+        max_reasonable = max(SCENE_MIN_SLIDES, int(max(duration_min, 1.0) * SCENE_MAX_SLIDES_PER_MIN))
+        print(
+            f"  [Scene Detect] Rejecting scene-cut path: {len(times)} cut(s) is outside plausible slide range "
+            f"{SCENE_MIN_SLIDES}-{max_reasonable} for {duration_min:.1f} min."
+        )
+        return []
+
+    initial_ts = min(60.0, info["duration_sec"] * 0.05)
+    if times and times[0] - initial_ts >= 15.0:
+        times = [initial_ts] + times
+        print(f"  [Scene Detect] Added initial slide candidate at {format_ts(initial_ts)} before first major cut.")
+
+    slides_dir = os.path.join(output_dir, "slides")
+    os.makedirs(slides_dir, exist_ok=True)
+    manifest = {
+        "video": video_name,
+        "method": "scene_ffmpeg",
+        "scene_threshold": threshold,
+        "slides": [],
+    }
+
+    cap = cv2.VideoCapture(video_path)
+    saved = []
+
+    print(f"  [Scene Detect] Saving {len(times)} slide candidate frame(s)...")
+    for idx, ts in enumerate(times, 1):
+        capture_ts = ts if idx == 1 and abs(ts - initial_ts) < 0.001 else min(
+            max(ts + SCENE_CAPTURE_OFFSET_SEC, 0.0),
+            max(info["duration_sec"] - 0.05, 0.0),
+        )
+        cap.set(cv2.CAP_PROP_POS_MSEC, capture_ts * 1000.0)
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            continue
+
+        ts_label = format_ts(capture_ts)
+        base = f"{video_name}_slide_{len(saved)+1}_{ts_label.replace(':', '-')}"
+        out_name = f"{base}.jpg"
+        out_path = os.path.join(slides_dir, out_name)
+        cv2.imwrite(out_path, frame, [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+        saved.append({
+            "index": len(saved) + 1,
+            "timestamp": ts_label,
+            "timestamp_sec": float(capture_ts),
+            "source_cut_sec": float(ts),
+            "file": out_name,
+        })
+        print(f"  ✓ slide #{len(saved)}: {ts_label} (scene cut @ {ts:.2f}s)")
+
+    cap.release()
+
+    if not saved:
+        print(f"  [Scene Detect] No unique frames saved after dedupe in {format_elapsed(time.time() - started)}.")
+        return []
+
+    manifest["slides"] = saved
+    manifest_path = os.path.join(slides_dir, f"{video_name}_slides_manifest.json")
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f"  [Scene Detect] Completed in {format_elapsed(time.time() - started)}.")
+    return saved
 
 
 def build_vlm_prompt(batch):
@@ -361,6 +543,7 @@ def classify_batch_with_anthropic(batch, model):
 
 
 def classify_batch_with_ollama(batch, model):
+    encoded_images = [frame_to_data_url(sample["frame"], max_dim=VLM_IMAGE_MAX_DIM)[1] for sample in batch]
     body = {
         "model": model,
         "stream": False,
@@ -387,7 +570,7 @@ def classify_batch_with_ollama(batch, model):
             {
                 "role": "user",
                 "content": build_vlm_prompt(batch),
-                "images": [frame_to_data_url(sample["frame"])[1] for sample in batch],
+                "images": encoded_images,
             }
         ],
     }
@@ -395,6 +578,7 @@ def classify_batch_with_ollama(batch, model):
         "http://localhost:11434/api/chat",
         body,
         {"Content-Type": "application/json"},
+        timeout=VLM_TIMEOUT_SEC,
     )
     text = resp["message"]["content"]
     return extract_json_object(text)["results"]
@@ -415,8 +599,37 @@ def classify_slide_batches(provider, model, batches):
 
     results = []
     for idx, batch in enumerate(batches, 1):
-        print(f"    VLM batch {idx}/{len(batches)} via {provider}:{model}...")
-        batch_results = classifier(batch, model)
+        batch_start = time.time()
+        print(f"    VLM batch {idx}/{len(batches)} via {provider}:{model} with {len(batch)} frame(s)...")
+        try:
+            batch_results = classifier(batch, model)
+            print(f"      Batch {idx}/{len(batches)} complete in {format_elapsed(time.time() - batch_start)}.")
+        except Exception as exc:
+            elapsed = format_elapsed(time.time() - batch_start)
+            print(f"      Batch {idx}/{len(batches)} failed after {elapsed}: {type(exc).__name__}: {exc}")
+            if provider == "ollama" and len(batch) > 1:
+                print("      Retrying each frame individually to isolate the failure...")
+                batch_results = []
+                for single_idx, sample in enumerate(batch, 1):
+                    single_start = time.time()
+                    print(f"        Single-frame retry {single_idx}/{len(batch)} at {format_ts(sample['timestamp_sec'])}...")
+                    try:
+                        single_results = classifier([sample], model)
+                        batch_results.extend(single_results)
+                        print(f"          Single-frame retry complete in {format_elapsed(time.time() - single_start)}.")
+                    except Exception as single_exc:
+                        print(
+                            f"          Single-frame retry failed after {format_elapsed(time.time() - single_start)}: "
+                            f"{type(single_exc).__name__}: {single_exc}"
+                        )
+                if not batch_results:
+                    print("      No usable results from single-frame retries.")
+                    continue
+            else:
+                print("      Stack trace:")
+                for line in traceback.format_exc().splitlines():
+                    print(f"        {line}")
+                continue
         for item in batch_results:
             ordinal = int(item["index"]) - 1
             if ordinal < 0 or ordinal >= len(batch):
@@ -433,12 +646,14 @@ def classify_slide_batches(provider, model, batches):
 
 def extract_slide_frames_with_vlm(video_path, scored_frames, info, output_dir, video_name,
                                   provider, model, batch_size, max_samples):
+    vlm_start = time.time()
     samples = select_vlm_samples(scored_frames, max_samples=max_samples)
     if not samples:
         print("\n  No frames available for VLM fallback.")
         return []
 
     print(f"\n  [VLM Fallback] Sampling {len(samples)} frame(s) for {provider} classification...")
+    print(f"  [VLM Fallback] Batch size: {batch_size}, timeout: {VLM_TIMEOUT_SEC}s, max image dim: {VLM_IMAGE_MAX_DIM}px")
     cap = cv2.VideoCapture(video_path)
     enriched = []
     for sample in samples:
@@ -458,7 +673,7 @@ def extract_slide_frames_with_vlm(video_path, scored_frames, info, output_dir, v
     positive = [x for x in classified if x.get("vlm_is_slide")]
 
     if not positive:
-        print("\n  VLM fallback also found no slides.")
+        print(f"\n  VLM fallback found no slides after {format_elapsed(time.time() - vlm_start)}.")
         return []
 
     positive.sort(key=lambda x: x["timestamp_sec"])
@@ -510,6 +725,8 @@ def extract_slide_frames_with_vlm(video_path, scored_frames, info, output_dir, v
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
+    print(f"  [VLM Fallback] Completed in {format_elapsed(time.time() - vlm_start)}.")
+
     return manifest["slides"]
 
 
@@ -518,6 +735,7 @@ def pass1_quick_scan(video_path, info):
     Pass 1: Fast scan with OpenCV cascade classifiers.
     No deep learning, minimal memory. Score each sampled frame.
     """
+    started = time.time()
     print("  [Pass 1] Quick scan with OpenCV cascades...")
     cap = cv2.VideoCapture(video_path)
     fps = info["fps"]
@@ -626,6 +844,7 @@ def pass1_quick_scan(video_path, info):
 
     cap.release()
     print(f"    Scanned {count} total frames")
+    print(f"  [Pass 1] Complete in {format_elapsed(time.time() - started)}.")
     return scored_frames
 
 
@@ -700,9 +919,18 @@ def extract_slide_frames(video_path, scored_frames, info, output_dir, video_name
     This avoids running a VLM across the full video. If false positives become a
     problem, a future VLM pass should only classify these grouped representatives.
     """
+    scene_slides = extract_slide_frames_from_scene_cuts(
+        video_path=video_path,
+        info=info,
+        output_dir=output_dir,
+        video_name=video_name,
+    )
+    if scene_slides:
+        return scene_slides
+
     slide_samples = [f for f in scored_frames if f["is_presentation"]]
     if not slide_samples:
-        print("\n  No slide-like frames detected.")
+        print("\n  No slide-like frames detected after scene-cut and OpenCV heuristics.")
         if VLM_PROVIDER:
             model = VLM_MODEL or vlm_default_model(VLM_PROVIDER)
             print(f"  Trying VLM fallback with {VLM_PROVIDER}:{model}...")
@@ -800,6 +1028,7 @@ def pass2_deep_analysis(video_path, candidates, info, top_n=TOP_N):
     Pass 2: DeepFace expression analysis on only the top candidates.
     Re-reads specific frames from video (no bulk memory use).
     """
+    started = time.time()
     print(f"\n  [Pass 2] Deep expression analysis on top {len(candidates)} candidates...")
     try:
         from deepface import DeepFace
@@ -826,6 +1055,7 @@ def pass2_deep_analysis(video_path, candidates, info, top_n=TOP_N):
         results.sort(key=lambda x: x["combined_score"], reverse=True)
         final = results[:top_n]
         final.sort(key=lambda x: x["timestamp_sec"])
+        print(f"  [Pass 2] Complete in {format_elapsed(time.time() - started)}.")
         return final
 
     cap = cv2.VideoCapture(video_path)
@@ -917,6 +1147,7 @@ def pass2_deep_analysis(video_path, candidates, info, top_n=TOP_N):
                 final.append(r)
 
     final.sort(key=lambda x: x["timestamp_sec"])
+    print(f"  [Pass 2] Complete in {format_elapsed(time.time() - started)}.")
     return final
 
 
@@ -979,6 +1210,7 @@ def save_outputs(selected, output_dir, video_name):
 
 
 def main():
+    total_started = time.time()
     if not VIDEO_PATH:
         print("Usage: python thumbnail_extractor.py <video_path> [output_dir] [top_n] [--extract-slides] [--vlm-provider PROVIDER] [--vlm-model MODEL]")
         sys.exit(1)
@@ -1010,13 +1242,16 @@ def main():
     final = pass2_deep_analysis(VIDEO_PATH, top_candidates, info, TOP_N)
 
     # Save outputs
+    save_started = time.time()
     print(f"\n  Saving {len(final)} final candidates...")
     manifest = save_outputs(final, OUTPUT_DIR, video_name)
+    print(f"  [Save] Complete in {format_elapsed(time.time() - save_started)}.")
 
     if EXTRACT_SLIDES:
         extract_slide_frames(VIDEO_PATH, scored, info, OUTPUT_DIR, video_name)
 
     print(f"\n═══ Done! ═══")
+    print(f"  Total runtime: {format_elapsed(time.time() - total_started)}")
     print(f"  Output: {OUTPUT_DIR}/")
     for e in manifest["candidates"]:
         files = list(e["files"].keys())
