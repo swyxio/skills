@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+  }
+}
+
+@layer utilities {
+  .diff-added { background-color: rgba(34, 197, 94, 0.15); }
+  .diff-removed { background-color: rgba(239, 68, 68, 0.15); text-decoration: line-through; }
+}
