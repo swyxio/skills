@@ -11,20 +11,85 @@ Strategy: Two-pass approach
 import sys
 import os
 import json
+import base64
 import cv2
 import numpy as np
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 # ── Config ──────────────────────────────────────────────────────────────────
-VIDEO_PATH = sys.argv[1] if len(sys.argv) > 1 else None
-OUTPUT_DIR = sys.argv[2] if len(sys.argv) > 2 else "/sessions/gifted-jolly-ptolemy/mnt/Downloads/thumb_candidates"
-TOP_N = int(sys.argv[3]) if len(sys.argv) > 3 else 4
+DEFAULT_OUTPUT_DIR = str(Path.home() / "Downloads" / "thumb_candidates")
 SAMPLE_INTERVAL_SEC = 10  # coarser sampling = less memory
 ANALYSIS_SCALE = 0.5  # downscale frames for face detection
 FULL_RES_SCALE = 1.0  # keep full res for final output
+SLIDE_HASH_SIZE = 9
+SLIDE_HASH_DISTANCE_THRESHOLD = 10
+SLIDE_GAP_SEC = SAMPLE_INTERVAL_SEC * 1.5
+VLM_DEFAULT_PROVIDER = None
+VLM_DEFAULT_MODEL = None
+VLM_BATCH_SIZE = 8
+VLM_MAX_SAMPLES = 120
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 smile_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_smile.xml')
+
+
+def parse_args(argv):
+    positional = []
+    extract_slides = False
+    vlm_provider = VLM_DEFAULT_PROVIDER
+    vlm_model = VLM_DEFAULT_MODEL
+    vlm_batch_size = VLM_BATCH_SIZE
+    vlm_max_samples = VLM_MAX_SAMPLES
+
+    args = argv[1:]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--extract-slides":
+            extract_slides = True
+        elif arg == "--vlm-provider":
+            i += 1
+            vlm_provider = args[i]
+        elif arg == "--vlm-model":
+            i += 1
+            vlm_model = args[i]
+        elif arg == "--vlm-batch-size":
+            i += 1
+            vlm_batch_size = int(args[i])
+        elif arg == "--vlm-max-samples":
+            i += 1
+            vlm_max_samples = int(args[i])
+        else:
+            positional.append(arg)
+        i += 1
+
+    video_path = positional[0] if len(positional) > 0 else None
+    output_dir = positional[1] if len(positional) > 1 else DEFAULT_OUTPUT_DIR
+    top_n = int(positional[2]) if len(positional) > 2 else 4
+
+    return {
+        "video_path": video_path,
+        "output_dir": output_dir,
+        "top_n": top_n,
+        "extract_slides": extract_slides,
+        "vlm_provider": vlm_provider,
+        "vlm_model": vlm_model,
+        "vlm_batch_size": vlm_batch_size,
+        "vlm_max_samples": vlm_max_samples,
+    }
+
+
+ARGS = parse_args(sys.argv)
+VIDEO_PATH = ARGS["video_path"]
+OUTPUT_DIR = ARGS["output_dir"]
+TOP_N = ARGS["top_n"]
+EXTRACT_SLIDES = ARGS["extract_slides"]
+VLM_PROVIDER = ARGS["vlm_provider"]
+VLM_MODEL = ARGS["vlm_model"]
+VLM_BATCH_SIZE = ARGS["vlm_batch_size"]
+VLM_MAX_SAMPLES = ARGS["vlm_max_samples"]
 
 
 def get_video_info(video_path):
@@ -44,6 +109,408 @@ def format_ts(seconds):
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
     return f"{h}:{m:02d}:{s:02d}" if h > 0 else f"{m}:{s:02d}"
+
+
+def average_hash(frame, hash_size=SLIDE_HASH_SIZE):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(gray, (hash_size, hash_size), interpolation=cv2.INTER_AREA)
+    avg = resized.mean()
+    return (resized > avg).astype(np.uint8).flatten()
+
+
+def hamming_distance(hash_a, hash_b):
+    return int(np.count_nonzero(hash_a != hash_b))
+
+
+def chunked(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]
+
+
+def frame_to_data_url(frame):
+    ok, encoded = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 82])
+    if not ok:
+        raise RuntimeError("Could not encode frame as JPEG")
+    b64 = base64.b64encode(encoded.tobytes()).decode("ascii")
+    return f"data:image/jpeg;base64,{b64}", b64
+
+
+def json_http_post(url, body, headers):
+    data = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def extract_json_object(text):
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError(f"No JSON object found in response: {text[:300]}")
+    return json.loads(text[start:end + 1])
+
+
+def vlm_default_model(provider):
+    defaults = {
+        "ollama": "gemma3",
+        "gemini": "gemini-2.5-flash-lite",
+        "openai": "gpt-4.1-mini",
+        "anthropic": "claude-sonnet-4-6",
+        "openrouter": "google/gemini-2.5-flash-lite",
+    }
+    return defaults.get(provider)
+
+
+def offer_vlm_options():
+    print("\n  No slide-like frames detected with OpenCV heuristics.")
+    print("  Lowest-overhead fallback is sampled-frame VLM classification, not full native-video upload.")
+    print("  To retry with a VLM fallback, rerun with one of:")
+    print("    --vlm-provider ollama      # lowest infra overhead if you already run a local vision model")
+    print("    --vlm-provider gemini      # best hosted default; also has separate native video support via Files API")
+    print("    --vlm-provider openai      # simple hosted image-batch path via Responses API")
+    print("    --vlm-provider anthropic   # strong hosted image understanding via Messages API")
+    print("    --vlm-provider openrouter  # one API key for multiple providers/models")
+    print("  Example:")
+    print("    python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4 --extract-slides --vlm-provider gemini")
+
+
+def select_vlm_samples(scored_frames, max_samples):
+    if not scored_frames:
+        return []
+    if len(scored_frames) <= max_samples:
+        return list(scored_frames)
+
+    step = max(1, int(np.ceil(len(scored_frames) / max_samples)))
+    samples = scored_frames[::step]
+    if samples[-1] is not scored_frames[-1]:
+        samples.append(scored_frames[-1])
+    return samples[:max_samples]
+
+
+def build_vlm_prompt(batch):
+    lines = [
+        "You are classifying sampled frames from a recorded talk.",
+        "For each frame, decide whether it should count as a slide frame.",
+        "A frame counts as a slide if the main informational content is a presentation slide, even if a presenter webcam is also visible.",
+        "Do not count talking-head-only shots, discussion tables, or audience shots as slides.",
+        "Return strict JSON in this shape: {\"results\":[{\"index\":1,\"is_slide\":true,\"confidence\":0.93,\"reason\":\"short reason\"}]}",
+        "Use exactly one result object per frame, in the same order as below.",
+        "Frames in this batch:",
+    ]
+    for i, sample in enumerate(batch, 1):
+        lines.append(f"- Frame {i}: timestamp {format_ts(sample['timestamp_sec'])}")
+    return "\n".join(lines)
+
+
+def classify_batch_with_gemini(batch, model):
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY")
+
+    parts = [{"text": build_vlm_prompt(batch)}]
+    for sample in batch:
+        _, b64 = frame_to_data_url(sample["frame"])
+        parts.append({
+            "inline_data": {
+                "mime_type": "image/jpeg",
+                "data": b64,
+            }
+        })
+
+    body = {
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+        },
+    }
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    resp = json_http_post(url, body, {"Content-Type": "application/json"})
+    text = resp["candidates"][0]["content"]["parts"][0]["text"]
+    return extract_json_object(text)["results"]
+
+
+def classify_batch_with_openai_compatible(batch, model, api_key, base_url, extra_headers=None):
+    content = [{"type": "text", "text": build_vlm_prompt(batch)}]
+    for sample in batch:
+        data_url, _ = frame_to_data_url(sample["frame"])
+        content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": data_url,
+                "detail": "low",
+            },
+        })
+
+    body = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": content}
+        ],
+        "response_format": {"type": "json_object"},
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    if extra_headers:
+        headers.update(extra_headers)
+
+    resp = json_http_post(base_url, body, headers)
+    text = resp["choices"][0]["message"]["content"]
+    return extract_json_object(text)["results"]
+
+
+def classify_batch_with_openai(batch, model):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing OPENAI_API_KEY")
+    content = [{"type": "input_text", "text": build_vlm_prompt(batch)}]
+    for sample in batch:
+        data_url, _ = frame_to_data_url(sample["frame"])
+        content.append({
+            "type": "input_image",
+            "image_url": data_url,
+            "detail": "low",
+        })
+
+    body = {
+        "model": model,
+        "input": [
+            {
+                "role": "user",
+                "content": content,
+            }
+        ],
+    }
+
+    resp = json_http_post(
+        "https://api.openai.com/v1/responses",
+        body,
+        {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+    )
+    text = resp.get("output_text")
+    if not text:
+        fragments = []
+        for item in resp.get("output", []):
+            for part in item.get("content", []):
+                if part.get("type") == "output_text":
+                    fragments.append(part.get("text", ""))
+        text = "\n".join(fragment for fragment in fragments if fragment)
+    return extract_json_object(text)["results"]
+
+
+def classify_batch_with_openrouter(batch, model):
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing OPENROUTER_API_KEY")
+    return classify_batch_with_openai_compatible(
+        batch=batch,
+        model=model,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1/chat/completions",
+        extra_headers={
+            "HTTP-Referer": "https://github.com/swyxio/skills",
+            "X-Title": "thumbnail-extraction",
+        },
+    )
+
+
+def classify_batch_with_anthropic(batch, model):
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing ANTHROPIC_API_KEY")
+
+    content = []
+    for sample in batch:
+        _, b64 = frame_to_data_url(sample["frame"])
+        content.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": b64,
+            },
+        })
+    content.append({"type": "text", "text": build_vlm_prompt(batch)})
+
+    body = {
+        "model": model,
+        "max_tokens": 1024,
+        "messages": [
+            {"role": "user", "content": content}
+        ],
+    }
+
+    resp = json_http_post(
+        "https://api.anthropic.com/v1/messages",
+        body,
+        {
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+    )
+    text_blocks = [block["text"] for block in resp.get("content", []) if block.get("type") == "text"]
+    text = "\n".join(text_blocks)
+    return extract_json_object(text)["results"]
+
+
+def classify_batch_with_ollama(batch, model):
+    body = {
+        "model": model,
+        "stream": False,
+        "format": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "index": {"type": "integer"},
+                            "is_slide": {"type": "boolean"},
+                            "confidence": {"type": "number"},
+                            "reason": {"type": "string"},
+                        },
+                        "required": ["index", "is_slide", "confidence", "reason"],
+                    },
+                }
+            },
+            "required": ["results"],
+        },
+        "messages": [
+            {
+                "role": "user",
+                "content": build_vlm_prompt(batch),
+                "images": [frame_to_data_url(sample["frame"])[1] for sample in batch],
+            }
+        ],
+    }
+    resp = json_http_post(
+        "http://localhost:11434/api/chat",
+        body,
+        {"Content-Type": "application/json"},
+    )
+    text = resp["message"]["content"]
+    return extract_json_object(text)["results"]
+
+
+def classify_slide_batches(provider, model, batches):
+    provider = provider.lower()
+    classifier = {
+        "gemini": classify_batch_with_gemini,
+        "openai": classify_batch_with_openai,
+        "openrouter": classify_batch_with_openrouter,
+        "anthropic": classify_batch_with_anthropic,
+        "ollama": classify_batch_with_ollama,
+    }.get(provider)
+
+    if classifier is None:
+        raise ValueError(f"Unsupported VLM provider: {provider}")
+
+    results = []
+    for idx, batch in enumerate(batches, 1):
+        print(f"    VLM batch {idx}/{len(batches)} via {provider}:{model}...")
+        batch_results = classifier(batch, model)
+        for item in batch_results:
+            ordinal = int(item["index"]) - 1
+            if ordinal < 0 or ordinal >= len(batch):
+                continue
+            sample = batch[ordinal]
+            results.append({
+                **sample,
+                "vlm_is_slide": bool(item.get("is_slide")),
+                "vlm_confidence": float(item.get("confidence", 0.0)),
+                "vlm_reason": str(item.get("reason", ""))[:200],
+            })
+    return results
+
+
+def extract_slide_frames_with_vlm(video_path, scored_frames, info, output_dir, video_name,
+                                  provider, model, batch_size, max_samples):
+    samples = select_vlm_samples(scored_frames, max_samples=max_samples)
+    if not samples:
+        print("\n  No frames available for VLM fallback.")
+        return []
+
+    print(f"\n  [VLM Fallback] Sampling {len(samples)} frame(s) for {provider} classification...")
+    cap = cv2.VideoCapture(video_path)
+    enriched = []
+    for sample in samples:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, sample["frame_idx"])
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            continue
+        enriched.append({
+            **sample,
+            "frame": frame,
+            "frame_hash": average_hash(frame),
+        })
+    cap.release()
+
+    batches = list(chunked(enriched, batch_size))
+    classified = classify_slide_batches(provider, model, batches)
+    positive = [x for x in classified if x.get("vlm_is_slide")]
+
+    if not positive:
+        print("\n  VLM fallback also found no slides.")
+        return []
+
+    positive.sort(key=lambda x: x["timestamp_sec"])
+    groups = []
+    current_group = None
+    for sample in positive:
+        if current_group is None:
+            current_group = [sample]
+            continue
+        prev = current_group[-1]
+        gap = sample["timestamp_sec"] - prev["timestamp_sec"]
+        hash_delta = hamming_distance(sample["frame_hash"], prev["frame_hash"])
+        if gap <= SLIDE_GAP_SEC and hash_delta <= SLIDE_HASH_DISTANCE_THRESHOLD:
+            current_group.append(sample)
+        else:
+            groups.append(current_group)
+            current_group = [sample]
+    if current_group:
+        groups.append(current_group)
+
+    slides_dir = os.path.join(output_dir, "slides_vlm")
+    os.makedirs(slides_dir, exist_ok=True)
+    manifest = {
+        "video": video_name,
+        "provider": provider,
+        "model": model,
+        "slides": [],
+    }
+    print(f"\n  Saving {len(groups)} VLM slide representative(s)...")
+    for idx, group in enumerate(groups, 1):
+        best = max(group, key=lambda x: (x["vlm_confidence"], x["slide_score"]))
+        ts_label = format_ts(best["timestamp_sec"])
+        base = f"{video_name}_vlm_slide_{idx}_{ts_label.replace(':', '-')}"
+        out_name = f"{base}.jpg"
+        out_path = os.path.join(slides_dir, out_name)
+        cv2.imwrite(out_path, best["frame"], [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+        manifest["slides"].append({
+            "index": idx,
+            "timestamp": ts_label,
+            "timestamp_sec": float(best["timestamp_sec"]),
+            "confidence": round(float(best["vlm_confidence"]), 3),
+            "reason": best["vlm_reason"],
+            "file": out_name,
+        })
+        print(f"  ✓ VLM slide #{idx}: {ts_label} (confidence: {best['vlm_confidence']:.2f})")
+
+    manifest_path = os.path.join(slides_dir, f"{video_name}_slides_vlm_manifest.json")
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
+
+    return manifest["slides"]
 
 
 def pass1_quick_scan(video_path, info):
@@ -120,6 +587,13 @@ def pass1_quick_scan(video_path, info):
         sat_std = float(np.std(hsv[:, :, 1]))
 
         is_presentation = bool(edge_density > 0.08 and sat_std < 50)
+        slide_score = 0.0
+        if is_presentation:
+            slide_score += edge_density * 12.0
+            slide_score += max(0.0, (55.0 - sat_std) / 25.0)
+            slide_score += min(variance / 5000.0, 1.0)
+            if num_faces == 0:
+                slide_score += 0.75
 
         # Quick score
         score = 0.0
@@ -142,6 +616,7 @@ def pass1_quick_scan(video_path, info):
             "variance": variance,
             "edge_density": edge_density,
             "is_presentation": is_presentation,
+            "slide_score": slide_score,
             "face_regions": face_regions
         })
 
@@ -211,6 +686,113 @@ def select_diverse_top(scored_frames, top_n=TOP_N, min_gap_sec=30):
             selected.append(f)
 
     return selected
+
+
+def extract_slide_frames(video_path, scored_frames, info, output_dir, video_name):
+    """
+    Extract one representative frame per detected slide segment.
+
+    Lowest-overhead approach:
+      1. Use existing cheap OpenCV presentation heuristic over the whole scan.
+      2. Group consecutive slide-like samples by time proximity + perceptual hash.
+      3. Save one highest-scoring representative per unique slide.
+
+    This avoids running a VLM across the full video. If false positives become a
+    problem, a future VLM pass should only classify these grouped representatives.
+    """
+    slide_samples = [f for f in scored_frames if f["is_presentation"]]
+    if not slide_samples:
+        print("\n  No slide-like frames detected.")
+        if VLM_PROVIDER:
+            model = VLM_MODEL or vlm_default_model(VLM_PROVIDER)
+            print(f"  Trying VLM fallback with {VLM_PROVIDER}:{model}...")
+            return extract_slide_frames_with_vlm(
+                video_path=video_path,
+                scored_frames=scored_frames,
+                info=info,
+                output_dir=output_dir,
+                video_name=video_name,
+                provider=VLM_PROVIDER,
+                model=model,
+                batch_size=VLM_BATCH_SIZE,
+                max_samples=VLM_MAX_SAMPLES,
+            )
+        offer_vlm_options()
+        return []
+
+    slide_samples.sort(key=lambda x: x["timestamp_sec"])
+    cap = cv2.VideoCapture(video_path)
+    groups = []
+    current_group = None
+
+    for sample in slide_samples:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, sample["frame_idx"])
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            continue
+
+        frame_hash = average_hash(frame)
+        enriched = {
+            **sample,
+            "frame_hash": frame_hash,
+            "frame": frame,
+        }
+
+        if current_group is None:
+            current_group = [enriched]
+            continue
+
+        prev = current_group[-1]
+        gap = sample["timestamp_sec"] - prev["timestamp_sec"]
+        hash_delta = hamming_distance(frame_hash, prev["frame_hash"])
+
+        if gap <= SLIDE_GAP_SEC and hash_delta <= SLIDE_HASH_DISTANCE_THRESHOLD:
+            current_group.append(enriched)
+        else:
+            groups.append(current_group)
+            current_group = [enriched]
+
+    if current_group:
+        groups.append(current_group)
+
+    cap.release()
+
+    slides_dir = os.path.join(output_dir, "slides")
+    os.makedirs(slides_dir, exist_ok=True)
+    manifest = {
+        "video": video_name,
+        "slides": [],
+    }
+
+    print(f"\n  Saving {len(groups)} slide representative(s)...")
+    for idx, group in enumerate(groups, 1):
+        best = max(group, key=lambda x: x["slide_score"])
+        ts_label = format_ts(best["timestamp_sec"])
+        base = f"{video_name}_slide_{idx}_{ts_label.replace(':', '-')}"
+        out_name = f"{base}.jpg"
+        out_path = os.path.join(slides_dir, out_name)
+        cv2.imwrite(out_path, best["frame"], [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+        manifest["slides"].append({
+            "index": idx,
+            "timestamp": ts_label,
+            "timestamp_sec": float(best["timestamp_sec"]),
+            "slide_score": round(float(best["slide_score"]), 3),
+            "num_faces": int(best["num_faces"]),
+            "edge_density": round(float(best["edge_density"]), 4),
+            "file": out_name,
+        })
+        print(f"  ✓ slide #{idx}: {ts_label} (score: {best['slide_score']:.2f})")
+
+        for item in group:
+            item.pop("frame", None)
+            item.pop("frame_hash", None)
+
+    manifest_path = os.path.join(slides_dir, f"{video_name}_slides_manifest.json")
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
+
+    return manifest["slides"]
 
 
 def pass2_deep_analysis(video_path, candidates, info, top_n=TOP_N):
@@ -398,7 +980,7 @@ def save_outputs(selected, output_dir, video_name):
 
 def main():
     if not VIDEO_PATH:
-        print("Usage: python thumbnail_extractor.py <video_path> [output_dir] [top_n]")
+        print("Usage: python thumbnail_extractor.py <video_path> [output_dir] [top_n] [--extract-slides] [--vlm-provider PROVIDER] [--vlm-model MODEL]")
         sys.exit(1)
 
     if not os.path.exists(VIDEO_PATH):
@@ -430,6 +1012,9 @@ def main():
     # Save outputs
     print(f"\n  Saving {len(final)} final candidates...")
     manifest = save_outputs(final, OUTPUT_DIR, video_name)
+
+    if EXTRACT_SLIDES:
+        extract_slide_frames(VIDEO_PATH, scored, info, OUTPUT_DIR, video_name)
 
     print(f"\n═══ Done! ═══")
     print(f"  Output: {OUTPUT_DIR}/")

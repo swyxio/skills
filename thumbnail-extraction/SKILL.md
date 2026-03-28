@@ -1,19 +1,20 @@
 ---
 name: thumbnail-extraction
-description: "Extracts the most interesting frames from video files for thumbnail compositing. Detects faces, expressions, smiles, and presentation slides. Outputs full frames, face crops, and transparent cutouts. Use when asked to extract thumbnails, find interesting frames, grab screenshots from video, or create thumbnail candidates from recordings."
+description: "Extracts the most interesting frames from video files for thumbnail compositing. Detects faces, expressions, smiles, and presentation slides. Outputs full frames, face crops, transparent cutouts, and can proportionately export one representative image per detected slide. Use when asked to extract thumbnails, find interesting frames, grab screenshots from video, create thumbnail candidates from recordings, or export the slides from a talk video."
 version: 0.1.0
 ---
 
 # Video Thumbnail Extraction
 
 ## Overview
-Automatically scan a local MP4 video (or YouTube URL via yt-dlp) and extract the 4 most visually interesting frames — prioritizing expressive faces (laughing, shocked, smiling) and engaging presentation slides. Outputs full frames, face crops, and background-removed transparent PNGs ready for compositing.
+Automatically scan a local MP4 video (or YouTube URL via yt-dlp) and extract the 4 most visually interesting frames — prioritizing expressive faces (laughing, shocked, smiling) and engaging presentation slides. Outputs full frames, face crops, and background-removed transparent PNGs ready for compositing. When `--extract-slides` is enabled, it also exports one representative JPG per detected slide. If OpenCV sees no slides, the script can fall back to a VLM provider (`ollama`, `gemini`, `openai`, `anthropic`, `openrouter`) over sampled frames.
 
 ## When to Use
 - Before creating YouTube thumbnails (feeds into `youtube-thumbnails` skill)
 - When you need the best screenshot from a long video recording
 - When compositing a thumbnail and need transparent guest cutouts
 - Processing Zoom gallery recordings, interviews, or presentations
+- Exporting the slide deck visuals from a recorded talk without manually scrubbing the timeline
 
 ## Dependencies
 
@@ -49,6 +50,7 @@ pip3 install 'rembg[cpu]' pillow --break-system-packages
   - Detect presentation slides (high edge density + low color saturation)
 - Score each frame based on: face count, smile count, smile size, visual variance
 - Select top 12 diverse candidates using **quadrant system**: divide video into N time segments, pick best from each → ensures temporal spread
+- If `--extract-slides` is enabled, reuse the same pass-1 presentation heuristic to collect slide-like samples for later grouping
 
 **Pass 2 — Deep Analysis** (DeepFace, only on top 12 candidates)
 - Re-read only the selected frames from video
@@ -62,6 +64,24 @@ pip3 install 'rembg[cpu]' pillow --break-system-packages
 - Crop largest detected face with generous padding (0.5x)
 - Run background removal on face crop → transparent PNG
 - Generate manifest JSON with metadata
+
+**Optional Slide Export**
+- Filter pass-1 samples to slide-like frames
+- Group consecutive slide-like samples by time proximity and perceptual hash similarity
+- Save one highest-scoring representative JPG per unique slide group
+- This is the lowest-overhead approach because it avoids a full-video VLM pass
+
+**Optional VLM Fallback**
+- If OpenCV sees no slides, the script can classify sampled frames with a VLM
+- The implementation reuses already-sampled frames instead of uploading the whole video
+- This is the lowest-overhead cross-provider design because one code path works for local and hosted VLMs
+- Gemini native video understanding can still be worth using separately, but it requires a different upload/poll flow through the Files API
+- Recommendation order for this skill:
+- `ollama` if you already run a local vision model and want zero external API spend
+- `gemini` as the best hosted default because it handles sampled frames well and also has native video support outside this code path
+- `openai` if you already have OpenAI credentials and want a simple sampled-image fallback
+- `anthropic` if you prefer Claude vision on sampled frames
+- `openrouter` if you want a single routing layer across multiple providers
 
 ### Scoring Heuristics
 
@@ -91,7 +111,7 @@ This ensures a 76-minute video yields picks from different parts (e.g., 1:00, 2:
 
 ### Command Line
 ```bash
-python3 thumbnail_extractor.py <video_path> [output_dir] [top_n]
+python3 thumbnail_extractor.py <video_path> [output_dir] [top_n] [--extract-slides] [--vlm-provider PROVIDER] [--vlm-model MODEL]
 ```
 
 **Arguments:**
@@ -106,6 +126,15 @@ python3 thumbnail_extractor.py "GMT20260130-210038_Recording_gallery_2380x1544.m
 
 # Custom output dir and count
 python3 thumbnail_extractor.py recording.mp4 ./thumbs 6
+
+# Extract thumbnails and slide JPGs together
+python3 thumbnail_extractor.py recording.mp4 ./thumbs 6 --extract-slides
+
+# Retry slide extraction with Gemini if OpenCV sees no slides
+python3 thumbnail_extractor.py recording.mp4 ./thumbs 6 --extract-slides --vlm-provider gemini
+
+# Retry through a local Ollama vision model
+python3 thumbnail_extractor.py recording.mp4 ./thumbs 6 --extract-slides --vlm-provider ollama --vlm-model gemma3
 
 # YouTube video (download first)
 yt-dlp -o "video.mp4" "https://youtube.com/watch?v=..."
@@ -224,3 +253,4 @@ For short videos (<10 min), consider `SAMPLE_INTERVAL_SEC=5` for finer coverage.
 - **No faces detected**: Zoom gallery recordings with "shared screen with gallery view" work best. Solo speaker view may have the face too close/large for the cascade detector — try lowering `ANALYSIS_SCALE` to 0.3.
 - **Background removal artifacts**: rembg's u2net can produce halos around hair. For cleaner results, try the `u2net_human_seg` model: `remove(img, model_name='u2net_human_seg')`.
 - **Slow processing**: A 76-minute video takes ~2 minutes for Pass 1, ~15 seconds for Pass 2 (12 candidates), and ~60 seconds for bg removal (4 faces). Most time is in Pass 1 scanning.
+- **No slides detected**: Let the OpenCV pass complete first. Then rerun with `--vlm-provider gemini` for the best hosted default, or `--vlm-provider ollama --vlm-model gemma3` if you already have a local vision model installed.
