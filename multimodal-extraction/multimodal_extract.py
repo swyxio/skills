@@ -2,18 +2,20 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 
 DEFAULT_OUTPUT_DIR = str(Path.home() / "Downloads" / "multimodal_output")
 DEFAULT_TOP_N = 4
 DEFAULT_WHISPER_MODEL = "turbo"
 DEFAULT_LANGUAGE = "en"
+DEFAULT_IMAGE_WIDTH = 860
 
 
 def format_elapsed(seconds):
@@ -74,6 +76,58 @@ def is_url(value):
         return False
     parsed = urlparse(value)
     return parsed.scheme in {"http", "https"}
+
+
+def find_youtube_urls_in_text(text):
+    if not text:
+        return []
+    pattern = r"https?://(?:www\.)?(?:youtube\.com/watch\?[^)\s]+|youtu\.be/[A-Za-z0-9_-]+[^)\s]*)"
+    return re.findall(pattern, text)
+
+
+def extract_video_id_from_youtube_url(url):
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    if "youtu.be" in host:
+        return parsed.path.strip("/").split("/")[0] or None
+    if "youtube.com" in host:
+        if parsed.path == "/watch":
+            return parse_qs(parsed.query).get("v", [None])[0]
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) >= 2 and parts[0] in {"embed", "shorts", "live"}:
+            return parts[1]
+    return None
+
+
+def canonical_youtube_url(url):
+    video_id = extract_video_id_from_youtube_url(url)
+    if not video_id:
+        return None
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def detect_youtube_url(source_value, transcript):
+    if is_url(source_value):
+        direct = canonical_youtube_url(source_value)
+        if direct:
+            return direct
+
+    candidates = []
+    if isinstance(transcript, dict):
+        text = json.dumps(transcript)
+        candidates.extend(find_youtube_urls_in_text(text))
+    for candidate in candidates:
+        normalized = canonical_youtube_url(candidate)
+        if normalized:
+            return normalized
+    return None
+
+
+def youtube_timestamp_url(base_url, timestamp_sec):
+    normalized = canonical_youtube_url(base_url)
+    if not normalized:
+        return None
+    return f"{normalized}&t={max(0, int(timestamp_sec))}s"
 
 
 def run(cmd, label, cwd=None):
@@ -281,6 +335,7 @@ def write_markdown(output_dir, source_value, video_path, anchors, transcript_jso
     total_duration = 0.0
     if segments:
         total_duration = float(segments[-1].get("end", 0.0))
+    youtube_url = detect_youtube_url(source_value, transcript)
 
     md_path = Path(output_dir) / "multimodal_timeline.md"
     rel_video_path = os.path.relpath(video_path, output_dir)
@@ -292,6 +347,8 @@ def write_markdown(output_dir, source_value, video_path, anchors, transcript_jso
         f.write(f"- Local video: `{rel_video_path}`\n")
         f.write(f"- Transcript JSON: `{rel_transcript_path}`\n")
         f.write(f"- Visual anchors: `{len(anchors)}`\n\n")
+        if youtube_url:
+            f.write(f"- YouTube URL: {youtube_url}\n\n")
 
         for idx, anchor_group in enumerate(anchors):
             start_sec = 0.0 if idx == 0 else anchor_group["timestamp_sec"]
@@ -299,11 +356,21 @@ def write_markdown(output_dir, source_value, video_path, anchors, transcript_jso
             if idx == 0:
                 start_sec = 0.0
 
-            f.write(f"## {anchor_group['timestamp']}\n\n")
+            group_link = youtube_timestamp_url(youtube_url, anchor_group["timestamp_sec"]) if youtube_url else None
+            if group_link:
+                f.write(f"## [{anchor_group['timestamp']}]({group_link})\n\n")
+            else:
+                f.write(f"## {anchor_group['timestamp']}\n\n")
             for image in anchor_group["images"]:
                 rel_image = image["image_relpath"]
                 f.write(f"### {image['label']} ({image['kind']})\n\n")
-                f.write(f"![{image['label']}]({rel_image})\n\n")
+                image_link = youtube_timestamp_url(youtube_url, image["timestamp_sec"]) if youtube_url else None
+                if image_link:
+                    f.write(
+                        f'<a href="{image_link}"><img src="{rel_image}" alt="{image["label"]}" width="{DEFAULT_IMAGE_WIDTH}" /></a>\n\n'
+                    )
+                else:
+                    f.write(f'<img src="{rel_image}" alt="{image["label"]}" width="{DEFAULT_IMAGE_WIDTH}" />\n\n')
 
             lines = transcript_text_for_window(segments, start_sec, end_sec)
             if lines:
