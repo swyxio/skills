@@ -36,7 +36,7 @@ ollama pull qwen2.5:32b        # 18GB, 128k context (if you have RAM)
 # Cloud — set the relevant env var
 export OPENAI_API_KEY=sk-...           # GPT-4.1 (1M context, $2/M input)
 export ANTHROPIC_API_KEY=sk-ant-...    # Claude Sonnet 4 (200k context)
-export GEMINI_API_KEY=...              # Gemini 2.5 Pro (1M context, free tier available)
+export GEMINI_API_KEY=...              # Gemini 3.1 Pro (1M context, free tier available)
 export OPENROUTER_API_KEY=sk-or-...    # Any model via OpenRouter
 ```
 
@@ -90,8 +90,8 @@ echo "~${TOKENS} tokens"
 |---|---|---|
 | < 50k tokens | Any available | Fits in one call everywhere |
 | 50k-150k tokens | Ollama (llama3.1), OpenAI, Anthropic | 128-200k context |
-| 150k-500k tokens | Gemini 2.5 Pro, GPT-4.1 | 1M context |
-| 500k-1M tokens | Gemini 2.5 Pro, GPT-4.1 | 1M context, may need chunking |
+| 150k-500k tokens | Gemini 3.1 Pro, GPT-4.1 | 1M context |
+| 500k-1M tokens | Gemini 3.1 Pro, GPT-4.1 | 1M context, may need chunking |
 | > 1M tokens | Any (with recursive chunking) | Map-reduce required |
 
 **Strategy selection:**
@@ -145,13 +145,13 @@ call_openai_compatible() {
 call_openai_compatible "https://api.openai.com/v1" "$OPENAI_API_KEY" "gpt-4.1-mini" "$SYSTEM" "$TEXT"
 
 # OpenRouter
-call_openai_compatible "https://openrouter.ai/api/v1" "$OPENROUTER_API_KEY" "google/gemini-2.5-flash" "$SYSTEM" "$TEXT"
+call_openai_compatible "https://openrouter.ai/api/v1" "$OPENROUTER_API_KEY" "google/gemini-3.1-flash" "$SYSTEM" "$TEXT"
 
 # Ollama (local)
 call_openai_compatible "http://localhost:11434/v1" "ollama" "llama3.1:8b" "$SYSTEM" "$TEXT"
 
 # Gemini (OpenAI-compatible endpoint)
-call_openai_compatible "https://generativelanguage.googleapis.com/v1beta/openai" "$GEMINI_API_KEY" "gemini-2.5-flash" "$SYSTEM" "$TEXT"
+call_openai_compatible "https://generativelanguage.googleapis.com/v1beta/openai" "$GEMINI_API_KEY" "gemini-3.1-flash" "$SYSTEM" "$TEXT"
 ```
 
 #### Backend: Anthropic (different format)
@@ -694,7 +694,7 @@ SEO-optimized, 150-300 words. Front-load keywords.
 call_openai_compatible \
   "https://generativelanguage.googleapis.com/v1beta/openai" \
   "$GEMINI_API_KEY" \
-  "gemini-2.5-flash" \
+  "gemini-3.1-flash" \
   "$SYSTEM" \
   "${TEXT}\n\n${FOCUS}" \
   8192
@@ -777,7 +777,7 @@ Add a small delay between calls: `sleep 1` between chunk processing. Or use a lo
 | Ollama (local) | `http://localhost:11434/v1` | llama3.1:8b | 128k | Free |
 | OpenAI | `https://api.openai.com/v1` | gpt-4.1-mini | 1M | $0.40/M in |
 | Anthropic | Custom format | claude-sonnet-4 | 200k | $3/M in |
-| Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | gemini-2.5-flash | 1M | Free tier / $0.15/M in |
+| Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | gemini-3.1-flash | 1M | Free tier / $0.15/M in |
 | OpenRouter | `https://openrouter.ai/api/v1` | any model | varies | varies |
 
-**Recommendation for most users:** Gemini 2.5 Flash via the OpenAI-compatible endpoint. Free tier, 1M context (no chunking needed for most inputs), fast, good quality.
+**Recommendation for most users:** Gemini 3.1 Flash via the OpenAI-compatible endpoint. Free tier, 1M context (no chunking needed for most inputs), fast, good quality.

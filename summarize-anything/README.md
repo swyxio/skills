@@ -21,7 +21,7 @@ export ANTHROPIC_API_KEY=sk-ant-...# Claude Sonnet 4, 200k context
 export OPENROUTER_API_KEY=sk-or-...# Any model via proxy
 ```
 
-**Recommended default:** Gemini 2.5 Flash — free tier, 1M context window (most inputs fit in a single call without chunking), and it has an OpenAI-compatible endpoint.
+**Recommended default:** Gemini 3.1 Flash — free tier, 1M context window (most inputs fit in a single call without chunking), and it has an OpenAI-compatible endpoint.
 
 ## Problem
 
