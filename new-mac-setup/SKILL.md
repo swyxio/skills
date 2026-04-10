@@ -29,7 +29,7 @@ The setup is opinionated. The core opinions:
 - **Python**: uv from Astral (not pyenv, not pip, not conda — uv is dramatically faster and handles both venvs and package installs)
 - **Docker**: Colima (not Docker Desktop — lighter weight, CLI-native, free)
 - **Editor**: Cursor (AI-native editor)
-- **AI tools**: Claude Code, Codex CLI, Ollama for local models
+- **AI tools**: Claude Code, Codex CLI, Railway CLI, Ollama for local models
 - **Agent notifications**: peon-ping shared across Claude Code, Codex, and Cursor, tuned to notify only when useful
 - **Browser**: Dia (from The Browser Company, successor to Arc)
 - **Launcher**: Raycast (replaces Alfred, Spotlight, Caffeine, window management)
@@ -178,7 +178,7 @@ These tools were suggested by Claude during the initial setup session and accept
 
 ```
 undollar, npm-check-updates, trash-cli,
-@anthropic-ai/claude-code, @openai/codex
+@anthropic-ai/claude-code, @openai/codex, @railway/cli
 ```
 
 ### peon-ping Defaults

@@ -40,6 +40,18 @@ else
 fi
 
 # =============================================================================
+# RAILWAY CLI
+# =============================================================================
+echo ""
+echo "📦 Installing Railway CLI..."
+if command -v railway &>/dev/null; then
+    echo "   ✅ Railway CLI already installed"
+else
+    npm install -g @railway/cli
+    echo "   ✅ Railway CLI installed"
+fi
+
+# =============================================================================
 # PEON-PING — Shared agent notifications for Claude Code, Codex, Cursor
 # =============================================================================
 echo ""
@@ -186,6 +198,9 @@ echo "   claude                            # Start Claude Code"
 echo "   peon status                       # Check agent notification status"
 echo "   peon toggle                       # Toggle peon-ping mute"
 echo "   llama-server -hf ggml-org/Qwen2.5-Coder-3B-Q8_0-GGUF --port 8012 -ngl 99"
+echo "   railway                          # Show Railway CLI help"
+echo "   railway login                    # Authenticate Railway CLI"
+echo "   railway status                   # Show current project and service status"
 echo ""
 echo "💡 Manual downloads:"
 echo "   - ChatGPT Desktop: https://chat.openai.com/download"

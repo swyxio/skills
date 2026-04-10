@@ -188,4 +188,9 @@ ollama run qwen2.5-coder:14b     # Chat with Qwen coder
 
 # llama.cpp server
 llama-server -hf ggml-org/Qwen2.5-Coder-3B-Q8_0-GGUF --port 8012 -ngl 99
+
+# Railway CLI
+railway login                    # Authenticate with Railway
+railway status                   # Show status for current environment
+railway up                       # Deploy current project
 ```
