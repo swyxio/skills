@@ -1,6 +1,6 @@
 interface:
   display_name: "Slackbot Builder"
-  short_description: "Production patterns for Slack bots and agents"
-  default_prompt: "Use $slackbot-builder to design and harden a production Slack bot."
+  short_description: "Simple-to-polished progression for production Slack bots and agents"
+  default_prompt: "Use $slackbot-builder to design or harden a Slack bot; pick a maturity level (L0–L5) and follow its reference file."
 policy:
   allow_implicit_invocation: true

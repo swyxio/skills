@@ -1,0 +1,130 @@
+# L4 — Hardened (won't page you at 2am)
+
+**Goal:** the bot survives slow backends, Slack rate limits, malformed payloads,
+stale config, and an audit. Everything degrades instead of breaking.
+
+## Checklist
+
+- [ ] **Long-running work** → ack now, **signed internal callback** later, durable session URL.
+- [ ] **App Home preferences** with server-side allowlist validation.
+- [ ] **Slack API hardening** — `429`/`Retry-After`, `5xx` backoff, `ok:false` handling, centralized.
+- [ ] **Storage keys** namespaced with explicit TTLs.
+- [ ] **Service-user attribution** + audit trail for bot-initiated changes.
+- [ ] **Full observability** fields.
+- [ ] **Scope degradation** — least privilege, graceful when missing.
+- [ ] **Manifest-based setup**; secrets applied at deploy time.
+- [ ] **Security + testing checklists** pass.
+
+## Long-running work + signed callbacks
+
+1. Post an ack in the thread: `Working on …`.
+2. Create/resume a backend session; store the Slack callback context (`channel`,
+   `threadTs`, target, model) with the backend prompt.
+3. Update the ack with a **View Session** button if a durable URL exists.
+4. On completion, the backend calls an internal endpoint — **sign it** (internal
+   shared secret), validate the payload shape before trusting it, propagate
+   `trace_id` so callback logs join the original event trace.
+5. Fetch final output from the backend; post a concise completion to the thread.
+
+Never make Slack the only place the result exists — the backend retains the
+canonical transcript, artifacts, and errors.
+
+## App Home preferences
+
+Use App Home for stable prefs instead of burying them in commands: default
+model/effort, default target, notification verbosity, in-thread vs broadcast.
+**Validate every selected value against a server-side allowlist** before saving;
+normalize stale prefs to a fallback before rendering or acting.
+
+## Slack API hardening
+
+Treat Slack calls as **two-layer** failures: HTTP can fail, and HTTP 200 can still
+return `{ ok: false }`. Centralize so this is fixed once:
+
+- Respect `429` + `Retry-After`.
+- Retry transient `5xx` with capped exponential backoff.
+- Surface permanent `ok:false` in logs and user-facing fallback copy.
+- Wrap signed JSON/form parsing in `try/catch` → structured `400`, not an uncaught throw.
+
+Minimum wrappers: `chat.postMessage`, `chat.update`, `conversations.info`,
+`conversations.replies`, `views.publish`, `reactions.add/remove`,
+`assistant.threads.setStatus`.
+
+## Storage keys
+
+| Data | Key shape | TTL |
+|---|---|---|
+| Event dedupe | `event:${eventId}` | 1 hour |
+| Thread session | `thread:${channel}:${threadTs}` | 24h or product-specific |
+| Pending clarification | `pending:${channel}:${threadTs}` | 1 hour |
+| User preferences | `user_prefs:${userId}` | none / product-specific |
+| Dynamic target cache | `targets:cache` | 1–5 minutes |
+
+## Service-user attribution
+
+Bot-initiated changes should be traceable — attribute them to a dedicated,
+auto-provisioned service user (e.g. `bot@yourco.com`) so the audit log shows
+who/what, through the same audit path as every other surface.
+
+## Observability (full)
+
+Every line: `service`, `component`, `level`, event/`msg`, `trace_id`,
+`duration_ms`, `http_status`, `outcome: success|error|rejected`, `reject_reason`,
+`slack_error`, plus `session_id`/`message_id`/`channel`/`thread_ts` when relevant.
+`warn` for rejected/soft failures, `error` for failed operations. Guard the logger
+against circular/bad data; convert `Error` → `error_message`/`error_type`/`error_stack`/`error_code`.
+
+## Scopes: least privilege, graceful degradation
+
+| Capability | Scope(s) |
+|---|---|
+| Post / update / threads | `chat:write` |
+| Reactions | `reactions:write` |
+| Thread context | `*:history` (`channels`/`groups`/`im`/`mpim`) |
+| Channel topic | `channels:read` / `groups:read` |
+| Composer status | `chat:write` (+ enable Agents & AI Apps) |
+| Mentions / DMs / monitored threads | `app_mentions:read`, `message.im`, `message.channels`/`groups`/`mpim` |
+| App Home | `views.publish` (App Home tab enabled) |
+
+Missing scope ⇒ less context / fewer acks, not a crash.
+
+## Setup
+
+Define the app from a **manifest** (scopes + event subscriptions + interactivity
+URL + slash command) for reproducible setup. On serverless platforms, **secrets
+apply at deploy time** — set signing secret / bot token, then redeploy; verify with
+a signed `url_verification` request.
+
+## Security checklist
+
+- [ ] Verify signatures on every Slack-facing route; enforce the replay window; parse only after.
+- [ ] Dedupe `event_id`; ignore bot messages.
+- [ ] Never log tokens, signing/callback secrets, or raw Authorization headers.
+- [ ] Validate all Block Kit action values against a server-side allowlist.
+- [ ] Sign internal callbacks; validate shape before processing.
+- [ ] Keep bot tokens server-side only; scope OAuth tightly.
+- [ ] Treat Slack user/channel IDs as identifiers, not authorization — re-check access for sensitive actions.
+
+## Testing checklist
+
+- [ ] URL verification; valid signed event; invalid signature; stale timestamp.
+- [ ] Retry dedupe with the same `event_id`; bot-message loop prevention.
+- [ ] Fresh mention; thread follow-up; ambiguous request → clarification.
+- [ ] Block Kit select with valid and invalid option.
+- [ ] App Home render + preference persistence.
+- [ ] Completion callback signature validation.
+- [ ] Slack `{ ok:false, error }` handling; `429` backoff.
+- [ ] Slow backend: Slack still gets the immediate ack.
+
+## Anti-patterns
+
+- ❌ Empty/fake outage fallback you advertise but never built — use cached/break-glass config or a clear degraded response.
+- ❌ Per-callsite rate-limit logic instead of one centralized wrapper.
+- ❌ Processing a signed callback with the wrong shape.
+- ❌ Trusting a stored preference without re-validating against the allowlist.
+
+## Graduate when…
+
+A slow job acks instantly and completes via a signed callback; Slack `429`/`5xx`
+are handled centrally; the security + testing checklists pass; and missing scopes
+degrade silently.
