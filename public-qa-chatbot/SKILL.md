@@ -17,7 +17,7 @@ metadata:
 
 A comprehensive skill for building unauthenticated, public-facing Q&A chatbot widgets on marketing sites, conference pages, documentation portals, and similar contexts where you need to serve anonymous visitors while controlling cost and abuse.
 
-Distilled from a production implementation powering the [AI Engineer Europe 2026](https://ai.engineer/europe) conference chatbot, with additional chat-scroll lessons from [TanStack Virtual's chat guidance](https://tanstack.com/blog/tanstack-virtual-chat).
+Distilled from a production implementation powering the [AI Engineer Europe 2026](https://ai.engineer/europe) conference chatbot, with additional chat-scroll lessons from [TanStack Virtual's chat guidance](https://tanstack.com/blog/tanstack-virtual-chat) and agentic retrieval lessons from Mintlify's [virtual filesystem assistant](https://www.mintlify.com/blog/how-we-built-a-virtual-filesystem-for-our-assistant). See [MINTLIFY_VIRTUAL_FILESYSTEM.md](MINTLIFY_VIRTUAL_FILESYSTEM.md) for a clean markdown reference version of the Mintlify pattern.
 
 For a runnable React/TanStack Virtual demo of long chat scroll behavior plus an expanded bottom command shelf, use `assets/vite-react-tanstack-chat-demo`. The demo includes hover/double-click message controls, subtle token/latency stats, tool-call and multimodal examples, assistant response variants via left/right swipe, and a Realtime voice capture strip with live transcription and an audiogram.
 
@@ -53,12 +53,15 @@ This skill is written to be tech-agnostic. The reference implementation uses the
 | **Hosting** | Vercel (serverless functions) | Cloudflare Workers, AWS Lambda, Railway, Fly.io, Render |
 | **Rate limiting** | Upstash Redis (`@upstash/ratelimit`) | Cloudflare Rate Limiting, AWS WAF, Redis (self-hosted), Arcjet |
 | **Semantic cache** | Upstash Vector + Gemini Embeddings | Pinecone, Weaviate, Qdrant, pgvector, Cloudflare Vectorize |
+| **Agentic docs retrieval** | Read-only virtual filesystem over indexed docs | Plain RAG, hosted search API, real sandbox only for async/developer tools |
 | **Embedding model** | Gemini `text-embedding-004` (128 dims) | OpenAI `text-embedding-3-small`, Cohere Embed v3, Voyage AI |
 | **Observability** | Braintrust (`wrapAISDK`) | Langfuse, Helicone, LangSmith, OpenTelemetry, Datadog LLM Obs |
 | **Frontend** | React (inline component) | Vue, Svelte, vanilla JS, Web Components |
 | **Long chat virtualization** | TanStack Virtual chat support | Native scroll for short widgets, react-virtuoso, custom virtual list only when already proven |
 
 Do not require virtualization for every public FAQ widget. A short, bounded chat can stay as a simple DOM list. Reach for a virtualized chat list when conversations can grow long, rows have dynamic heights, older history prepends, or streaming output makes scroll anchoring fragile. When using React and a virtualized list is justified, prefer TanStack Virtual's chat support over custom scroll math.
+
+Do not require agentic document browsing for every public FAQ widget either. Plain RAG is sufficient for short, stable FAQs. Add a virtual docs filesystem when answers live across multiple pages, users ask for exact syntax, docs have a meaningful hierarchy, or top-k retrieval often misses the section an expert would `grep` for.
 
 ***
 ## 1. Rate Limiting
@@ -212,6 +215,15 @@ if (!VALID_PAGES.has(page)) {
 }
 ```
 
+### Access-prune retrieval surfaces
+
+For documentation-backed chatbots, access control must happen before retrieval, not after answer generation. If the bot exposes semantic search, exact search, or a virtual docs filesystem, apply the same visibility filter to every surface:
+
+- Exclude unpublished, draft, internal, customer-only, or role-gated pages before building any path tree the model can browse.
+- Apply the same filter to vector, keyword, and chunk queries. Do not rely on hiding paths in the UI while leaving chunks searchable.
+- Prefer omitting inaccessible paths entirely. A model should not be able to mention "there is an internal billing page, but you cannot access it."
+- Include `isPublic`, `groups`, `tenantId`, `docsVersion`, or equivalent metadata with indexed chunks so filters are cheap and testable.
+
 ### Safe error handling
 
 - Never leak raw SDK error strings to the client (may contain API keys from BYOK)
@@ -316,6 +328,17 @@ const stream = createUIMessageStream({ /* ... */ });
 pipeUIMessageStreamToResponse(stream, res);
 ```
 
+### Optimized exact search
+
+For docs assistants that expose `grep`-style tools, avoid scanning every page or chunk over the network. Use a two-stage exact-search path:
+
+1. **Coarse filter**: ask the document database for pages whose metadata or text might contain the fixed string or regex. Use datastore-native filters where available, such as `$contains`, full-text indexes, trigram search, or metadata filters by section/path.
+2. **Bulk prefetch**: fetch all candidate chunks for the matching pages in one batch, sorted by `page` and `chunk_index`.
+3. **Fine filter**: run exact string or regex matching in memory and return only final hit paths/snippets.
+4. **Cache**: store prefetched page chunks by `{ path, docsVersion }` so repeated `grep`/`cat` workflows do not hit the database twice.
+
+Log candidate count and final hit count. If the coarse filter returns too many pages, ask the model to narrow the query instead of silently running an expensive full-corpus scan.
+
 ### FAQ list view
 
 Offer a browsable FAQ list alongside the chat interface. This serves users who have common questions without making any LLM calls at all:
@@ -388,6 +411,17 @@ const { streamText } = wrapAISDK(ai); // Auto-traces all calls
 ### Log semantic cache hits
 
 Track cache hit rates to understand cost savings and tune the similarity threshold. A cache hit is a "free" response that saved an LLM call.
+
+### Trace retrieval tool calls
+
+Trace retrieval tools separately from LLM calls. For semantic search, exact search, and virtual filesystem tools, log:
+
+- Tool name, query/pattern, requested path, and docs version.
+- Latency, cache hit/miss, database round trips, chunks fetched, candidate count, and final result count.
+- Whether the model escalated from broad semantic search to exact `grep`/`cat`/`ls` exploration.
+- User-visible outcome signals such as cited-answer rate, "I don't know" rate, thumbs up/down, and handoff/escalation rate.
+
+This tells you whether agentic retrieval is improving answer quality or just adding cost and latency.
 
 ### Don't log sensitive data
 
@@ -541,6 +575,46 @@ tools: {
 }
 ```
 
+### Virtual documentation filesystem for agentic retrieval
+
+Top-k RAG works for simple FAQ questions, but it breaks down when the answer spans several pages, the user needs exact syntax, or the correct page does not land in the nearest embedding results. For documentation-backed chatbots, consider exposing the knowledge base as a read-only virtual filesystem so the model can explore with familiar tools such as `ls`, `cat`, `find`, and `grep`.
+
+The important idea is to give the model the **filesystem workflow**, not necessarily a real filesystem. Mintlify's ChromaFs pattern maps shell commands onto an existing docs index instead of booting a sandbox for every visitor. That matters for public chatbot latency and cost: their article reports p90 session creation dropping from about `46s` with sandbox/repo setup to about `100ms` with a virtual filesystem over Chroma.
+
+Recommended shape:
+
+- Store a path tree for the docs site, e.g. page slugs and section paths, as a compact JSON artifact in the same datastore as the indexed content.
+- On session init, load the path tree into memory as `Set<path>` plus `Map<directory, children>` so `ls`, `cd`, and basic `find` do not need network calls.
+- Apply access control before the tree reaches the model. For public widgets this usually means pruning unpublished, private, draft, customer-only, or admin-only pages. The model should not see paths it cannot read.
+- Implement `cat /path/page.mdx` by fetching all chunks for that page, sorting by `chunk_index`, and reassembling the full page. Cache page reads during the session so repeated inspection is cheap.
+- Support lazy file pointers for large artifacts such as OpenAPI specs, generated API reference JSON, changelogs, or versioned docs. Show the file in `ls`, but fetch content only when the model runs `cat`.
+- Make the filesystem explicitly read-only. Any write-like operation should fail with an `EROFS`-style error so the assistant can explore freely without state cleanup or cross-user mutation risk.
+- Optimize recursive `grep` as a two-stage search: use the vector/document database as a coarse filter to identify candidate pages, then run exact string or regex matching in memory over the fetched candidates. This gives exact-match behavior without scanning every file over the network.
+
+Expose the virtual filesystem as narrow tools rather than a general shell when possible:
+
+```typescript
+tools: {
+  list_docs: tool({
+    description: "List child paths under a documentation directory.",
+    inputSchema: jsonSchema<{ path: string }>({ ... }),
+    execute: async ({ path }) => docsFs.ls(path),
+  }),
+  read_doc: tool({
+    description: "Read a full documentation page by path.",
+    inputSchema: jsonSchema<{ path: string }>({ ... }),
+    execute: async ({ path }) => docsFs.cat(path),
+  }),
+  search_docs_exact: tool({
+    description: "Search docs by exact string or regex and return matching paths/snippets.",
+    inputSchema: jsonSchema<{ pattern: string; regex?: boolean }>({ ... }),
+    execute: async ({ pattern, regex }) => docsFs.grep(pattern, { regex }),
+  }),
+}
+```
+
+Use this pattern when the chatbot needs to behave like a docs expert. Keep normal semantic search as the first-pass tool for broad questions, then let the model escalate to `grep`/`cat`/`ls` when it needs exact wording, syntax, cross-page synthesis, or source-grounded citations.
+
 ### System prompt structure
 
 Structure the system prompt with these sections in order:
@@ -558,6 +632,30 @@ For chatbot endpoints that need streaming + external service calls (Redis, Vecto
 
 ***
 ## 7. Knowledge Base Management
+
+### Path tree index
+
+For large documentation sites, generate a docs manifest alongside the chunk index:
+
+```typescript
+type DocsPath = {
+  path: string;        // "/auth/oauth.mdx"
+  title: string;       // "OAuth"
+  isPublic: boolean;
+  groups: string[];
+  updatedAt: string;
+  sourceId: string;
+  docsVersion: string;
+};
+```
+
+At runtime, load the access-pruned manifest into memory:
+
+- `Set<string>` for valid file paths.
+- `Map<string, string[]>` for directory-to-children lookup.
+- Optional title/path aliases for forgiving `find_docs` behavior.
+
+This makes `list_docs`, `find_docs`, and path validation memory-only. Rebuild or invalidate the tree when `docsVersion` changes.
 
 ### Structured FAQ data
 
@@ -579,6 +677,25 @@ export const FAQ_QUESTIONS = [
   { category: "Ticketing", question: "Can I get a refund?", answer: "Yes..." },
 ];
 ```
+
+### Full-page reassembly from chunks
+
+Chunked vector results are good for discovery, but they are often too lossy for final answers. For `read_doc(path)` or citation verification, fetch the whole page:
+
+```typescript
+const chunks = await vectorIndex.query({
+  topK: 200,
+  includeMetadata: true,
+  filter: `path = '${path}' AND docsVersion = '${docsVersion}'`,
+});
+
+return chunks
+  .sort((a, b) => a.metadata.chunk_index - b.metadata.chunk_index)
+  .map(chunk => chunk.metadata.text)
+  .join("\n\n");
+```
+
+Cache full-page reads by `{ path, docsVersion }`. This lets the model answer exact syntax, multi-section, and "compare these pages" questions with the same source material a human docs reader would inspect.
 
 ### Include venue/logistics details
 
@@ -629,6 +746,8 @@ Use this checklist when building a new public Q&A chatbot:
 - [ ] BYOK fallback for rate-limited users
 - [ ] Semantic caching with TTL enforcement for first-turn questions
 - [ ] Cache hits use same stream protocol as live responses
+- [ ] For large docs/chatbots, virtual filesystem tools support `ls`/`cat`/`grep`-style exploration without per-user sandboxes
+- [ ] Docs filesystem is read-only, access-pruned, and reassembles full pages from ordered chunks
 - [ ] FAQ list view to reduce LLM calls
 - [ ] Observability/tracing on all LLM calls
 - [ ] Streaming responses for perceived speed
@@ -657,6 +776,7 @@ Use this checklist when building a new public Q&A chatbot:
 - TanStack Virtual chat blog: [Chat UIs Are Lists Until They Aren't](https://tanstack.com/blog/tanstack-virtual-chat)
 - TanStack Virtual chat guide: [tanstack.com/virtual/latest/docs/chat](https://tanstack.com/virtual/latest/docs/chat)
 - TanStack Virtual React chat example: [tanstack.com/virtual/latest/docs/framework/react/examples/chat](https://tanstack.com/virtual/latest/docs/framework/react/examples/chat)
+- Mintlify virtual filesystem assistant: [How we built a virtual filesystem for our Assistant](https://www.mintlify.com/blog/how-we-built-a-virtual-filesystem-for-our-assistant)
 - Reference implementation: [github.com/aiDotEngineer/aiecode2025](https://github.com/aiDotEngineer/aiecode2025) (see `src/pages/api/chat.ts` and `src/components/Chatbot.tsx`)
 - Agent Skills spec: [agentskills.io/specification](https://agentskills.io/specification)
 - Vercel AI SDK: [sdk.vercel.ai](https://sdk.vercel.ai)
