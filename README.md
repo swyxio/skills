@@ -52,6 +52,8 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [autoreview](./autoreview) — runs structured closeout code review with a selected helper, verifies accepted findings, reruns focused tests, and stops only when no actionable findings remain.
 - [public-qa-chatbot](./public-qa-chatbot) — builds unauthenticated public Q&A chatbot widgets with rate limits, origin/input hardening, semantic caching, observability, streaming UX, and robust chat scroll behavior.
 - [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, fast acknowledgements, thread sessions, Block Kit interactions, App Home preferences, callbacks, and structured observability.
+- [sync-url-navigation](./sync-url-navigation) — syncs URL query params with app navigation, tabs, and filter state so views are bookmarkable and shareable (`view`, `table`, `q`, deep links, `popstate`).
+- [app-ux-paradigms](./app-ux-paradigms) — standard web UX defaults: Esc/backdrop/× for modals, ⌘/Ctrl shortcuts, form save states, tables, menus, and help text for discoverable interactions.
 
 ### Media Download And Transformation
 
@@ -98,3 +100,20 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - Keep auxiliary docs minimal; the skill body should carry the agent-facing workflow.
 
 Click into each folder for the detailed workflow, prerequisites, and command examples.
+
+## Installing in Cursor
+
+Clone this repo, then symlink skills into `~/.cursor/skills/` (Cursor loads skills from that directory):
+
+```bash
+git clone git@github.com:swyxio/skills.git ~/Work/skills   # or any path you prefer
+mkdir -p ~/.cursor/skills
+
+# Link individual skills (repeat per skill, or link the ones you use):
+ln -sf ~/Work/skills/sync-url-navigation ~/.cursor/skills/sync-url-navigation
+ln -sf ~/Work/skills/app-ux-paradigms ~/.cursor/skills/app-ux-paradigms
+ln -sf ~/Work/skills/slackbot-builder ~/.cursor/skills/slackbot-builder
+ln -sf ~/Work/skills/web-animation-perf ~/.cursor/skills/web-animation-perf
+```
+
+Symlinks should point at this repository (`swyxio/skills`), not copies of `SKILL.md`, so `git pull` updates what agents read. After adding a new skill here, commit it, push, and add a matching symlink locally.
