@@ -20,7 +20,7 @@ Build the bot as a small HTTP service. The full route set you'll grow into:
 | `GET /health` | Deploy + dependency check. |
 | `POST /events` | URL verification + `event_callback`. |
 | `POST /interactions` | Block Kit actions, menus, modals (arrives at L3). |
-| `POST /callbacks/...` | Internal signed callbacks from workers/agents (arrives at L4). |
+| `POST /callbacks/...` | Internal signed callbacks from workers/agents (arrives at L5). |
 
 ## Verify Slack signatures
 

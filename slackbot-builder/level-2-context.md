@@ -86,7 +86,7 @@ When a stale mapping fails, delete it and fall back to a fresh session.
 ## Anti-patterns
 
 - ❌ Dumping entire channel history into the prompt.
-- ❌ Mixing context into the user's request (pollutes saved/persisted message).
+- ❌ Mixing context into the user's request. Keep `contextNote` a **separate field all the way down to the prompt builder** — don't concatenate it onto `message` inside the core. Doing so pollutes the persisted request *and* any downstream intent classifier/router (see L3 "Classifier input hygiene" — a channel-topic keyword silently rerouted every prompt in prod).
 - ❌ Letting a failed reaction / `setStatus` / context fetch abort the answer.
 - ❌ In-memory session maps in production (lost on redeploy/scale-out).
 - ❌ Treating `setStatus` as guaranteed UI — degrade gracefully.

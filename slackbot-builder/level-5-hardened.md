@@ -1,4 +1,4 @@
-# L4 — Hardened (won't page you at 2am)
+# L5 — Hardened (won't page you at 2am)
 
 **Goal:** the bot survives slow backends, Slack rate limits, malformed payloads,
 stale config, and an audit. Everything degrades instead of breaking.
@@ -11,6 +11,7 @@ stale config, and an audit. Everything degrades instead of breaking.
 - [ ] **Storage keys** namespaced with explicit TTLs.
 - [ ] **Service-user attribution** + audit trail for bot-initiated changes.
 - [ ] **Full observability** fields.
+- [ ] **Sanitized user-facing errors** — never echo raw backend/provider error text.
 - [ ] **Scope degradation** — least privilege, graceful when missing.
 - [ ] **Manifest-based setup**; secrets applied at deploy time.
 - [ ] **Security + testing checklists** pass.
@@ -34,7 +35,9 @@ canonical transcript, artifacts, and errors.
 Use App Home for stable prefs instead of burying them in commands: default
 model/effort, default target, notification verbosity, in-thread vs broadcast.
 **Validate every selected value against a server-side allowlist** before saving;
-normalize stale prefs to a fallback before rendering or acting.
+normalize stale prefs to a fallback before rendering or acting. App Home is also
+a natural **dashboard** — current state, recent bot-applied changes, quick links
+into the durable web surface.
 
 ## Slack API hardening
 
@@ -46,15 +49,22 @@ return `{ ok: false }`. Centralize so this is fixed once:
 - Surface permanent `ok:false` in logs and user-facing fallback copy.
 - Wrap signed JSON/form parsing in `try/catch` → structured `400`, not an uncaught throw.
 
-Minimum wrappers: `chat.postMessage`, `chat.update`, `conversations.info`,
-`conversations.replies`, `views.publish`, `reactions.add/remove`,
-`assistant.threads.setStatus`.
+Minimum wrappers: `chat.postMessage`, `chat.update`, `chat.startStream`/`appendStream`/`stopStream`,
+`conversations.info`, `conversations.replies`, `views.publish`, `views.open`,
+`reactions.add/remove`, `assistant.threads.setStatus`/`setTitle`/`setSuggestedPrompts`.
+
+## Sanitized user-facing errors
+
+Log the full error (with `trace_id`); post a **sanitized** line to the channel —
+never raw provider/backend text (e.g. `OpenAI API 500: {...stack...}`). Surface a
+short message plus the `trace_id` so support can grep the rest. Internal error
+detail in a channel is both noise and a small leak.
 
 ## Storage keys
 
 | Data | Key shape | TTL |
 |---|---|---|
-| Event dedupe | `event:${eventId}` | 1 hour |
+| Event dedupe | `event:${eventId}` | 1 hour (purge/expire — don't grow forever) |
 | Thread session | `thread:${channel}:${threadTs}` | 24h or product-specific |
 | Pending clarification | `pending:${channel}:${threadTs}` | 1 hour |
 | User preferences | `user_prefs:${userId}` | none / product-specific |
@@ -73,20 +83,24 @@ Every line: `service`, `component`, `level`, event/`msg`, `trace_id`,
 `slack_error`, plus `session_id`/`message_id`/`channel`/`thread_ts` when relevant.
 `warn` for rejected/soft failures, `error` for failed operations. Guard the logger
 against circular/bad data; convert `Error` → `error_message`/`error_type`/`error_stack`/`error_code`.
+**Log every non-default path** (deterministic/canned answer, model skipped,
+provider fallback) so silent degradation is greppable, not a mystery.
 
 ## Scopes: least privilege, graceful degradation
 
 | Capability | Scope(s) |
 |---|---|
-| Post / update / threads | `chat:write` |
+| Post / update / threads / streaming | `chat:write` |
 | Reactions | `reactions:write` |
 | Thread context | `*:history` (`channels`/`groups`/`im`/`mpim`) |
 | Channel topic | `channels:read` / `groups:read` |
 | Composer status | `chat:write` (+ enable Agents & AI Apps) |
-| Mentions / DMs / monitored threads | `app_mentions:read`, `message.im`, `message.channels`/`groups`/`mpim` |
+| Suggested prompts / thread titles (L4) | `assistant:write` (+ enable Agents & AI Apps) |
+| Modals (edit-before-apply) | `commands` / interactivity (no extra scope) |
 | App Home | `views.publish` (App Home tab enabled) |
+| Mentions / DMs / monitored threads | `app_mentions:read`, `message.im`, `message.channels`/`groups`/`mpim` |
 
-Missing scope ⇒ less context / fewer acks, not a crash.
+Missing scope ⇒ less context / fewer acks / message fallback, not a crash.
 
 ## Setup
 
@@ -100,7 +114,8 @@ a signed `url_verification` request.
 - [ ] Verify signatures on every Slack-facing route; enforce the replay window; parse only after.
 - [ ] Dedupe `event_id`; ignore bot messages.
 - [ ] Never log tokens, signing/callback secrets, or raw Authorization headers.
-- [ ] Validate all Block Kit action values against a server-side allowlist.
+- [ ] Never echo raw internal/provider error text to a channel — sanitize + include `trace_id`.
+- [ ] Validate all Block Kit action / view-submission values against a server-side allowlist.
 - [ ] Sign internal callbacks; validate shape before processing.
 - [ ] Keep bot tokens server-side only; scope OAuth tightly.
 - [ ] Treat Slack user/channel IDs as identifiers, not authorization — re-check access for sensitive actions.
@@ -110,10 +125,11 @@ a signed `url_verification` request.
 - [ ] URL verification; valid signed event; invalid signature; stale timestamp.
 - [ ] Retry dedupe with the same `event_id`; bot-message loop prevention.
 - [ ] Fresh mention; thread follow-up; ambiguous request → clarification.
-- [ ] Block Kit select with valid and invalid option.
+- [ ] Block Kit select + modal submission with valid and invalid option.
 - [ ] App Home render + preference persistence.
 - [ ] Completion callback signature validation.
 - [ ] Slack `{ ok:false, error }` handling; `429` backoff.
+- [ ] Native streaming start/append/stop; fallback when the Agents feature is disabled.
 - [ ] Slow backend: Slack still gets the immediate ack.
 
 ## Anti-patterns
@@ -122,9 +138,10 @@ a signed `url_verification` request.
 - ❌ Per-callsite rate-limit logic instead of one centralized wrapper.
 - ❌ Processing a signed callback with the wrong shape.
 - ❌ Trusting a stored preference without re-validating against the allowlist.
+- ❌ Leaking raw backend/provider error text into the channel instead of a sanitized message + `trace_id`.
 
 ## Graduate when…
 
 A slow job acks instantly and completes via a signed callback; Slack `429`/`5xx`
-are handled centrally; the security + testing checklists pass; and missing scopes
-degrade silently.
+are handled centrally; user-facing errors are sanitized with a trace id; the
+security + testing checklists pass; and missing scopes degrade silently.

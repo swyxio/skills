@@ -94,7 +94,7 @@ async function slack(method: string, body: object, env): Promise<{ ok: boolean; 
   return json;
 }
 ```
-(Centralized backoff/retry comes at L4 — keep one wrapper so you fix it once.)
+(Centralized backoff/retry comes at L5 — keep one wrapper so you fix it once.)
 
 ## Baseline observability
 

@@ -9,10 +9,11 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **Human-in-the-loop approvals** — drafts as Block Kit, applied only on click.
 - [ ] **Buttons resolve in place** (`chat.update`) so they can't be actioned twice.
 - [ ] **Dry-run validation** before presenting drafts.
+- [ ] **Rich, actionable drafts** — render computed evidence/artifacts, bulk + edit-before-apply, deep links.
 - [ ] **Slash commands** for one-shot invocations.
 - [ ] **Routing / clarification ladder** for ambiguous targets.
-- [ ] **Live status streaming** of agent steps into the composer.
-- [ ] **Monitored-thread decision** — reply to non-mentions only when addressed.
+- [ ] **Live status streaming** of agent steps into the composer (native version → L4).
+- [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
 
 ## Mutations require a human
 
@@ -28,7 +29,7 @@ as one Block Kit card per change with an `actions` block keyed to the proposal i
 ```
 
 Approve routes through the **exact same** operation + audit + version path as your
-web app. Attribute Slack-initiated changes to a **service user** (see L4).
+web app. Attribute Slack-initiated changes to a **service user** (see L5).
 
 ## Buttons resolve in place
 
@@ -43,6 +44,26 @@ const blocks = original.blocks.map(b =>
     : b);
 await slack("chat.update", { channel, ts, text, blocks }, env);
 ```
+
+## Rich, actionable drafts
+
+A draft card should show **what the agent computed**, not just prose, and make the
+next action one click:
+
+- **Surface evidence + artifacts.** If your core computed conflicts, metrics, or a
+  placement plan, render them as compact blocks — don't return them in the payload
+  and then drop them on the Slack surface. (Showing the real numbers is the right
+  fix; *bypassing* the model to hand-compute a canned summary is not — see the
+  classifier war story below.)
+- **Bulk actions.** For multi-draft sets add **Approve all / Reject all** alongside
+  per-card buttons; your cumulative dry-run already sequenced them safely.
+- **Edit before apply.** A third button opens a modal (`views.open`) pre-filled with
+  the patch fields (title, owner, target via `static_select` of valid options); on
+  `view_submission`, apply the **edited** patch through the same canonical path
+  (the apply function should already accept a patch override). Removes the
+  "placeholder → go fix it in the web app" round-trip.
+- **Deep links.** Add an "Open in <app>" link/button to the durable web surface for
+  each draft/target — Slack triggers, the web app is the system of record.
 
 ## Dry-run validation before presenting
 
@@ -76,11 +97,36 @@ Persist pending clarification in the store with a short TTL; on selection,
 await kv.put(`pending:${channel}:${threadKey}`, JSON.stringify({ message, userId, context }), { expirationTtl: 3600 });
 ```
 
+### Classifier input hygiene — route on the request, not the context
+
+Every router above (deterministic keyword match, LLM classifier, any fast-path
+that picks a canned answer) must inspect **only the user's raw request**. Never
+the channel topic, thread history, or session memory you prepend for grounding.
+Keep context a separate argument all the way down — not just at the API boundary.
+
+> **War story (real, shipped to prod).** A scheduling bot had a keyword fast path:
+> `/\b(how many|count|open slots?|conflicts?|metrics?)\b/` → return a deterministic
+> computed summary instead of calling the model. Separately, L2 context prepended
+> the channel topic + thread history onto the message *inside* the core, and the
+> classifier ran on that combined string. The channel topic contained the word
+> "conflicts". Result: **every single prompt** matched the fast path and returned
+> the identical canned summary, ignoring whatever the user actually typed. It
+> looked like the model was broken; the model was never called. Two compounding
+> mistakes: (1) the classifier saw context it should never have seen, and (2) the
+> bypass was **silent** — no log said "answered deterministically", so it took a
+> code trace to find. Fixes: classify on the raw request only, pass `contextNote`
+> as its own field through to the prompt builder, log every non-model path, and
+> prefer letting the model answer (grounded by deterministic reports it can look
+> up) rather than keyword-guessing intent. Reserve any no-model fast path for
+> **explicit command syntax** (e.g. `set field X to Y`), which can't misfire.
+
 ## Live status streaming
 
 If your core streams steps (`turn`, `tool_call`, …), map them to `setStatus`
 updates ("is checking the Agents track…", "is scanning for conflicts…"). De-dupe
-so you don't call `setStatus` on every token.
+so you don't call `setStatus` on every token. (The composer-status version is the
+L3 baseline; **L4 upgrades the *same* event stream** to native `chat.*Stream`
+chunks — a typed answer + a live tool-call timeline in the message itself.)
 
 ```ts
 let last = "";
@@ -100,11 +146,16 @@ A plain reply (no @mention) in a thread the bot is already in is ambiguous:
    reply **quietly** (threaded answer, no reaction/status). When in doubt, stay out.
    Fall back to a conservative heuristic if no model key.
 
+**Cost control:** run the cheap heuristic *first* and only escalate to the model
+call when it's genuinely ambiguous — otherwise you pay for a classifier call on
+every message in every thread the bot has ever touched. Optionally cache a
+per-thread "engaged" flag so a busy thread isn't re-classified on each reply.
+
 ## Slash commands
 
 Ack with an ephemeral "working on it…", then post the answer to `response_url`
 (`response_type: in_channel`). One-shot, no thread — skip session continuity but
-still record observability (L4) and support per-request flags (e.g. `--history`).
+still record observability (L5) and support per-request flags (e.g. `--history`).
 
 ## Anti-patterns
 
@@ -115,6 +166,11 @@ still record observability (L4) and support per-request flags (e.g. `--history`)
 - ❌ Replying to every thread message → the bot becomes a nuisance.
 - ❌ `setStatus` on every streamed token → rate-limit churn.
 - ❌ Forgetting to re-validate a selected target before acting on it.
+- ❌ Running an intent classifier / fast-path router over the **context-augmented** message instead of the raw request — a stray keyword in a channel topic then reroutes every prompt.
+- ❌ Keyword-guessing intent to short-circuit the model, when the model could answer better grounded on the same deterministic data. Reserve no-model paths for explicit command syntax + a true fallback.
+- ❌ Silently taking a non-model / canned-answer path with no log — undebuggable when it misfires.
+- ❌ Computing evidence/artifacts in the core and then rendering only the prose answer on Slack — show the conflicts/metrics/plan you already have.
+- ❌ A model classifier call on *every* monitored-thread message when a cheap heuristic would filter most of them first.
 
 ## Graduate when…
 

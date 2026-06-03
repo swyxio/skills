@@ -1,10 +1,10 @@
-# L5 — Multi-surface / scale (polished platform)
+# L6 — Multi-surface / scale (polished platform)
 
 **Goal:** the bot is one surface of a product, not a standalone script. The same
 core powers web + Slack + cron + future bots; it runs across many workspaces and
 handles load gracefully.
 
-Reach for L5 only when the product need is real. Most bots are great at L4.
+Reach for L6 only when the product need is real. Most bots are great at L5.
 
 ## Checklist
 
@@ -13,6 +13,7 @@ Reach for L5 only when the product need is real. Most bots are great at L4.
 - [ ] **Queues + backpressure** for heavy/bursty work; no unbounded fan-out.
 - [ ] **Target/config caching** with short TTLs and stale-delete-on-failure.
 - [ ] **Usage analytics store** (PostHog-free option: your own table).
+- [ ] **Answer-quality feedback** captured per run.
 - [ ] **Break-glass / degraded config** that's actually implemented.
 
 ## One core, many surfaces
@@ -27,8 +28,9 @@ core: runBotQuery(input, { emit })   ← plan, validate, persist, audit, log
 web /api      slack /events    cron / scheduled
 ```
 
-`emit` is the seam: web streams it over SSE, Slack maps it to `setStatus`, cron
-ignores it. Adding a surface = a new adapter, never new business logic.
+`emit` is the seam: web streams it over SSE, Slack maps it to `setStatus` (L2) or
+native `chat.*Stream` chunks (L4), cron ignores it. Adding a surface — or a new
+Slack surface — = a new adapter over the same events, never new business logic.
 
 ## Multi-workspace / tenancy
 
@@ -53,12 +55,14 @@ and refetch. Don't hammer the control plane on every event.
 | Dynamic target cache | `targets:cache` (or per-tenant) | 1–5 minutes |
 | Workspace tokens | `team:${teamId}:auth` | until revoked |
 
-## Usage analytics
+## Usage analytics + feedback
 
 Log one row per run to your own store (surface, provider/model, turns, tool calls,
 proposals, drops, latency, outcome) — queryable usage/latency/failure analytics
-without a third-party dependency. All writes best-effort so analytics never break a
-reply.
+without a third-party dependency. Add a **lightweight feedback signal** per answer
+— a 👍/👎 reaction handler or Block Kit buttons recorded against the run id — so
+you can track answer quality and which prompts/tools actually help. All writes
+best-effort so analytics never break a reply.
 
 ## Break-glass / degraded config
 
@@ -79,4 +83,5 @@ not in production.
 
 A new surface ships by writing only an adapter; the bot runs in multiple
 workspaces with isolated state and tokens; heavy work flows through a bounded
-queue; and you can answer "how is the bot being used?" from your own analytics.
+queue; and you can answer "how is the bot being used, and are the answers good?"
+from your own analytics.
