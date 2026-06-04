@@ -249,6 +249,43 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 
 ---
 
+## 10. Client request queuing
+
+### 10.1 Send while active — FIFO wait
+
+- **Setup:** Long-running turn (multistep lookups + streaming answer).
+- **Action:** User sends second message before first completes.
+- **UI:** First shows `writing` + elapsed + tool lines; second shows `queued` (no timer); composer cleared and accepts more input.
+- **Network:** Second `streamAi` starts only after first settles.
+
+### 10.2 Remove queued job
+
+- **Action:** Click **Remove** on queued pending.
+- **Expect:** Job removed from queue; user + pending bubbles for that id gone; never hits API.
+
+### 10.3 Stop active job
+
+- **Action:** Click **Stop** during streaming.
+- **Expect:** Abort; message restored to composer (unless silent abort); queue continues with next job if any.
+
+### 10.4 Session ordering
+
+- **Setup:** Turn 1 compound draft still streaming.
+- **Action:** Turn 2 queued then runs: "does speaker X have a session here?"
+- **Expect:** Turn 2 planner session context includes turn 1 only **after** turn 1 `recordSessionTurn`; turn 2 must not claim turn 1 drafts were applied unless outcomes say APPLIED.
+
+### 10.5 Edit drains queue
+
+- **Action:** Edit an earlier user message while one active + one queued.
+- **Expect:** Queue cleared; active aborted; history truncated; composer filled.
+
+### 10.6 proposals global state
+
+- **Setup:** Turn 1 completes with drafts; turn 2 starts (read-only question).
+- **Expect:** `proposals` from turn 1 remain visible until turn 2 returns new proposals (product choice — document); applying turn 1 drafts during queued turn 2 triggers version-stale path (§3).
+
+---
+
 ## Regression suite mapping (Vitest-style)
 
 | Test name | Covers |
@@ -271,3 +308,4 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 4. Open second tab; edit there; return to first — banner appears; Apply shows conflict message.
 5. Reload schedule — Apply succeeds.
 6. Compound: *"in [track], remove X and Y, add"* + JSON — expect 3+ draft cards, numbered answer, CFP fields on new talk.
+7. While (6) runs, send a second question — see `queued`, then an answer after the first turn finishes; Remove cancels the wait.

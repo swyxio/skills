@@ -141,6 +141,44 @@ When the validator drops proposals, one retry prompt listing **per-proposal reas
 
 ## UX
 
+### Request queuing (long agent loops)
+
+Compound / lookup-heavy turns can run **minutes**. The composer must stay usable — queue follow-ups instead of blocking send.
+
+**Client queue (FIFO, one in-flight):**
+
+| State | UI | User action |
+|-------|-----|-------------|
+| **queued** | `aiebot is queued…` (no elapsed timer) | **Remove** — drop from queue, delete pending bubble |
+| **active** | `thinking` / `writing` + elapsed; tool lines (`looked up assignment: …`) | **Stop** — abort stream; restore message to composer |
+| **done** | Assistant bubble + draft cards | — |
+
+**On send (always):**
+
+1. Append **user** bubble + **pending** placeholder immediately (`queued: true`).
+2. Clear composer — do not wait for the network.
+3. Push job onto `queueRef`; `processQueue` runs one job at a time (`processingRef` gate).
+
+**Ordering semantics:**
+
+- Job *N+1* does not call the API until job *N* finishes (success, error, or abort). This avoids overlapping planner runs and duplicate `proposals` state stomping.
+- **Server session** gets turn *N* only after *N* completes (`recordSessionTurn`). A queued question (e.g. "does X already have a session?") is planned **without** in-flight *N* drafts/outcomes unless *N* has already landed. Do not assume the model sees work that is still streaming.
+- Optional product copy when a message is queued behind an active run: *"Queued — will run after the current reply finishes."*
+
+**Edit / clear:**
+
+- **Edit** on a user message: drain the queue, abort active (silent), truncate chat after that index, restore text to composer.
+- **Clear chat**: drain queue + abort; rotate session key if continuity should reset.
+
+**Backend:** One HTTP/stream per job is enough; no server-side queue required unless you add Slack/email workers — document where queue lives (browser vs worker).
+
+**Smells:**
+
+- Disabling send while `pending` → bad for multistep latency.
+- Dropping queued jobs on unrelated errors.
+- Starting job *N+1* in parallel → race on `proposals`, session turns, and snapshot version.
+- User applies drafts from turn *N* while *N+1* was queued with stale `expectedVersion` — pair with **version poll / stale banner** (below).
+
 ### Draft cards (per reply)
 
 - Inline **Apply** / **Ignore** on each assistant turn that emitted proposals.
@@ -200,6 +238,7 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Cross-surface** | Slack approve vs web ignore share same session semantics |
 | **Multistep compound** | User says remove 2 + add 1; bot only drafts add or claims done with 0 cards |
 | **Partial apply** | Apply 2 of 3; follow-up must not assume the third happened |
+| **Queuing** | Second send while first runs blocks or loses message; parallel API races |
 
 ## Implementation smells
 
@@ -217,7 +256,7 @@ AIEWF 2026 internal schedule (`aiewf2026-internal-schedule`):
 - `functions/_lib/aiebot.ts` — orchestration, dry-run, apply
 - `functions/_lib/aiebot-store.ts` — session + proposal outcomes
 - `functions/_lib/ai.ts` — planner prompt, validator, alias normalize
-- `src/frontend/components/AiebotPanel.tsx` — draft cards
+- `src/frontend/components/AiebotPanel.tsx` — draft cards, FIFO `queueRef` / `processQueue`, queued vs active pending UI
 - `src/frontend/scheduleSync.ts` + `ScheduleStaleToast.tsx` — version poll + banner
 
 ## Quick build checklist
