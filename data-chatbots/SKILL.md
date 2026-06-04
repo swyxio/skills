@@ -250,15 +250,19 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 - Full schedule fetch for version poll → expensive; add version-only endpoint
 - Routing user message content into deterministic vs model branch when only `contextNote` should ground
 
-## Reference implementation
+## Sample code
 
-AIEWF 2026 internal schedule (`aiewf2026-internal-schedule`):
+Portable excerpts in [samples/](./samples/) (from `swyxio/aiewf2026-internal-schedule` aiebot):
 
-- `functions/_lib/aiebot.ts` — orchestration, dry-run, apply
-- `functions/_lib/aiebot-store.ts` — session + proposal outcomes
-- `functions/_lib/ai.ts` — planner prompt, validator, alias normalize
-- `src/frontend/components/AiebotPanel.tsx` — draft cards, FIFO `queueRef` / `processQueue`, queued vs active pending UI
-- `src/frontend/scheduleSync.ts` + `ScheduleStaleToast.tsx` — version poll + banner
+| Sample | What to copy |
+|--------|----------------|
+| [orchestration-dry-run-and-query.ts](./samples/orchestration-dry-run-and-query.ts) | Plan → cumulative dry-run → persist drafts; apply path |
+| [session-memory-with-outcomes.ts](./samples/session-memory-with-outcomes.ts) | DRAFT/APPLIED/IGNORED in context; record Apply/Ignore |
+| [proposal-validate-and-normalize.ts](./samples/proposal-validate-and-normalize.ts) | Allowlist, CFP aliases, placeholder coercion |
+| [client-request-queue.ts](./samples/client-request-queue.ts) | FIFO queue, queued vs active, Stop/Remove |
+| [version-stale-ux.ts](./samples/version-stale-ux.ts) | Version poll endpoint, 409 handling, apply errors |
+
+Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/frontend/components/AiebotPanel.tsx`, `scheduleSync.ts`.
 
 ## Quick build checklist
 
