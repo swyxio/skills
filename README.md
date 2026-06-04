@@ -104,18 +104,22 @@ Click into each folder for the detailed workflow, prerequisites, and command exa
 
 ## Installing in Cursor
 
-Clone this repo, then symlink skills into `~/.cursor/skills/` (Cursor loads skills from that directory):
+Clone this repo, then point Cursor at it with **one symlink for the whole directory** (recommended):
 
 ```bash
 git clone git@github.com:swyxio/skills.git ~/Work/skills   # or any path you prefer
-mkdir -p ~/.cursor/skills
-
-# Link individual skills (repeat per skill, or link the ones you use):
-ln -sf ~/Work/skills/sync-url-navigation ~/.cursor/skills/sync-url-navigation
-ln -sf ~/Work/skills/app-ux-paradigms ~/.cursor/skills/app-ux-paradigms
-ln -sf ~/Work/skills/data-chatbots ~/.cursor/skills/data-chatbots
-ln -sf ~/Work/skills/slackbot-builder ~/.cursor/skills/slackbot-builder
-ln -sf ~/Work/skills/web-animation-perf ~/.cursor/skills/web-animation-perf
+rm -rf ~/.cursor/skills   # only if replacing an old per-skill layout
+ln -sf ~/Work/skills ~/.cursor/skills
 ```
 
-Symlinks should point at this repository (`swyxio/skills`), not copies of `SKILL.md`, so `git pull` updates what agents read. After adding a new skill here, commit it, push, and add a matching symlink locally.
+Cursor loads each skill subfolder that contains `SKILL.md`. `git pull` in `~/Work/skills` updates every skill agents see — no per-skill symlinks to add after a new commit.
+
+**Optional:** link only the skills you use (omit `rm` above; symlink into an existing `~/.cursor/skills/` folder):
+
+```bash
+ln -sf ~/Work/skills/data-chatbots ~/.cursor/skills/data-chatbots
+```
+
+Do **not** copy `SKILL.md` files into `~/.cursor/skills/`; always symlink to this repo.
+
+**Note:** Cursor’s built-in skills live separately at `~/.cursor/skills-cursor/` — leave that alone.
