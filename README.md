@@ -54,6 +54,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, fast acknowledgements, thread sessions, Block Kit interactions, App Home preferences, callbacks, and structured observability.
 - [sync-url-navigation](./sync-url-navigation) — syncs URL query params with app navigation, tabs, and filter state so views are bookmarkable and shareable (`view`, `table`, `q`, deep links, `popstate`).
 - [app-ux-paradigms](./app-ux-paradigms) — standard web UX defaults: Esc/backdrop/× for modals, ⌘/Ctrl shortcuts, form save states, tables, menus, and help text for discoverable interactions.
+- [data-chatbots](./data-chatbots) — copilots over structured data that **propose** mutations (draft → Apply), not direct writes: prompting, validator allowlists, session memory with DRAFT/APPLIED/IGNORED, version-stale UX, and test matrices.
 
 ### Media Download And Transformation
 
@@ -112,6 +113,7 @@ mkdir -p ~/.cursor/skills
 # Link individual skills (repeat per skill, or link the ones you use):
 ln -sf ~/Work/skills/sync-url-navigation ~/.cursor/skills/sync-url-navigation
 ln -sf ~/Work/skills/app-ux-paradigms ~/.cursor/skills/app-ux-paradigms
+ln -sf ~/Work/skills/data-chatbots ~/.cursor/skills/data-chatbots
 ln -sf ~/Work/skills/slackbot-builder ~/.cursor/skills/slackbot-builder
 ln -sf ~/Work/skills/web-animation-perf ~/.cursor/skills/web-animation-perf
 ```

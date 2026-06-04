@@ -1,0 +1,210 @@
+# Test cases: propose-then-apply data chatbots
+
+Use as acceptance criteria when building or reviewing a copilot. Each case should have **setup**, **action**, **expected UI**, **expected canonical state**, **expected next-turn model behavior**.
+
+---
+
+## 1. Proposal lifecycle & memory
+
+### 1.1 Draft not applied — follow-up must not assume success
+
+- **Setup:** Bot drafts "move speaker A to slot X". User does **not** click Apply.
+- **Action:** User says "create assignment from scratch, I didn't accept the last one."
+- **State:** Canonical data unchanged; proposal status `draft`.
+- **Session context must show:** prior proposal `DRAFT` or user never applied.
+- **Bot must not:** reference A as already in slot X; must not use past tense "I moved."
+
+### 1.2 Ignored draft
+
+- **Setup:** User clicks **Ignore** on a draft.
+- **Action:** Follow-up related to same entity.
+- **State:** Unchanged; proposal `ignored`.
+- **Session:** `[Human ignored draft "…"]` or outcome line `IGNORED`.
+- **Bot must:** treat prior proposal as void.
+
+### 1.3 Applied draft
+
+- **Setup:** User clicks **Apply**; version bumps.
+- **Action:** "Move them to the afternoon instead."
+- **State:** Reflects first apply; proposal `applied`.
+- **Bot may:** plan a second draft from current positions.
+
+### 1.4 New reply replaces global draft list
+
+- **Setup:** Turn 1 has draft card; Turn 2 emits new proposals (UI may replace pending list).
+- **Action:** User returns to Turn 1 card mentally — old drafts still in DB as `draft` unless ignored.
+- **Test:** Session loader still marks old sets `DRAFT` even if UI no longer shows card.
+
+### 1.5 User corrects in natural language without Ignore
+
+- **Setup:** Draft pending; user says "no don't use sponsor hold slot."
+- **Expect:** New plan respects rejection even if Ignore wasn't clicked (best-effort via message; Ignore is still the source of truth for status).
+
+---
+
+## 2. Voice & copy
+
+### 2.1 Answer tense vs UI chrome
+
+- **Assert:** While status is `draft`, answer does not claim completion.
+- **UI:** Shows "Draft" badge + Apply/Ignore.
+- **Regression:** "I moved…" + Draft badge = bug.
+
+### 2.2 Dropped proposals called out
+
+- **Setup:** Validator drops invalid proposal (bad slot, bad status).
+- **Assert:** Answer includes ⚠️ list; `proposals.length === 0` not paired with success prose.
+
+---
+
+## 3. Optimistic versioning
+
+### 3.1 Stale apply
+
+- **Setup:** Tab at vN; server advanced to vN+2 (other tab or teammate).
+- **Action:** Apply draft with `expectedVersion: N`.
+- **Expect:** 409 `version_conflict`; inline error mentions both versions; stale banner on.
+
+### 3.2 Poll detects drift
+
+- **Setup:** Load vN; externally commit vN+1.
+- **Action:** Wait for poll interval.
+- **Expect:** Banner before user clicks anything.
+
+### 3.3 Reload schedule clears stale
+
+- **Action:** Click "Reload schedule".
+- **Expect:** Snapshot vM; banner gone; apply uses vM.
+
+### 3.4 Uncaught promise regression
+
+- **Action:** Apply while stale without handling.
+- **Expect:** No silent failure — error on card or toast.
+
+---
+
+## 4. Patch validation & field mapping
+
+### 4.1 Allowlist — field survives validation
+
+- **Setup:** Proposal patch includes domain field F (e.g. foreign key).
+- **Assert:** After validate + dry-run, patch still contains F; after apply, entity has F.
+
+### 4.2 Allowlist — unsupported key dropped
+
+- **Setup:** Model puts `slotId` inside `assignment_create` patch.
+- **Expect:** Stripped or coerced; not "success" with wrong target.
+
+### 4.3 Alias normalization
+
+- **Setup:** User/patch uses `proposal_id`, `source_row_hash`.
+- **Expect:** Stored as canonical `cfpProposalId`, `cfpSourceRowHash`.
+
+### 4.4 Edit patch JSON then apply
+
+- **Setup:** User edits draft JSON (title, slot ref).
+- **Expect:** Applied operation uses edited patch, not original only.
+
+---
+
+## 5. Scheduling-specific (adapt to your domain)
+
+### 5.1 Open slot vs placeholder holder
+
+- **Setup:** Slot has generic "Keynote" row, no real speaker.
+- **Expect:** `assignment` update on `assignmentId`, not `assignment_create` on occupied slot.
+
+### 5.2 Truly open slot
+
+- **Expect:** `assignment_create` with `targetId = slot_*`.
+
+### 5.3 Occupied slot
+
+- **Expect:** Draft dropped or conflict flagged; no overbook.
+
+### 5.4 Swap / rotate
+
+- **Swap:** Two slotted assignments exchange slots atomically.
+- **Rotate:** 3+ cycle; invalid if any talk unslotted.
+
+### 5.5 Speaker not in catalog
+
+- **Expect:** Placement draft + `speaker_create` (explicit or synthesized).
+
+---
+
+## 6. Agent loop & tools
+
+### 6.1 need_more then final
+
+- **Assert:** Lookups resolve; final turn has `lookups: []` and proposals or explicit read-only answer.
+
+### 6.2 Metrics not guessed
+
+- **Ask:** "How many open slots?"
+- **Assert:** Number matches deterministic report or lookup, not hallucinated.
+
+### 6.3 Web search / enrichment
+
+- **Setup:** User gives company URL only.
+- **Expect:** Search enriches speaker profile; company URL in notes, not wrong twitter.
+
+---
+
+## 7. Multi-surface & audit
+
+### 7.1 Web Apply creates operation + audit
+
+- **Assert:** `operations` row; `audit_events`; version increment.
+
+### 7.2 Slack approve same proposal id
+
+- **Assert:** Same `applyProposalById` path as web.
+
+### 7.3 Session key resolution without client passing key
+
+- **Setup:** Apply from API without `sessionKey`.
+- **Expect:** Resolve session via `proposal_set_id` on assistant message.
+
+---
+
+## 8. Edge UX
+
+### 8.1 Concurrent drafts in one turn
+
+- **Setup:** Speaker create + assignment create.
+- **Apply:** One succeeds, one fails version — partial state documented.
+
+### 8.2 Long session truncation
+
+- **Setup:** >N turns.
+- **Expect:** Recent turns + outcomes still include last proposal states.
+
+### 8.3 Provider error vs apply error
+
+- **Chat stream fails:** Show in chat, no draft cards.
+- **Apply fails:** Draft card error, chat unchanged.
+
+---
+
+## Regression suite mapping (Vitest-style)
+
+| Test name | Covers |
+|-----------|--------|
+| `formatProposalStatusLines` | 1.x session labels |
+| `validateAiDraftResult` open slot | 5.2 |
+| `validateAiDraftResult` occupied | 5.3 |
+| `validateAiDraftResult` CFP aliases | 4.3 |
+| `dryRunProposals` cumulative | 8.1 |
+| `coercePlaceholderCreate` | 5.1 |
+| E2E manual | 3.x, 1.1, 2.1 |
+
+---
+
+## Manual QA script (5 minutes)
+
+1. Draft a move; **do not** Apply — ask "did it move?" → must say no / still draft.
+2. Ignore draft — ask to redo → must start fresh.
+3. Apply draft — confirm grid + CFP fields if provided in prompt.
+4. Open second tab; edit there; return to first — banner appears; Apply shows conflict message.
+5. Reload schedule — Apply succeeds.
