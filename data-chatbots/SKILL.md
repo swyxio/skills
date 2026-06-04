@@ -3,8 +3,9 @@ name: data-chatbots
 description: >-
   Design and implement AI copilots that analyze structured data and propose
   mutations for human approval (draft → apply), not direct writes. Covers
-  prompting, multistep compound requests (remove + add in one turn), validation,
-  session memory, optimistic versioning UX, and test matrices. Use when building
+  prompting, multistep compound requests (remove + add in one turn), FIFO client
+  queuing for long agent loops, validation, session memory, optimistic versioning
+  UX, and test matrices. Use when building
   scheduling/admin chatbots, proposal workflows, human-in-the-loop agents, or
   reviewing aiebot-style features.
 ---
@@ -275,4 +276,5 @@ AIEWF 2026 internal schedule (`aiewf2026-internal-schedule`):
 [ ] Move-into-occupied dry-run + swap/fill-holder guidance in prompt
 [ ] Compound remove+add decomposes to N proposals; cumulative dry-run respects order
 [ ] Track/speaker/company lookups before final; JSON blob fields land on patch
+[ ] Send while busy queues (FIFO); Remove vs Stop; session turn after prior job completes
 ```
