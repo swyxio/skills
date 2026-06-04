@@ -131,6 +131,25 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 
 - **Expect:** Placement draft + `speaker_create` (explicit or synthesized).
 
+### 5.6 `open_slot` lookup misses placeholder the user calls “open”
+
+- **Setup:** Main Stage keynote at 5:10 PM has seed holder `Keynote`, `speakers: []` (shows empty in grid).
+- **Action:** Model runs lookup `open_slot` with query `"July 1 Main Stage 5:10pm"`.
+- **Expect:** Empty or wrong results if lookup only scans `openSlots`; **must** use `placeableSlotsByDayRoom` (placeholder sample with `assignmentId`) or extended lookup.
+- **Follow-up:** User says “put Tomasz there” — draft uses `assignment` update on holder id, not `assignment_create` / not move with `slotId` only.
+
+### 5.7 Move into occupied slot (real booking vs placeholder)
+
+- **Setup A:** Target slot has **real** talk (named speaker). User: “move A to that slot.”
+- **Expect:** Dry-run drop `slot_occupied` + answer offers **swap** or alternate slot; no silent draft.
+- **Setup B:** Target has **placeholder** holder; A is already slotted elsewhere.
+- **Expect:** Not a single `{ slotId }` move onto that slot id — use fill-holder + clear source, or swap; dry-run must not pass naive overbook.
+
+### 5.8 Keynote window — earliest sample vs user-named time
+
+- **Setup:** Day has keynote slots 4:30, 4:50, 5:10; user says “closing keynote at 5:10.”
+- **Expect:** Proposal targets **5:10** slot/holder, not earliest placeable (4:30) unless user said “first available in the block.”
+
 ---
 
 ## 6. Agent loop & tools
@@ -187,6 +206,49 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 
 ---
 
+## 9. Multistep compound requests (one message)
+
+### 9.1 Track-scoped remove two + add one (JSON blob)
+
+- **Setup:** Inference track has talks for "Perplexity" (sponsor/company) and "Denis Yarats"; an 11a placeable slot exists.
+- **Action:** *"In Inference track, remove Perplexity's talk and Denis Yarats, and add"* + JSON with `proposal_id`, `speaker`, `session`, `description`.
+- **Expect proposals (≥3):**
+  1. Cancel/unschedule Perplexity talk (`asn_*` from lookup)
+  2. Cancel/unschedule Denis Yarats talk
+  3. Place new talk (create or placeholder fill) with title/abstract/speakers + CFP ids from JSON
+  4. Optional `speaker_create` for new speaker
+- **Expect answer:** Numbered list matching cards; names resolved track; chosen slot/time stated; "drafted" not "removed and added."
+- **Dry-run:** All `kept` when ordered cancels-before-create.
+
+### 9.2 Lookup turn before proposals
+
+- **Setup:** User gives only names, no ids.
+- **Action:** Compound remove+add.
+- **Expect:** At least one `need_more` with `assignment`/`track` lookups; `final` has ids, not "I couldn't find ids."
+
+### 9.3 Partial apply of bundle
+
+- **Setup:** 3 drafts from 9.1; user Applies cancels only, ignores add.
+- **Action:** Follow-up "put Lin Qiao in that slot."
+- **Expect:** Session shows 2× APPLIED, 1× IGNORED/DRAFT; bot does not claim Lin is already scheduled.
+
+### 9.4 Company/sponsor removal phrasing
+
+- **Setup:** Talk listed with sponsor Perplexity, speaker may differ.
+- **Action:** "Remove Perplexity's talk."
+- **Expect:** Resolves correct assignment via sponsor/title, not random "Perplexity" speaker string match.
+
+### 9.5 JSON-only fields not stripped
+
+- **Setup:** Patch includes `proposal_id` / alias keys from pasted JSON.
+- **Assert:** Survives validator; present on entity after apply (see §4.3).
+
+### 9.6 No single mega-proposal
+
+- **Assert:** Never one proposal patching two unrelated `asn_*` ids or mixing cancel+create in one illegal patch shape.
+
+---
+
 ## Regression suite mapping (Vitest-style)
 
 | Test name | Covers |
@@ -197,7 +259,7 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 | `validateAiDraftResult` CFP aliases | 4.3 |
 | `dryRunProposals` cumulative | 8.1 |
 | `coercePlaceholderCreate` | 5.1 |
-| E2E manual | 3.x, 1.1, 2.1 |
+| E2E manual | 3.x, 1.1, 2.1, 9.1 |
 
 ---
 
@@ -208,3 +270,4 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 3. Apply draft — confirm grid + CFP fields if provided in prompt.
 4. Open second tab; edit there; return to first — banner appears; Apply shows conflict message.
 5. Reload schedule — Apply succeeds.
+6. Compound: *"in [track], remove X and Y, add"* + JSON — expect 3+ draft cards, numbered answer, CFP fields on new talk.
