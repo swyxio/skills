@@ -180,7 +180,7 @@ Slack has no model dropdown and no “History access” checkbox. Users need **e
 | `!help` | “What can aiebot do?” examples panel |
 | Selected grid slot context | Autofill composer with slot/assignment ids |
 
-**Model slugs** live in one registry (`AI_MODEL_OPTIONS`) shared by frontend + backend. Document every slug in `!help`. Typical defaults: fast mini for Q&A; `openai-gpt-5.4-high` for `!audit` unless `!model` wins.
+**Model slugs** live in one registry (`AI_MODEL_OPTIONS`) shared by frontend + backend. Document every slug in `!help`. Typical defaults: fast mini for Q&A; a **mid reasoning tier** (e.g. `…-medium`) for `!audit` unless `!model` wins — **not** the slowest/highest tier (see *Super-long audit requests* below for why high reasoning got the audit path silently killed).
 
 **Best practices:**
 
@@ -190,6 +190,31 @@ Slack has no model dropdown and no “History access” checkbox. Users need **e
 - Log chosen model slug + `historyAccess` on each run for debugging “why was this dumb?”
 
 Reference: `functions/_lib/slack-flags.ts`, `functions/_lib/slack.ts` (`buildHelpBlocks`), `src/domain/aiModels.ts`. See [slackbot-builder](../slackbot-builder/level-3-interactive.md) § inline flags.
+
+### Super-long audit requests (serverless execution budget) — production lesson
+
+Audit/history is the **slowest path you have**: opt-in history prefetch + token-heavy context + (tempting) the strongest model + a multi-turn agent loop. On a serverless background task (Cloudflare Pages `waitUntil`, Lambda, etc.) there is a finite execution budget. A run that exceeds it is **killed mid-flight**: no reply, no error reaction, and **no telemetry row** — the user sees only the ack (e.g. the 👀 reaction) forever. This is worse than an error because it looks like the bot ignored them.
+
+**Two compounding causes (both real, seen in prod):**
+
+1. **Slowest model + high reasoning + many turns** simply runs 1–2 min. The audit answer is mostly *summarizing already-prefetched events* — it does **not** need max reasoning.
+2. **Provider HTTP calls with no timeout** hang indefinitely on a stalled response. Across several turns this blows any budget and the platform reaps the whole task.
+
+**Diagnose with the run-log table, not just logs.** A killed run writes **nothing** (the `success` insert is never reached; the `error` insert only fires on *caught* throws). So:
+- A gap between "request accepted" events and recorded `*_runs` rows = silent kills.
+- `GROUP BY model, outcome` with `MIN/MAX(duration_ms)`: the slow model shows huge max durations and the killed attempts are simply absent. (In prod: audit on the high tier ran 19–132s and the reaped ones recorded 0 rows; the same path on a mini/medium tier finished in 2–5s.)
+
+**Fixes (cheap, no new infra — do these first):**
+
+- **Hard timeout on EVERY provider call** via `AbortController` (covers the request *and* the streaming body read; clear the timer in `finally`). A stall now throws → the per-provider `try/catch` degrades gracefully (deterministic fallback + provider note, or a posted error) instead of hanging. This alone guarantees the ack surface always resolves to a reply or ❌.
+- **Lower the audit default model** to a mid reasoning tier. Capable enough to summarize prefetched history; fast enough to finish in budget.
+- **Cap audit turns** — with a history prefetch, turn 1 can usually answer.
+- **Always emit the terminal state in `finally`** (swap 👀→✅/❌, close the stream), never only on the success branch — so even an unexpected throw flips the ack off "working".
+- **Record provider + model + turns + duration + outcome per run** so silent kills are detectable as *missing* rows.
+
+**When the work genuinely needs minutes** (deep multi-turn audit reasoning that must never drop): move it **off the request path** into a durable runner — Cloudflare **Workflows** (durable steps, per-step retries, unlimited wall time), a queue, or a DO alarm. Pattern: ack instantly → kick off a durable instance → post the result back when done. Do **not** rely on `waitUntil` for multi-minute work. Caveat: durability ≠ speed — a Workflow that runs 2 min is reliable but the user still waits 2 min, so prefer making the path *fast* (timeout + faster model) before reaching for durable execution.
+
+Reference: `functions/_lib/ai.ts` (`providerCallTimeout`, per-provider `try/catch` fallback), `src/domain/aiModels.ts` (`AUDIT_AI_MODEL_SLUG`), `aiebot_runs` telemetry in `aiebot-store.ts`.
 
 ## UX
 
@@ -298,6 +323,7 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Slack `!help`** | User gets guide without planner call; empty mention works |
 | **Slack `!model`** | Invalid slug ignored; valid slug reflected in footer metadata |
 | **Slack `!audit`** | Prefetch present in prompt; answer summarizes events, no “I will check…” |
+| **Provider timeout** | Stalled model call hangs the background task → ack stuck on 👀, no reply, no run row |
 | **Audit exclude self** | “not by me” excludes requester; `!mine` includes only requester |
 | **Multistep compound** | User says remove 2 + add 1; bot only drafts add or claims done with 0 cards |
 | **Partial apply** | Apply 2 of 3; follow-up must not assume the third happened |
@@ -346,4 +372,8 @@ Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/fr
 [ ] Queued turn does not replace prior proposals — merge catalog; Pending/Applied/Ignored badges persist per turn
 [ ] Slack: parse/strip !help !model !audit flags; !help bypasses planner; model registry in help blocks
 [ ] Audit: prefetch history + audit default model; exclude/actor prefixes on lookups
+[ ] Hard timeout (AbortController) on every provider call incl. stream read; degrades to fallback/error
+[ ] Audit default = mid reasoning tier (not slowest); audit turns capped
+[ ] Ack surface resolves to reply/✅/❌ in finally — never stuck on the working reaction
+[ ] Per-run telemetry (model/turns/duration/outcome) so silent kills show as missing rows
 ```

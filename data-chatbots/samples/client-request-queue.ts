@@ -31,7 +31,11 @@ async function processQueue(): Promise<void> {
     await streamPlanner(job.prompt, { signal: abortController.signal }, {
       onToolCall: (kind, query) => appendTool(job.id, kind, query),
       onAnswerDelta: (text) => appendAnswer(job.id, text),
-      onResult: (result) => replaceWithAssistant(job.id, result)
+      onResult: (result) => {
+        replaceWithAssistant(job.id, result);
+        // Merge — never replace — so turn N drafts stay reviewable while N+1 runs.
+        proposalsCatalog = mergeProposals(proposalsCatalog, result.proposals);
+      }
     });
   } catch (error) {
     if (abortController.signal.aborted) {
@@ -102,3 +106,5 @@ declare function findActivePending(): { id: string } | undefined;
 declare function abortSilently(id: string): void;
 declare function truncateChatAfter(index: number): void;
 declare function getUserText(index: number): string;
+declare let proposalsCatalog: Array<{ id: string; status: string }>;
+declare function mergeProposals<T extends { id: string }>(existing: T[], incoming: T[]): T[];
