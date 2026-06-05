@@ -207,6 +207,8 @@ Audit/history is the **slowest path you have**: opt-in history prefetch + token-
 **Fixes (cheap, no new infra — do these first):**
 
 - **Hard timeout on EVERY provider call** via `AbortController` (covers the request *and* the streaming body read; clear the timer in `finally`). A stall now throws → the per-provider `try/catch` degrades gracefully (deterministic fallback + provider note, or a posted error) instead of hanging. This alone guarantees the ack surface always resolves to a reply or ❌.
+  - **Streaming calls need an IDLE timeout, not a total-duration cap** (regression learned the hard way). A flat "abort after 120s total" **kills a long-but-healthy answer mid-stream** — a compound request (e.g. place 5 talks at once) legitimately streams for minutes, and the user sees `provider call exceeded 120000ms timeout` right when it was almost done. Instead, **reset the abort timer on every byte of activity** and only abort after a genuine stall (no data for the window). Feed an `onActivity` callback through the SSE reader (fires per network chunk, incl. keepalives during reasoning), and `reset()` the timer there. Net: actively-progressing streams run as long as they need; truly hung streams still fall back. Keep the **total** cap only for **non-streaming** one-shot calls (lookup turns, summaries) where "too long" really does mean "hung". Workers/Pages don't bill awaited I/O as CPU, so a multi-minute *active* stream is fine; an *idle* one is the real risk.
+  - Log when the **idle** abort actually fires (`console.warn` with provider + ms) so a real hang is distinguishable from a slow-but-fine response.
 - **Lower the audit default model** to a mid reasoning tier. Capable enough to summarize prefetched history; fast enough to finish in budget.
 - **Cap audit turns** — with a history prefetch, turn 1 can usually answer.
 - **Always emit the terminal state in `finally`** (swap 👀→✅/❌, close the stream), never only on the success branch — so even an unexpected throw flips the ack off "working".
@@ -214,7 +216,7 @@ Audit/history is the **slowest path you have**: opt-in history prefetch + token-
 
 **When the work genuinely needs minutes** (deep multi-turn audit reasoning that must never drop): move it **off the request path** into a durable runner — Cloudflare **Workflows** (durable steps, per-step retries, unlimited wall time), a queue, or a DO alarm. Pattern: ack instantly → kick off a durable instance → post the result back when done. Do **not** rely on `waitUntil` for multi-minute work. Caveat: durability ≠ speed — a Workflow that runs 2 min is reliable but the user still waits 2 min, so prefer making the path *fast* (timeout + faster model) before reaching for durable execution.
 
-Reference: `functions/_lib/ai.ts` (`providerCallTimeout`, per-provider `try/catch` fallback), `src/domain/aiModels.ts` (`AUDIT_AI_MODEL_SLUG`), `aiebot_runs` telemetry in `aiebot-store.ts`.
+Reference: `functions/_lib/ai.ts` (`providerCallTimeout` with `reset()`, `STREAM_IDLE_TIMEOUT_MS` vs `PROVIDER_CALL_TIMEOUT_MS`, `readSse(…, onActivity)`, per-provider `try/catch` fallback), `src/domain/aiModels.ts` (`AUDIT_AI_MODEL_SLUG`), `aiebot_runs` telemetry in `aiebot-store.ts`.
 
 ## UX
 
@@ -270,6 +272,31 @@ Compound / lookup-heavy turns can run **minutes**. The composer must stay usable
 - Global `proposals` signal = **merged catalog** (`mergeProposals` on each result); `setProposalStatus` syncs catalog + every assistant turn that owns that `prop_*` id.
 - Read-only queued questions must not wipe turn *N* drafts — only **merge** new `prop_*` ids from turn *N+1*.
 
+### Bulk review / mass-approve (many drafts in one turn)
+
+A multistep request ("create speaker + draft talk" per person across a roster) routinely emits **8–14 drafts in one reply**. A vertical stack of full Apply/Ignore cards forces N scrolls + N clicks. Collapse to a **table** the moment a turn has >1 draft:
+
+| Element | Behavior |
+|---------|----------|
+| **Row** | One line per proposal: `[checkbox] summary … [status badge] [▸]` — dense, truncated summary |
+| **Checkbox** | Drafts **default checked** (= will apply); unchecking just excludes from the batch (stays `draft`, not ignored) |
+| **Header** | `N/M selected to apply` + select-all toggle |
+| **Expand (▸)** | Click row/caret → reveals `targetType:targetId`, evidence, editable patch JSON, per-row **Apply just this** / **Ignore** |
+| **Footer** | One **`Apply N selected`** button — the mass-approve |
+| **Resolved rows** | `applied`/`ignored` show badge only, no checkbox; header flips to `N changes resolved` once no drafts remain |
+
+**Bulk apply must chain the version, not fan out.** Each apply bumps `expectedVersion`; firing all N with the same starting version makes apply #2..N throw `version_conflict`. So:
+
+- Apply **sequentially**, feeding each apply's returned `result.version` into the next (`version = applied.result?.version ?? version + 1`).
+- Refresh the snapshot **once at the end**, not between every apply (avoids N grid flashes / N snapshot refetches).
+- On a per-row error: record it on that row, `refreshAll()` + resync `version` from the live snapshot, and **keep going** — one bad draft must not abort the rest.
+- Post a summary stage line: `Applied 5 of 7 selected changes — 2 need attention, see below`.
+- Default the verb to your app's existing one (**Apply**), not "Accept", for consistency with single-card actions.
+
+**Smells:** checkbox = "ignore the unchecked" (confusing — unchecked should just be *skipped*, left as draft); bulk apply with a single fixed `expectedVersion`; refreshing the whole snapshot inside the loop; losing per-row edit/error state on re-render (key expand/patch/error maps by `prop_*` id so they survive status changes).
+
+Reference: `src/frontend/components/AiebotPanel.tsx` (`ProposalReviewTable`).
+
 ### Version / staleness (optimistic concurrency)
 
 - Every mutation sends `expectedVersion`; server returns `409 version_conflict` when stale.
@@ -318,12 +345,14 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Coercion** | Valid placement rewritten create→update |
 | **Conflict** | Double-booked speaker; swap unslotted talk |
 | **Edit before apply** | User changes patch JSON then applies |
+| **Bulk apply** | Apply N drafts at once with one fixed version → #2..N hit `version_conflict`; one bad row aborts the rest |
 | **Multi-tab** | Poll raises stale banner; reload clears it |
 | **Cross-surface** | Slack approve vs web ignore share same session semantics |
 | **Slack `!help`** | User gets guide without planner call; empty mention works |
 | **Slack `!model`** | Invalid slug ignored; valid slug reflected in footer metadata |
 | **Slack `!audit`** | Prefetch present in prompt; answer summarizes events, no “I will check…” |
 | **Provider timeout** | Stalled model call hangs the background task → ack stuck on 👀, no reply, no run row |
+| **Streaming idle vs total cap** | Total-duration cap aborts a long-but-streaming compound answer ("so close"); idle reset lets it finish, true stall still falls back |
 | **Audit exclude self** | “not by me” excludes requester; `!mine` includes only requester |
 | **Multistep compound** | User says remove 2 + add 1; bot only drafts add or claims done with 0 cards |
 | **Partial apply** | Apply 2 of 3; follow-up must not assume the third happened |
@@ -370,9 +399,11 @@ Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/fr
 [ ] Track/speaker/company lookups before final; JSON blob fields land on patch
 [ ] Send while busy queues (FIFO); Remove vs Stop; session turn after prior job completes
 [ ] Queued turn does not replace prior proposals — merge catalog; Pending/Applied/Ignored badges persist per turn
+[ ] Many drafts → table view: checkbox default-checked, expand for details, one-click Apply N selected (version chained, one final refresh)
 [ ] Slack: parse/strip !help !model !audit flags; !help bypasses planner; model registry in help blocks
 [ ] Audit: prefetch history + audit default model; exclude/actor prefixes on lookups
 [ ] Hard timeout (AbortController) on every provider call incl. stream read; degrades to fallback/error
+[ ] Streaming = IDLE timeout (reset per chunk/keepalive); only non-streaming gets a total-duration cap
 [ ] Audit default = mid reasoning tier (not slowest); audit turns capped
 [ ] Ack surface resolves to reply/✅/❌ in finally — never stuck on the working reaction
 [ ] Per-run telemetry (model/turns/duration/outcome) so silent kills show as missing rows
