@@ -64,6 +64,7 @@ business logic, that's the bug.
 - **Keep Block Kit terse**; canonical state lives in your backend.
 - **Every enriching call is best-effort** — a failed reaction, status update, or context fetch must never abort the real answer.
 - **Mutations require a human.** A query never changes state; it drafts, and a human approves.
+- **Slack flags configure the core; they are not a second product.** `!help` (static guide, no model), `!model <slug>` (planner tier), `!audit` (opt-in history + stronger default model + server prefetch). Parse once, strip before planning, document slugs in help. See [L3 § inline flags](level-3-interactive.md#inline-message-flags-help-model-audit).
 - **Route on the raw request, never the context.** Any intent classifier / keyword router / fast-path heuristic must inspect **only** the user's actual message — never the channel topic, thread history, or session memory you prepend for grounding. Context is for grounding the model, not for deciding *how* to handle the request. (See the war story in [level-3-interactive.md](level-3-interactive.md).)
 - **Don't degrade silently.** When a request takes a non-default path (canned/deterministic answer, model skipped, provider fell back), **log it**. A bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
 - **Flat JSON logs with trace ids everywhere.** Slack bots are otherwise painful to debug.

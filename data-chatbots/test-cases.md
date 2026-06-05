@@ -31,7 +31,7 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 
 ### 1.4 New reply replaces global draft list
 
-- **Setup:** Turn 1 has draft card; Turn 2 emits new proposals (UI may replace pending list).
+- **Setup:** Turn 1 has draft card; Turn 2 emits new proposals (UI merges — turn 1 cards stay).
 - **Action:** User returns to Turn 1 card mentally — old drafts still in DB as `draft` unless ignored.
 - **Test:** Session loader still marks old sets `DRAFT` even if UI no longer shows card.
 
@@ -150,6 +150,15 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 - **Setup:** Day has keynote slots 4:30, 4:50, 5:10; user says “closing keynote at 5:10.”
 - **Expect:** Proposal targets **5:10** slot/holder, not earliest placeable (4:30) unless user said “first available in the block.”
 
+### 5.9 HOLD rows excluded; overwrite dropped
+
+- **Setup:** Track has `S1` placeholder at 11:40, booked Perplexity at 11:40 (another slot), and `HOLD` at 15:20 (`status: hold`, no speaker).
+- **Expect:** `placeableSlotsByDayRoom` includes `S1` placeholder, **not** the HOLD row.
+- **Expect:** `assignment` update filling `asn_hold_*` with a new speaker → dropped (“HOLD/reserved”).
+- **Expect:** `assignment_create` on Perplexity’s `slot_*` → dropped (“already booked”).
+- **Expect:** `assignment` move with `{ slotId: hold_slot }` → dropped (destination HOLD).
+- **Expect:** “Replace Perplexity with Lin” → targets Perplexity’s `asn_*` (or cancel + fill that slot), not earliest placeholder nor the HOLD.
+
 ---
 
 ## 6. Agent loop & tools
@@ -184,6 +193,30 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 
 - **Setup:** Apply from API without `sessionKey`.
 - **Expect:** Resolve session via `proposal_set_id` on assistant message.
+
+### 7.4 Slack `!help` (no planner)
+
+- **Action:** `@aiebot !help` or empty @mention.
+- **Expect:** Block Kit guide with model slugs; no `runAiebotQuery` / no draft cards; footer does not show a model run.
+
+### 7.5 Slack `!model` override
+
+- **Action:** `!model openai-gpt-5.4-high <scheduling question>`.
+- **Expect:** Footer/metadata shows `gpt-5.4` + high reasoning; same orchestration as web `modelSlug`.
+- **Action:** `!model totally-fake-slug …`
+- **Expect:** Slug ignored; default model used; help lists valid slugs.
+
+### 7.6 Slack `!audit` + exclude self
+
+- **Action:** `!audit last day edits not by me`.
+- **Expect:** History prefetch in first turn; answer lists non-requester edits; no stall text (“once I have them”).
+- **Action:** `!audit !mine …`
+- **Expect:** Only requester’s edits (opposite of exclude).
+
+### 7.7 `!model` wins over audit default
+
+- **Action:** `!model openai-gpt-5.4-mini-medium !audit 6h …`
+- **Expect:** Uses mini model, still has history access + prefetch.
 
 ---
 
@@ -279,10 +312,21 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 - **Action:** Edit an earlier user message while one active + one queued.
 - **Expect:** Queue cleared; active aborted; history truncated; composer filled.
 
-### 10.6 proposals global state
+### 10.6 proposals persist across queued turns
 
-- **Setup:** Turn 1 completes with drafts; turn 2 starts (read-only question).
-- **Expect:** `proposals` from turn 1 remain visible until turn 2 returns new proposals (product choice — document); applying turn 1 drafts during queued turn 2 triggers version-stale path (§3).
+- **Setup:** Turn 1 completes with 2 draft cards; user queues turn 2 (e.g. read-only question) before acting on turn 1.
+- **Expect:** Turn 1 cards **still visible** with **Pending review** while turn 2 shows `queued` / runs.
+- **Expect:** `proposals` catalog **merges** turn 2 ids — does **not** replace turn 1 entries.
+- **Action:** Apply one turn-1 draft while turn 2 is queued or after turn 2 finishes.
+- **Expect:** That card → **Applied**; others stay **Pending** until acted on.
+- **Action:** Ignore a draft.
+- **Expect:** Card → **Ignored** (still visible, no Apply); session context shows IGNORED not APPLIED.
+- **Expect:** Applying during stale snapshot → version-stale path (§3).
+
+### 10.7 Proposal status labels
+
+- **Assert:** UI uses Pending review / Applied / Ignored — not a single “Draft” that disappears on the next message.
+- **Assert:** Session `[Proposal outcomes]` uses DRAFT vs IGNORED vs APPLIED (authoritative for the bot).
 
 ---
 

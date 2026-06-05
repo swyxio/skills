@@ -23,8 +23,17 @@ Copilots over **authoritative structured state** (schedules, CRMs, configs) shou
 | **Dry-run** | Simulate proposals cumulatively on in-memory snapshot; drop invalid drafts before humans see them |
 | **Persist drafts** | `draft` / `applied` / `ignored` status in DB, separate from canonical state |
 | **Apply path** | Same mutation pipeline as manual UI (`expectedVersion` + audit log) |
+| **DB invariants** | Enforce mutual exclusivity in SQLite, not only in TS (partial UNIQUE + CHECK) |
 
 One orchestration function per product surface (web, Slack, email) so behavior stays identical.
+
+### Slot occupancy (schedule-shaped products)
+
+Enforce in **SQLite**, not only application code:
+
+- **Partial UNIQUE** on `assignments(slot_id)` where `status != 'cancelled'` — at most one active occupant per slot.
+- **CHECK** `(status != 'cancelled' OR slot_id IS NULL)` — cancelled rows cannot keep a `slot_id` (prevents “NO PROGRAMMING” ghosts shadowing a real talk).
+- **App layer** mirrors DB: `releaseSlotWhenCancelled` on update; grid uses active-only `assignmentsBySlot`; map `UNIQUE`/`CHECK` failures to `409 slot_occupied`.
 
 ## Prompting
 
@@ -57,8 +66,9 @@ Many schedules seed **structural holder rows** (generic title like `Keynote` / `
 3. **Virtual FS / bash `grep OPEN SLOT`** only marks slots with **no** assignment; placeholder keynotes appear as normal session files, not `OPEN SLOT`.
 4. **Moves vs fills:** `assignment` patch `{ slotId }` into a placeholder-occupied slot **dry-runs as `slot_occupied`** (the holder still occupies the slot). To relocate an existing talk into that time: **swap** with the occupant, **fill the placeholder row** and clear/move the source talk, or **rotate** for 3+ — not a naive move into the slot id.
 5. **Time disambiguation:** A “keynote window” (e.g. 4:30–5:30) often has **multiple** slot ids (4:30, 4:50, 5:10). “Closing keynote” may mean the **last** block, not the earliest sample in the index. When the user names a clock time, match that sample — do not auto-pick the earliest placeable in the group.
+6. **HOLD / reserved rows are NOT placeholders:** Rows with `status: "hold"` or title `HOLD`/`Reserved` have no speaker but are **intentionally blocked**. They must be **excluded** from `placeableSlotsByDayRoom`. Validation must **drop** proposals that fill a hold row or `assignment_create` / `slotId` move onto an occupied booked or hold slot — never silent overwrite. When the user says “replace X’s slot”, resolve **X’s** `asn_*`, not the earliest placeholder in the track.
 
-**Prompt + validator habits:** System prompt must document both `open` and `placeholder` states; coerce `assignment_create` on placeholder → `assignment` update; dry-run drops moves into real bookings with the occupant id in the reason. See [test-cases.md](test-cases.md) §5.6–5.8.
+**Prompt + validator habits:** System prompt must document both `open` and `placeholder` states; coerce `assignment_create` on placeholder → `assignment` update; dry-run drops moves into real bookings with the occupant id in the reason; hold rows excluded from placeable index. See [test-cases.md](test-cases.md) §5.6–5.9.
 
 ### Underspecified requests
 
@@ -140,6 +150,47 @@ On Apply/Ignore, append explicit user lines: `[Human applied draft "…"]` / `[H
 
 When the validator drops proposals, one retry prompt listing **per-proposal reasons** and allowed patch keys — prevents silent "success" answers with zero drafts.
 
+### Slack inline flags (`!help`, `!model`, `!audit`) — why they exist
+
+Slack has no model dropdown and no “History access” checkbox. Users need **explicit, strip-before-planning flags** in the message (same orchestration core as web; flags only affect the Slack adapter).
+
+| Flag | Purpose | Why not implicit? |
+|------|---------|-------------------|
+| **`!help`** | Post the full capabilities guide (Block Kit); **no model call** | Empty @mentions and “what can you do?” should be instant; avoids burning tokens on static docs |
+| **`!model <slug>`** | Override planner model for this request | Default is fast/cheap; audit and hard reasoning need a stronger tier without changing global config |
+| **`!audit [duration]`** | Opt-in audit/operations history + prefetch | History is sensitive and token-heavy — never on by default; `!audit` also auto-picks the **audit default model** unless `!model` overrides |
+| **`!mine`** | History: only requester’s edits | Requires knowing requester email in the adapter |
+| **`!verbose`** | Full before/after diffs in history results | Compact by default; verbose blows context |
+| **“not by me”** (natural language) | Maps to `exclude:<email>` on history prefetch | Users say this more often than a flag |
+
+**Parsing rules (adapter):**
+
+1. Parse flags from raw message → strip them → pass **clean text** as `message` to `runAiebotQuery`.
+2. `!help` (or bare `help` / empty mention) → return `buildHelpBlocks()` immediately; do not call the planner.
+3. Invalid `!model` slugs → **ignore** (fall back to default / audit default); list valid slugs in help.
+4. `historyQueryPrefix` (e.g. `after:…`, `actor:…`, `exclude:…`) is prepended server-side to every `history` lookup — model cannot “forget” the time window.
+5. **Audit mode:** server **prefetches** history before turn 1; system prompt forbids “I will check…” stall answers.
+
+**Web parity:**
+
+| Slack | Web |
+|-------|-----|
+| `!model openai-gpt-5.4-high` | Model dropdown (`modelSlug` on `/api/ai/chat`) |
+| `!audit` | “History access” checkbox |
+| `!help` | “What can aiebot do?” examples panel |
+| Selected grid slot context | Autofill composer with slot/assignment ids |
+
+**Model slugs** live in one registry (`AI_MODEL_OPTIONS`) shared by frontend + backend. Document every slug in `!help`. Typical defaults: fast mini for Q&A; `openai-gpt-5.4-high` for `!audit` unless `!model` wins.
+
+**Best practices:**
+
+- Combine flags: `@aiebot !model openai-gpt-5.4-high !audit 2d summarize edits not by me`
+- Prefer `!help` for onboarding; keep `SLACK_HELP_TEXT` one line pointing to `!help`
+- Never classify routing on flag-stripped vs raw message inconsistently — strip flags **before** persistence, not before help detection
+- Log chosen model slug + `historyAccess` on each run for debugging “why was this dumb?”
+
+Reference: `functions/_lib/slack-flags.ts`, `functions/_lib/slack.ts` (`buildHelpBlocks`), `src/domain/aiModels.ts`. See [slackbot-builder](../slackbot-builder/level-3-interactive.md) § inline flags.
+
 ## UX
 
 ### Request queuing (long agent loops)
@@ -179,13 +230,20 @@ Compound / lookup-heavy turns can run **minutes**. The composer must stay usable
 - Dropping queued jobs on unrelated errors.
 - Starting job *N+1* in parallel → race on `proposals`, session turns, and snapshot version.
 - User applies drafts from turn *N* while *N+1* was queued with stale `expectedVersion` — pair with **version poll / stale banner** (below).
+- Replacing the global `proposals` array on each `onResult` → **dismisses prior turn’s cards** while a queued follow-up runs. **Merge** by proposal id instead.
 
 ### Draft cards (per reply)
 
 - Inline **Apply** / **Ignore** on each assistant turn that emitted proposals.
 - Editable patch JSON before apply (power users).
-- Copy: *"N draft changes — nothing updates until you click Apply."*
-- When drafts for a turn are gone (applied/ignored), show *"resolved"* — do not leave phantom cards.
+- Copy: *"N pending changes — nothing updates until you click Apply."*
+- **Statuses (three outcomes):**
+  - `draft` → **Pending review** (no action yet — still Apply/Ignore).
+  - `applied` → **Applied** (on canonical store; buttons hidden).
+  - `ignored` → **Ignored** (soft reject — not on schedule; bot session memory treats as rejected).
+- Cards **stay visible** on their assistant turn after Apply/Ignore (badge + helper text), so a **queued** follow-up does not remove earlier drafts.
+- Global `proposals` signal = **merged catalog** (`mergeProposals` on each result); `setProposalStatus` syncs catalog + every assistant turn that owns that `prop_*` id.
+- Read-only queued questions must not wipe turn *N* drafts — only **merge** new `prop_*` ids from turn *N+1*.
 
 ### Version / staleness (optimistic concurrency)
 
@@ -237,6 +295,10 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Edit before apply** | User changes patch JSON then applies |
 | **Multi-tab** | Poll raises stale banner; reload clears it |
 | **Cross-surface** | Slack approve vs web ignore share same session semantics |
+| **Slack `!help`** | User gets guide without planner call; empty mention works |
+| **Slack `!model`** | Invalid slug ignored; valid slug reflected in footer metadata |
+| **Slack `!audit`** | Prefetch present in prompt; answer summarizes events, no “I will check…” |
+| **Audit exclude self** | “not by me” excludes requester; `!mine` includes only requester |
 | **Multistep compound** | User says remove 2 + add 1; bot only drafts add or claims done with 0 cards |
 | **Partial apply** | Apply 2 of 3; follow-up must not assume the third happened |
 | **Queuing** | Second send while first runs blocks or loses message; parallel API races |
@@ -281,4 +343,7 @@ Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/fr
 [ ] Compound remove+add decomposes to N proposals; cumulative dry-run respects order
 [ ] Track/speaker/company lookups before final; JSON blob fields land on patch
 [ ] Send while busy queues (FIFO); Remove vs Stop; session turn after prior job completes
+[ ] Queued turn does not replace prior proposals — merge catalog; Pending/Applied/Ignored badges persist per turn
+[ ] Slack: parse/strip !help !model !audit flags; !help bypasses planner; model registry in help blocks
+[ ] Audit: prefetch history + audit default model; exclude/actor prefixes on lookups
 ```

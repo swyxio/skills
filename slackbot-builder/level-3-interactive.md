@@ -11,6 +11,7 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **Dry-run validation** before presenting drafts.
 - [ ] **Rich, actionable drafts** — render computed evidence/artifacts, bulk + edit-before-apply, deep links.
 - [ ] **Slash commands** for one-shot invocations.
+- [ ] **Inline flags** (`!help`, `!model`, `!audit`) — shared parser, strip before planning, help lists model slugs.
 - [ ] **Routing / clarification ladder** for ambiguous targets.
 - [ ] **Live status streaming** of agent steps into the composer (native version → L4).
 - [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
@@ -156,6 +157,72 @@ per-thread "engaged" flag so a busy thread isn't re-classified on each reply.
 Ack with an ephemeral "working on it…", then post the answer to `response_url`
 (`response_type: in_channel`). One-shot, no thread — skip session continuity but
 still record observability (L5) and support per-request flags (e.g. `--history`).
+
+## Inline message flags (`!help`, `!model`, `!audit`)
+
+Slack has no settings UI for model tier or sensitive lookups. Use **strip-before-planning**
+flags in the message text (mentions, DMs, slash commands) and a single parser shared
+across entry points.
+
+### Why each flag exists
+
+| Flag | When to use | Why not default? |
+|------|-------------|------------------|
+| **`!help`** | Onboarding, “what can you do?” | Static docs should not cost a model call or pollute session |
+| **`!model <slug>`** | Hard reasoning, multistep placement, debugging bad answers | Production default should stay fast/cheap |
+| **`!audit [6h\|3d\|1w]`** | “Who changed what?” | Audit log is opt-in, token-heavy, and needs stronger model + prefetch |
+| **`!mine`** | “What did I change?” | Needs requester identity from Slack user → email mapping |
+| **`!verbose`** | Debug a specific edit | Full diffs blow context size |
+
+Natural language **“not by me”** / **“except me”** should map to `exclude:<requester-email>` on history filters (complement of `!mine`).
+
+### Parser contract
+
+```ts
+// functions/_lib/slack-flags.ts (AIEWF reference)
+export function parseSlackFlags(text: string): {
+  text: string;           // stripped message → planner
+  helpRequested: boolean;
+  modelSlug: string | null;  // validated against shared registry
+  historyAccess: boolean;
+  historyAfter: string | null;
+  historyMine: boolean;
+  historyVerbose: boolean;
+  excludeSelf: boolean;
+};
+```
+
+**Rules:**
+
+1. **`!help` first** — if set (or message is only `help`), post `buildHelpBlocks()` and return. No planner.
+2. **Strip all flags** from `text` before `runBotQuery({ message })` — persisted request stays clean.
+3. **`!model`** — accept `!model slug` or `!model:slug`; ignore unknown slugs (list valid ones in help).
+4. **`!audit`** — implies `historyAccess`; default window 24h unless `!audit 6h` / `3d` / `1w`.
+5. Build `historyQueryPrefix` server-side (`after:`, `actor:`, `exclude:`) — prepend to every history lookup so the model cannot drop the window.
+6. **Audit mode:** prefetch history **before** agent turn 1; bump `maxTurns`; pick audit-default model unless `!model` overrides.
+7. **Slash commands** use the same parser (not a parallel `--history` path that drifts).
+
+### Help blocks should be the source of truth
+
+`buildHelpBlocks(appOrigin)` should include:
+
+- How to invoke (@mention, DM, `/command`)
+- Ask vs draft vs instant-edit syntax
+- Full flag reference + **every model slug** from `AI_MODEL_OPTIONS`
+- One combined example: `!model openai-gpt-5.4-high !audit 2d edits not by me`
+
+Keep `SLACK_HELP_TEXT` as a one-liner that points to `!help`.
+
+### Best practices
+
+- ✅ One registry for model slugs (web dropdown + Slack `!model` + footer metadata).
+- ✅ Log `modelSlug`, `historyAccess`, and prefetch query on each run.
+- ✅ Map `emit({ type: 'tool_call', kind: 'history' })` to composer status (“is reviewing the change history…”).
+- ❌ Letting the model answer “I’ve requested history…” without prefetch — users experience a stall.
+- ❌ Duplicating flag parsing in events vs slash command handlers.
+- ❌ Putting business logic in the Slack layer — flags only configure `runBotQuery` input.
+
+Cross-surface detail: [data-chatbots](../data-chatbots/SKILL.md) § Slack inline flags.
 
 ## Anti-patterns
 
