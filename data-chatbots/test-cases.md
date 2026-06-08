@@ -159,6 +159,16 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 - **Expect:** `assignment` move with `{ slotId: hold_slot }` → dropped (destination HOLD).
 - **Expect:** “Replace Perplexity with Lin” → targets Perplexity’s `asn_*` (or cancel + fill that slot), not earliest placeholder nor the HOLD.
 
+### 5.10 Apply-time overwrite guard (TOCTOU) — reviewed placement must never synthesize a cancel
+
+- **Setup:** Draft a plain `assignment_create` into slot **S while S is open**; the draft is reviewed/approved.
+- **Action:** Before Apply, another talk is placed into S (S now holds a real booking). Then Apply the original draft.
+- **Expect:** Apply **fails** (`409 slot_occupied` → re-draft); it must **not** lower into `batch[cancel occupant, place]`. The occupant is untouched; nothing was cancelled.
+- **Expect:** `expectedVersion` matching is **not** sufficient on its own — the guard must hold even when versions match (scope, not just version, must be re-checked).
+- **Setup B (draft-time):** Draft a placement into a slot that is **already** occupied by a real booking.
+- **Expect:** The *stored* draft is an explicit replace `batch[cancel X, place Y]` (visible cancel card, destructive → unchecked by default), **not** a bare create whose cancel would only materialize at apply.
+- **Forensic:** A read-only audit-log scan for cancels whose reviewed proposal was a placement/move (not an explicit cancel / not a batch with a visible cancel op) returns **zero** once the guard ships.
+
 ---
 
 ## 6. Agent loop & tools
