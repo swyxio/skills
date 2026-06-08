@@ -9,6 +9,7 @@ Portable patterns extracted from the **AIEWF 2026 internal schedule** aiebot (`s
 | [proposal-validate-and-normalize.ts](./proposal-validate-and-normalize.ts) | Allowlisted patch keys, alias normalization, placeholder coercion |
 | [client-request-queue.ts](./client-request-queue.ts) | FIFO queue, queued vs active UI, Stop vs Remove |
 | [version-stale-ux.ts](./version-stale-ux.ts) | Version poll, stale banner, API 409 handling, apply error surfacing |
+| [surface-panel-sizing.tsx](./surface-panel-sizing.tsx) | Floating-dockable panel: ⌘/Ctrl+J size state machine, preset↔custom-resize reconciliation, snap transition, full-height flex layout (history grows, composer pinned) |
 
 **Slack flags** (no separate sample file): see `functions/_lib/slack-flags.ts` + `buildHelpBlocks` in `functions/_lib/slack.ts`; documented in the main SKILL § Slack inline flags and in [slackbot-builder](../../slackbot-builder/level-3-interactive.md).
 

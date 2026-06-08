@@ -5,7 +5,8 @@ description: >-
   mutations for human approval (draft → apply), not direct writes. Covers
   prompting, multistep compound requests (remove + add in one turn), FIFO client
   queuing for long agent loops, validation, session memory, optimistic versioning
-  UX, and test matrices. Use when building
+  UX, copilot panel/surface ergonomics (floating-dockable panel, summon-hotkey
+  size state machine), and test matrices. Use when building
   scheduling/admin chatbots, proposal workflows, human-in-the-loop agents, or
   reviewing aiebot-style features.
 ---
@@ -13,6 +14,19 @@ description: >-
 # Data chatbots
 
 Copilots over **authoritative structured state** (schedules, CRMs, configs) should **draft** changes and **apply** only after explicit human approval. Treat the model as a planner, not a writer.
+
+## Battle scars (production incidents — read before you ship)
+
+Real failures from running aiebot against live data. Each one shipped, bit us, and is now a permanent check in the test matrix + quick checklist below. If you build a draft→apply copilot you **will** hit these — wire the guardrail before the incident, not after.
+
+1. **Silent apply-time overwrite (TOCTOU) — caught in prod, almost lost a real talk.** A human approved a plain `assignment_create` ("place this talk into the 11:10 **open** slot"). Between draft (slot empty) and Apply ~7 min later, that slot got filled by another talk. The apply path **re-derived occupancy from live state and silently lowered the placement into `batch[cancel occupant, place new]`**, cancelling a real talk **nobody approved**. Only the immutable audit log revealed it. **Guardrail: what you APPLY must equal what was REVIEWED — never synthesize a more-destructive op at apply time.** See *Apply == review* below + test §5.10. The version guard does **not** save you (it matched).
+2. **Unique external/import id → can't insert, must reactivate.** A `*_create` re-linking an already-used `cfp_proposal_id` died at apply with `UNIQUE constraint failed` — including *soft-deleted* rows that still own the key. Dry-run modelled occupancy but not external-id uniqueness, so it "passed review, failed apply." **Guardrail: dry-run every DB invariant; deterministic create→move/reactivate guard at the apply choke point.** See *External / import ID uniqueness*.
+3. **Apply failure had no feedback loop (the missing 4th outcome).** A rejected apply left the proposal `draft`, wrote no session line, and the planner re-read it as "pending" and re-proposed the identical doomed change. **Guardrail: record an authoritative `[Apply FAILED …]` line before re-throwing; teach the planner it's terminal.** See *Session / follow-up context*.
+4. **Audit/history run silently killed on serverless.** The slowest path (opt-in prefetch + token-heavy + tempting strongest model + multi-turn) blew the background execution budget and was killed mid-flight — no reply, no error, no telemetry row. **Guardrail: hard per-call timeout, mid-tier audit default model, capped turns, terminal state in `finally`, per-run telemetry.** See [audit-log.md](audit-log.md).
+5. **"Open" in the UI ≠ "open" in the index.** Seed placeholder holder rows make a slot look empty while the DB still has an active assignment; `open_slot` lookups missed them and metrics undercounted. **Guardrail: two placeable kinds (open + placeholder); feed `placeableSlotsByDayRoom`; exclude HOLD/reserved.** See *Schedule data*.
+6. **Bulk apply fanned out one fixed `expectedVersion`.** Applying N drafts with the same starting version made #2..N throw `version_conflict`. **Guardrail: chain each apply's returned version into the next; one final refresh.** See *Bulk review / mass-approve*.
+
+> **Cheap forensic check:** a read-only script that walks the audit log for **cancels whose reviewed proposal did not approve a cancel** (executed op cancelled a talk, but the stored proposal was a placement/move, not an explicit cancel or a batch with a visible cancel op) finds every silent overwrite after the fact. Run it periodically; once the apply-time guard ships it should always return zero.
 
 ## Architecture (non-negotiables)
 
@@ -27,6 +41,10 @@ Copilots over **authoritative structured state** (schedules, CRMs, configs) shou
 
 One orchestration function per product surface (web, Slack, email) so behavior stays identical.
 
+### Audit / change log (immutable)
+
+The audit/change log is **immutable (append-only)** and **tracks the actor (which user) and the action taken** on every change to canonical state. Ideally it also backs **snapshot / rollback / restore** of canonical state. Every apply path writes through it (see *Apply path* above). Operational deep-dive (audit-mode access, prefetch/turn caps, serverless execution budget): [audit-log.md](audit-log.md).
+
 ### Slot occupancy (schedule-shaped products)
 
 Enforce in **SQLite**, not only application code:
@@ -34,6 +52,46 @@ Enforce in **SQLite**, not only application code:
 - **Partial UNIQUE** on `assignments(slot_id)` where `status != 'cancelled'` — at most one active occupant per slot.
 - **CHECK** `(status != 'cancelled' OR slot_id IS NULL)` — cancelled rows cannot keep a `slot_id` (prevents “NO PROGRAMMING” ghosts shadowing a real talk).
 - **App layer** mirrors DB: `releaseSlotWhenCancelled` on update; grid uses active-only `assignmentsBySlot`; map `UNIQUE`/`CHECK` failures to `409 slot_occupied`.
+
+### Apply == review: never expand scope at apply time (TOCTOU overwrite)
+
+**The operation you APPLY must be identical in scope to the draft the human REVIEWED.** The dangerous gap is *time-of-check vs time-of-use*: a draft is reviewed against one snapshot and applied against a later one. If the apply path **re-derives** the operation from live state, it can quietly become **more destructive** than what was approved.
+
+Real prod incident (battle scar #1): a reviewed `assignment_create` ("place into an **open** slot") was applied ~7 min later, after that slot had been filled by another talk. The apply path saw the slot occupied and **lowered the placement into `batch[cancel occupant, place new]`** — executing a cancellation of a real talk that **was never in the reviewed draft**. Recovered only because the audit log showed the synthesized cancel.
+
+Why the usual guards don't catch it:
+
+- **`expectedVersion` is necessary but not sufficient.** It detects *that* the world changed, not *whether this draft's specific preconditions still hold*. The bug fired even with **matching versions**, because scope was re-computed from live occupancy at apply. (Worse: clients often send the *current* version at click, not the version the draft was generated against — so the check passes trivially.)
+- **Dry-run validated the harmless version.** At draft time the slot was open, so the simulated op was a clean place. The destructive lowering happened later, at apply, where nothing re-validated against what the human saw.
+
+Guardrails (do all):
+
+1. **Decide destructive lowering at DRAFT time, as a visible card.** If a placement targets an occupied real booking, the *stored draft* becomes an explicit replace (`batch[cancel X, place Y]`), so the reviewer sees — and separately approves — the cancel. Your risk analyzer should flag a cancel-bearing batch as destructive (unchecked by default).
+2. **At APPLY time, refuse to expand scope.** A stored *plain placement* whose target slot is now occupied must throw (`409 slot_occupied` → "re-draft"); it must **not** synthesize a cancel. Only an explicitly-reviewed replace batch may cancel — and the reducer's occupancy check still guards it if the occupant changed again.
+3. **Same rule for any destructive synthesis, not just cancels** — a create→move that relocates an existing talk, a delete that cascades, etc. If apply would do something the card didn't show, fail and re-draft.
+
+This is the mirror of the cfp-dedup lesson: there the apply path must *converge* a create into a move; here it must *refuse* to diverge a placement into a cancel. The unifying invariant: **apply executes the reviewed intent or fails — it never invents new destructive scope.** (Split the lowering function by mode: a `preview` mode that lowers occupied placements into a visible replace for the draft, and an `apply` mode that throws instead of synthesizing — so the two paths can never drift.)
+
+### External / import ID uniqueness — reactivate, don't recreate (the `cfp_proposal_id` lesson)
+
+When rows carry a **unique external/import key** (CFP proposal id, Airtable record id, source row hash), a `*_create` that re-links an already-used key **cannot insert** — the DB unique index rejects it. The intent is almost always **reuse the existing row** (move / update / reactivate), not a duplicate. Real production failure: `db_write_failed: UNIQUE constraint failed: assignments.cfp_proposal_id`.
+
+Three traps, all hit in one bug:
+
+1. **Dry-run/validator models occupancy but NOT external-id uniqueness.** The proposal passed every in-memory check and died only at apply. **Lesson: the dry-run must simulate *every* DB invariant it can — unique external ids, FKs, CHECKs — not just slot occupancy.** When two validation layers (domain dry-run vs DB constraints) disagree, the gap is exactly where "passed review, failed apply" lives. The agent's own validation-repair retry won't catch it either: that loop re-runs the *same* domain validator, so a constraint the validator can't see is invisible to self-repair too.
+2. **Soft-deleted rows still hold the unique key — match your guard predicate to the index predicate.** Occupancy uniqueness is partial (`WHERE status != 'cancelled'`); external-id uniqueness usually is **not** (`WHERE cfp_proposal_id IS NOT NULL`). A `cancelled`, unscheduled row still owns its `cfp_proposal_id` and blocks new inserts. A create→move guard that filters `status != 'cancelled'` (correct for occupancy) **misses the cancelled-row case entirely.** Decide per key whether cancelled rows count.
+3. **You can't dedupe on a key you can't search.** No lookup indexed `cfp_proposal_id` (assignment lookup matched title/track/speaker; the bash virtual-FS didn't emit cfp ids), so `grep <cfpId>` returned nothing and the agent "reasonably" chose create. **Lesson: every identifier the agent must dedupe on has to be in at least one lookup/index** — otherwise prefer a deterministic server-side guard over prompt instructions.
+
+**Defense in depth (do more than one):**
+
+- **Deterministic writeback guard (surest).** At the single apply choke point, before building statements: if a `*_create` carries an external id already linked to a row, rewrite it to an **update/move of that existing row** (reactivate if soft-deleted: set the target slot, flip status off `cancelled`). Covers every surface (proposal apply, direct ops, imports) regardless of what the model emitted. Match the lookup's predicate to the *index's* predicate.
+- **Validator-time conversion.** Convert `create`→`move` at draft time so the human sees a move card, not a doomed create.
+- **Prompt guidance (weakest alone).** Tell the planner to look up whether the talk already exists (by the searchable fields — title + speaker if the id isn't indexed) and emit a move. Only reliable if the dedupe key is actually searchable.
+- **Emergency data repair:** the operator fix mirrors the guard — **reactivate the existing (often soft-deleted) row** into the target rather than inserting a second one, so the unique link is preserved.
+
+## Tiered operation harness (secondary — adopt after MVP)
+
+The dedup lesson above is one instance of a broader trap: a write surface that grows **one bespoke op + repair coercion per phrasing** (`create`, `move`, `multi_move`, `cancel`, `swap`, `rotate`, `create-on-placeholder`…), and the *gaps between them* are where "passed review, failed apply" bugs live. The proven fix collapses the copilot surface into **three tiers** (hot paths → composable primitives → audit) over **one selector**, gated by a per-request `mode`. **Don't reach for this on day one** — run a simpler bespoke-op MVP first to learn your real use cases, then graduate. Full refactor plan (tiers, the `upsert`/`rebind`/`batch` primitive set, the one selector resolver, hot-path → saga lowering, mode-gating, and the "collapse the copilot surface, keep the human/legacy vocabulary" migration): [tiered-operation-harness.md](tiered-operation-harness.md).
 
 ## Prompting
 
@@ -49,6 +107,7 @@ Enforce in **SQLite**, not only application code:
 - **Agent loop**: `need_more` + focused lookups; `final` + proposals, no more lookups.
 - Explicit rule: placement IDs are **in the index** — do not ask the user for slot IDs the index already contains.
 - Quantitative claims → deterministic reports or lookups, never invented numbers.
+- **Any key the agent must dedupe/relink on must be searchable.** If a unique external/import id (cfp id, record id, hash) is enforced by the DB but absent from every lookup and the virtual FS, the agent can't discover existing links and will duplicate. Index it in a lookup *or* enforce the dedup deterministically server-side — don't rely on prompt instructions to avoid a collision the model can't even see.
 
 ### Schedule data: “open” in the UI ≠ “open” in the index (AIEWF / aiebot lesson)
 
@@ -66,9 +125,9 @@ Many schedules seed **structural holder rows** (generic title like `Keynote` / `
 3. **Virtual FS / bash `grep OPEN SLOT`** only marks slots with **no** assignment; placeholder keynotes appear as normal session files, not `OPEN SLOT`.
 4. **Moves vs fills:** `assignment` patch `{ slotId }` into a placeholder-occupied slot **dry-runs as `slot_occupied`** (the holder still occupies the slot). To relocate an existing talk into that time: **swap** with the occupant, **fill the placeholder row** and clear/move the source talk, or **rotate** for 3+ — not a naive move into the slot id.
 5. **Time disambiguation:** A “keynote window” (e.g. 4:30–5:30) often has **multiple** slot ids (4:30, 4:50, 5:10). “Closing keynote” may mean the **last** block, not the earliest sample in the index. When the user names a clock time, match that sample — do not auto-pick the earliest placeable in the group.
-6. **HOLD / reserved rows are NOT placeholders:** Rows with `status: "hold"` or title `HOLD`/`Reserved` have no speaker but are **intentionally blocked**. They must be **excluded** from `placeableSlotsByDayRoom`. Validation must **drop** proposals that fill a hold row or `assignment_create` / `slotId` move onto an occupied booked or hold slot — never silent overwrite. When the user says “replace X’s slot”, resolve **X’s** `asn_*`, not the earliest placeholder in the track.
+6. **HOLD / reserved rows are NOT placeholders:** Rows with `status: "hold"` or title `HOLD`/`Reserved` have no speaker but are **intentionally blocked**. They must be **excluded** from `placeableSlotsByDayRoom`. Validation must **drop** proposals that fill a hold row or `assignment_create` / `slotId` move onto an occupied booked or hold slot — never silent overwrite. When the user says “replace X’s slot”, resolve **X’s** `asn_*`, not the earliest placeholder in the track. This is a **draft-time** guard; it does **not** cover the case where the slot becomes occupied *after* an open-slot draft was approved — for that, see *Apply == review* (the apply path must refuse, not silently synthesize a cancel).
 
-**Prompt + validator habits:** System prompt must document both `open` and `placeholder` states; coerce `assignment_create` on placeholder → `assignment` update; dry-run drops moves into real bookings with the occupant id in the reason; hold rows excluded from placeable index. See [test-cases.md](test-cases.md) §5.6–5.9.
+**Prompt + validator habits:** System prompt must document both `open` and `placeholder` states; coerce `assignment_create` on placeholder → `assignment` update; dry-run drops moves into real bookings with the occupant id in the reason; hold rows excluded from placeable index; apply refuses to expand an open-slot draft into a cancel (TOCTOU). See [test-cases.md](test-cases.md) §5.6–5.10.
 
 ### Underspecified requests
 
@@ -140,11 +199,18 @@ Replay recent turns **with authoritative proposal outcomes**, not assistant pros
 DRAFT     → not on canonical data
 IGNORED   → human rejected; schedule unchanged
 APPLIED   → on canonical data
+FAILED    → human clicked Apply but the WRITE was rejected; canonical data unchanged
 ```
 
 Preamble for the model: *only APPLIED means the change happened; ignore "I moved" if outcomes say DRAFT/IGNORED.*
 
 On Apply/Ignore, append explicit user lines: `[Human applied draft "…"]` / `[Human ignored draft "…"]`.
+
+**Apply failures need a feedback loop — the missing 4th outcome.** A rejected apply (DB constraint, validation, conflict) is a dead-end if you only model draft/applied/ignored: the apply handler throws *before* `status = applied`, so the proposal stays `draft`, no session line is written, and the planner re-reads it next turn as a benign "pending review" — with **no idea the write failed**. The error lives only in the UI. Fix:
+
+- On apply error, **record an authoritative session line** before re-throwing: `[Apply FAILED for "…"] — write REJECTED (<reason>); canonical data NOT changed; do not re-propose verbatim — diagnose and correct.` Resolve the session key *before* the write so a failure can still be attributed.
+- Teach the planner that `[Apply FAILED …]` is authoritative (same status as DRAFT/IGNORED): **re-plan, don't re-emit the identical proposal.** Without this the bot loops: propose → reject → propose the same thing.
+- This is reactive (next turn). Pair it with the deterministic create→move guard above so the common cause never reaches the user at all.
 
 ### Validation repair turn
 
@@ -158,7 +224,8 @@ Slack has no model dropdown and no “History access” checkbox. Users need **e
 |------|---------|-------------------|
 | **`!help`** | Post the full capabilities guide (Block Kit); **no model call** | Empty @mentions and “what can you do?” should be instant; avoids burning tokens on static docs |
 | **`!model <slug>`** | Override planner model for this request | Default is fast/cheap; audit and hard reasoning need a stronger tier without changing global config |
-| **`!audit [duration]`** | Opt-in audit/operations history + prefetch | History is sensitive and token-heavy — never on by default; `!audit` also auto-picks the **audit default model** unless `!model` overrides |
+| **`!advanced`** | Unlock Tier-2 composable primitives + atomic `batch` | The long-tail vocabulary is gated so the default model stays on the ergonomic hot paths (see [tiered-operation-harness.md](tiered-operation-harness.md)) |
+| **`!audit [duration]`** | Opt-in audit/operations history + prefetch | History is sensitive and token-heavy — never on by default; `!audit` also auto-picks the **audit default model** unless `!model` overrides (deep-dive: [audit-log.md](audit-log.md)) |
 | **`!mine`** | History: only requester’s edits | Requires knowing requester email in the adapter |
 | **`!verbose`** | Full before/after diffs in history results | Compact by default; verbose blows context |
 | **“not by me”** (natural language) | Maps to `exclude:<email>` on history prefetch | Users say this more often than a flag |
@@ -176,11 +243,12 @@ Slack has no model dropdown and no “History access” checkbox. Users need **e
 | Slack | Web |
 |-------|-----|
 | `!model openai-gpt-5.4-high` | Model dropdown (`modelSlug` on `/api/ai/chat`) |
+| `!advanced` | “Advanced” checkbox (`mode: "advanced"` on `/api/ai/chat`) |
 | `!audit` | “History access” checkbox |
 | `!help` | “What can aiebot do?” examples panel |
 | Selected grid slot context | Autofill composer with slot/assignment ids |
 
-**Model slugs** live in one registry (`AI_MODEL_OPTIONS`) shared by frontend + backend. Document every slug in `!help`. Typical defaults: fast mini for Q&A; a **mid reasoning tier** (e.g. `…-medium`) for `!audit` unless `!model` wins — **not** the slowest/highest tier (see *Super-long audit requests* below for why high reasoning got the audit path silently killed).
+**Model slugs** live in one registry (`AI_MODEL_OPTIONS`) shared by frontend + backend. Document every slug in `!help`. Typical defaults: fast mini for Q&A; a **mid reasoning tier** (e.g. `…-medium`) for `!audit` unless `!model` wins — **not** the slowest/highest tier (see [audit-log.md](audit-log.md) for why high reasoning got the audit path silently killed).
 
 **Best practices:**
 
@@ -191,34 +259,13 @@ Slack has no model dropdown and no “History access” checkbox. Users need **e
 
 Reference: `functions/_lib/slack-flags.ts`, `functions/_lib/slack.ts` (`buildHelpBlocks`), `src/domain/aiModels.ts`. See [slackbot-builder](../slackbot-builder/level-3-interactive.md) § inline flags.
 
-### Super-long audit requests (serverless execution budget) — production lesson
+### Super-long audit requests (serverless execution budget)
 
-Audit/history is the **slowest path you have**: opt-in history prefetch + token-heavy context + (tempting) the strongest model + a multi-turn agent loop. On a serverless background task (Cloudflare Pages `waitUntil`, Lambda, etc.) there is a finite execution budget. A run that exceeds it is **killed mid-flight**: no reply, no error reaction, and **no telemetry row** — the user sees only the ack (e.g. the 👀 reaction) forever. This is worse than an error because it looks like the bot ignored them.
-
-**Two compounding causes (both real, seen in prod):**
-
-1. **Slowest model + high reasoning + many turns** simply runs 1–2 min. The audit answer is mostly *summarizing already-prefetched events* — it does **not** need max reasoning.
-2. **Provider HTTP calls with no timeout** hang indefinitely on a stalled response. Across several turns this blows any budget and the platform reaps the whole task.
-
-**Diagnose with the run-log table, not just logs.** A killed run writes **nothing** (the `success` insert is never reached; the `error` insert only fires on *caught* throws). So:
-- A gap between "request accepted" events and recorded `*_runs` rows = silent kills.
-- `GROUP BY model, outcome` with `MIN/MAX(duration_ms)`: the slow model shows huge max durations and the killed attempts are simply absent. (In prod: audit on the high tier ran 19–132s and the reaped ones recorded 0 rows; the same path on a mini/medium tier finished in 2–5s.)
-
-**Fixes (cheap, no new infra — do these first):**
-
-- **Hard timeout on EVERY provider call** via `AbortController` (covers the request *and* the streaming body read; clear the timer in `finally`). A stall now throws → the per-provider `try/catch` degrades gracefully (deterministic fallback + provider note, or a posted error) instead of hanging. This alone guarantees the ack surface always resolves to a reply or ❌.
-  - **Streaming calls need an IDLE timeout, not a total-duration cap** (regression learned the hard way). A flat "abort after 120s total" **kills a long-but-healthy answer mid-stream** — a compound request (e.g. place 5 talks at once) legitimately streams for minutes, and the user sees `provider call exceeded 120000ms timeout` right when it was almost done. Instead, **reset the abort timer on every byte of activity** and only abort after a genuine stall (no data for the window). Feed an `onActivity` callback through the SSE reader (fires per network chunk, incl. keepalives during reasoning), and `reset()` the timer there. Net: actively-progressing streams run as long as they need; truly hung streams still fall back. Keep the **total** cap only for **non-streaming** one-shot calls (lookup turns, summaries) where "too long" really does mean "hung". Workers/Pages don't bill awaited I/O as CPU, so a multi-minute *active* stream is fine; an *idle* one is the real risk.
-  - Log when the **idle** abort actually fires (`console.warn` with provider + ms) so a real hang is distinguishable from a slow-but-fine response.
-- **Lower the audit default model** to a mid reasoning tier. Capable enough to summarize prefetched history; fast enough to finish in budget.
-- **Cap audit turns** — with a history prefetch, turn 1 can usually answer.
-- **Always emit the terminal state in `finally`** (swap 👀→✅/❌, close the stream), never only on the success branch — so even an unexpected throw flips the ack off "working".
-- **Record provider + model + turns + duration + outcome per run** so silent kills are detectable as *missing* rows.
-
-**When the work genuinely needs minutes** (deep multi-turn audit reasoning that must never drop): move it **off the request path** into a durable runner — Cloudflare **Workflows** (durable steps, per-step retries, unlimited wall time), a queue, or a DO alarm. Pattern: ack instantly → kick off a durable instance → post the result back when done. Do **not** rely on `waitUntil` for multi-minute work. Caveat: durability ≠ speed — a Workflow that runs 2 min is reliable but the user still waits 2 min, so prefer making the path *fast* (timeout + faster model) before reaching for durable execution.
-
-Reference: `functions/_lib/ai.ts` (`providerCallTimeout` with `reset()`, `STREAM_IDLE_TIMEOUT_MS` vs `PROVIDER_CALL_TIMEOUT_MS`, `readSse(…, onActivity)`, per-provider `try/catch` fallback), `src/domain/aiModels.ts` (`AUDIT_AI_MODEL_SLUG`), `aiebot_runs` telemetry in `aiebot-store.ts`.
+Audit/history is the **slowest path you have** (opt-in prefetch + token-heavy context + tempting strongest model + multi-turn loop), and on a serverless background task (`waitUntil`, Lambda) a run that exceeds the execution budget is **killed mid-flight** — no reply, no error reaction, no telemetry row. Mitigate with: a **hard timeout on every provider call** (idle-reset for streams, total cap for one-shots), a **mid-tier audit default model**, **capped audit turns**, terminal state emitted in `finally`, and **per-run telemetry** (silent kills show as missing rows). Full lesson, diagnosis, and durable-runner escalation: [audit-log.md](audit-log.md).
 
 ## UX
+
+> This section covers the **draft→apply data flow** (queuing, cards, versioning, errors). For how the copilot *surface itself* behaves — floating/dockable panel, the summon-hotkey **size state machine** (cycle: minimized → sidebar 50% → sidebar 80% → centered → minimized), custom-resize reconciliation, on-screen clamping, and snap animation — see [surface-ux.md](surface-ux.md).
 
 ### Request queuing (long agent loops)
 
@@ -322,6 +369,9 @@ When adding a new patchable field:
 
 Other validator habits:
 
+- **Dry-run must model every DB invariant**, not just occupancy — unique external/import ids, FKs, CHECKs. Anything the DB enforces but the snapshot doesn't simulate is a "passed review, failed apply" bug, invisible to the agent's self-repair retry (which re-runs the same validator).
+- **Apply must not expand scope vs. the reviewed draft (TOCTOU).** A plain placement whose target slot got occupied between draft and apply must **fail** (`409 slot_occupied` → re-draft), never silently lower into a `cancel + place`. Decide replace at draft time (visible card); refuse synthesis at apply. Generalize to any destructive lowering (create→cancel, cascading delete). See *Apply == review*.
+- **Duplicate unique external id → rewrite `*_create` to update/reactivate** the existing row (incl. soft-deleted rows that still hold the key); match the guard predicate to the *index's* predicate (occupancy excludes cancelled; external-id may not).
 - `assignment_create` only on truly open slots; **rewrite** create-on-placeholder → `assignment` update
 - Strip misplaced keys (`slotId` in patch → belongs in `targetId`)
 - Auto-`speaker_create` when placement uses unknown `kind: "text"` speaker
@@ -339,8 +389,13 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Validator allowlist** | User gives IDs in prompt; UI fields empty after apply |
 | **Alias normalization** | `proposal_id` in patch dropped as unsupported key |
 | **Slot kind** | Create on occupied slot; create on placeholder holder |
+| **Apply-time scope expansion (TOCTOU)** | Draft places into an open slot; slot gets booked before Apply → apply silently cancels the new occupant nobody approved |
 | **Open vs placeholder feed** | `open_slot` lookup empty; user-visible “open” 5:10 slot ignored |
 | **Move vs fill** | Move into placeholder slot dropped as `slot_occupied` |
+| **Unique external id reuse** | `create` re-links an already-used cfp/import id → `UNIQUE` fail at apply; create→move/reactivate guard not exercised |
+| **Soft-deleted holds the key** | Cancelled row still owns the unique external id; create→move guard that filters out cancelled misses it |
+| **Apply-failure feedback** | Rejected apply leaves proposal `draft`, no session line; planner re-proposes the identical doomed change |
+| **Dedupe key searchability** | Unique key absent from all lookups → agent can't find existing link → duplicates |
 | **Dry-run drop** | Optimistic answer but zero draft cards |
 | **Coercion** | Valid placement rewritten create→update |
 | **Conflict** | Double-booked speaker; swap unslotted talk |
@@ -363,6 +418,11 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 - Assistant turn stored in session **without** proposal status → follow-up hallucination
 - `recordSessionTurn` only stores natural language, not outcomes
 - Apply handler without `try/catch` → console `Uncaught (in promise)`
+- Apply failure surfaced only in the UI (no `FAILED` session line) → planner never learns, re-proposes the same rejected change
+- Apply path **re-derives** the operation from live state and can emit a *more destructive* op (e.g. a cancel) than the reviewed draft → silent overwrite (TOCTOU); decide destructive lowering at draft, refuse scope expansion at apply (one lowering fn, `preview` vs `apply` mode)
+- Dry-run/validator that models only occupancy while the DB also enforces unique external ids/FKs → "passed review, failed apply"
+- create→move/dedup guard that filters `status != 'cancelled'` while the unique index covers all rows → cancelled row still blocks inserts
+- DB-enforced unique key that no lookup indexes → agent can't dedupe, duplicates
 - Model-only enforcement of "don't claim applied" without outcome lines
 - Full schedule fetch for version poll → expensive; add version-only endpoint
 - Routing user message content into deterministic vs model branch when only `contextNote` should ground
@@ -378,8 +438,18 @@ Portable excerpts in [samples/](./samples/) (from `swyxio/aiewf2026-internal-sch
 | [proposal-validate-and-normalize.ts](./samples/proposal-validate-and-normalize.ts) | Allowlist, CFP aliases, placeholder coercion |
 | [client-request-queue.ts](./samples/client-request-queue.ts) | FIFO queue, queued vs active, Stop/Remove |
 | [version-stale-ux.ts](./samples/version-stale-ux.ts) | Version poll endpoint, 409 handling, apply errors |
+| [surface-panel-sizing.tsx](./samples/surface-panel-sizing.tsx) | Floating panel ⌘/Ctrl+J size state machine + preset/custom-resize reconciliation + full-height flex layout (see [surface-ux.md](surface-ux.md)) |
 
 Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/frontend/components/AiebotPanel.tsx`, `scheduleSync.ts`.
+
+Side files (deeper dives, reference as needed):
+
+| File | When to read |
+|------|--------------|
+| [surface-ux.md](surface-ux.md) | Copilot **panel/surface ergonomics** — floating-dockable panel, summon-hotkey size state machine, custom-resize coexistence, viewport clamping, snap animation, discoverability |
+| [test-cases.md](test-cases.md) | Acceptance criteria / test scenarios while building or reviewing |
+| [tiered-operation-harness.md](tiered-operation-harness.md) | **Secondary** refactor plan — collapse the copilot write surface into 3 tiers + 1 selector **after** an MVP teaches you the real use cases |
+| [audit-log.md](audit-log.md) | Operational deep-dive on audit/history mode + the serverless execution budget |
 
 ## Quick build checklist
 
@@ -387,8 +457,12 @@ Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/fr
 [ ] Proposals never write canonical state directly
 [ ] Validator allowlist matches all promoted patch fields (+ aliases)
 [ ] Dry-run + dropped list in answer when drafts fail
-[ ] Session context includes DRAFT/APPLIED/IGNORED per proposal set
-[ ] Apply/Ignore recorded in session
+[ ] Dry-run models ALL DB invariants (unique external ids/FKs/CHECKs), not just occupancy
+[ ] Apply == review: a placement whose slot got occupied after drafting FAILS at apply (no synthesized cancel); destructive replace is decided + shown at draft time (preview vs apply mode on the lowering fn)
+[ ] Unique external id reuse → create rewritten to update/reactivate (incl. soft-deleted rows); guard predicate matches index predicate
+[ ] Every dedupe key the agent reasons about is searchable in a lookup (or deduped deterministically server-side)
+[ ] Session context includes DRAFT/APPLIED/IGNORED/FAILED per proposal set
+[ ] Apply/Ignore recorded in session; apply FAILURE recorded too (authoritative re-plan line)
 [ ] System prompt: tentative voice + outcome authority
 [ ] Apply/save catches version_conflict with visible error
 [ ] Version poll + persistent stale toast
@@ -407,4 +481,5 @@ Full repo paths: `functions/_lib/aiebot.ts`, `aiebot-store.ts`, `ai.ts`, `src/fr
 [ ] Audit default = mid reasoning tier (not slowest); audit turns capped
 [ ] Ack surface resolves to reply/✅/❌ in finally — never stuck on the working reaction
 [ ] Per-run telemetry (model/turns/duration/outcome) so silent kills show as missing rows
+[ ] Copilot panel: one summon hotkey; consider a size state machine (cycle presets → minimize); clamp on-screen; restore-on-click vs cycle-on-key; snap transition only during snap + honor reduced-motion (see surface-ux.md)
 ```
