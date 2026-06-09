@@ -1,16 +1,13 @@
 ---
 name: slackbot-builder
 description: >
- Build production Slack bots with strong opinions, organized as a simple-to-polished
- progression: signature verification, 3-second acknowledgements, event idempotency,
- thread-to-session state, responsive feedback (reactions + assistant.threads.setStatus +
- live streaming), Block Kit interactions that resolve in place, human-in-the-loop
- approvals with dry-run validation, routing/clarification ladders, the native Agents &
- AI Apps surface (assistant container, suggested prompts, thread titles, native text
- streaming with a tool-call timeline), file/media outputs with in-message control
- buttons and a views.open settings modal, App Home preferences, long-running signed
- callbacks, rate-limit hardening, per-modality model-call tracing, structured logging,
- and multi-surface/multi-tenant scale.
+ Build production Slack bots as a maturity ladder (L0–L6): signature verification,
+ fast acks + event idempotency, threads-as-sessions, responsive feedback (reactions,
+ status, live streaming), Block Kit interactions + human-in-the-loop approvals, the
+ native Agents & AI Apps surface, file/media outputs + settings modals, durable
+ long-running work, rate-limit + security hardening, model-call tracing, and
+ multi-surface/multi-tenant scale. Use when building or hardening any Slack app, bot,
+ agent-in-Slack workflow, or Slack Events API / Block Kit / slash-command integration.
 license: MIT
 metadata:
  author: swyx
@@ -58,7 +55,10 @@ business logic, that's the bug.
 always-on rungs): **image generation** → [image-generation.md](image-generation.md)
 (durable renders, model-param gating, iterate buttons).
 
-## Strong opinions (apply at every level)
+## Strong opinions
+
+**Universal invariants — true at every level** (the level-specific opinions live in
+their level files so they load only when you're there):
 
 - Prefer the **Events API over Socket Mode** for production web services unless inbound HTTP is impossible.
 - **Verify every request from the raw body before parsing.** No exceptions, including the `url_verification` handshake.
@@ -69,14 +69,14 @@ always-on rungs): **image generation** → [image-generation.md](image-generatio
 - **Slack is a status surface, not the product.** Link to a durable web/session URL for long output, logs, PRs, artifacts.
 - **Keep Block Kit terse**; canonical state lives in your backend.
 - **Every enriching call is best-effort** — a failed reaction, status update, or context fetch must never abort the real answer.
-- **Mutations require a human.** A query never changes state; it drafts, and a human approves.
-- **Slack flags configure the core; they are not a second product.** `!help` (static guide, no model), `!model <slug>` (planner tier), `!audit` (opt-in history + stronger default model + server prefetch). Parse once, strip before planning, document slugs in help. See [L3 § inline flags](level-3-interactive.md#inline-message-flags-help-model-audit).
-- **Route on the raw request, never the context.** Any intent classifier / keyword router / fast-path heuristic must inspect **only** the user's actual message — never the channel topic, thread history, or session memory you prepend for grounding. Context is for grounding the model, not for deciding *how* to handle the request. (See the war story in [level-3-interactive.md](level-3-interactive.md).)
-- **Don't degrade silently.** When a request takes a non-default path (canned/deterministic answer, model skipped, provider fell back), **log it**. A bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
-- **Instrument every model call, not just the text one.** Image/audio/embedding/classifier calls are billable too. Trace at the **core function** so every adapter inherits the span; capture usage tokens; price per modality; never put binary in attributes. The text planner is the one you remember; the image call is the one that ships dark.
-- **Generated artifacts get affordances, not just a file drop.** A produced image/chart/PDF should arrive with iterate buttons (Regenerate/Variation) and a `:gear:` settings modal — the Cursor-agent pattern. (Gotcha: `files.completeUploadExternal` drops `blocks` if `initial_comment` is set — use `blocks` to carry buttons.)
-- **Slow work is a long job, not a background promise.** Anything over ~20s (a media render, a heavy export) outlives serverless request-scoped background primitives (Cloudflare `waitUntil` is cancelled ~30s in), so the bot acks 👀 and goes silent. Run it in **durable execution** (Workflow/Durable Object/queue) triggered from the fast handler, with retries and a visible failure path (👀 → ⚠️ + trace id from inside the job). Generating images specifically? → [image-generation.md](image-generation.md).
+- **Don't degrade silently.** Log every non-default path (canned/deterministic answer, model skipped, provider fallback) — a bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
 - **Flat JSON logs with trace ids everywhere.** Slack bots are otherwise painful to debug.
+
+**Level-specific opinions** (full rationale + war stories in the linked file): mutations
+require a human, inline flags configure the core, route on the raw request not the
+context, artifacts get iterate-button + settings-modal affordances → [L3](level-3-interactive.md);
+instrument *every* model call (not just text), slow work runs in durable execution not a
+background promise → [L5](level-5-hardened.md); image-gen specifics → [image-generation.md](image-generation.md).
 
 ## How to use this skill
 
