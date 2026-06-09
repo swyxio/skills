@@ -7,15 +7,17 @@ description: >
  live streaming), Block Kit interactions that resolve in place, human-in-the-loop
  approvals with dry-run validation, routing/clarification ladders, the native Agents &
  AI Apps surface (assistant container, suggested prompts, thread titles, native text
- streaming with a tool-call timeline), App Home preferences, long-running signed
- callbacks, rate-limit hardening, structured logging, and multi-surface/multi-tenant scale.
+ streaming with a tool-call timeline), file/media outputs with in-message control
+ buttons and a views.open settings modal, App Home preferences, long-running signed
+ callbacks, rate-limit hardening, per-modality model-call tracing, structured logging,
+ and multi-surface/multi-tenant scale.
 license: MIT
 metadata:
  author: swyx
- version: "2.0"
+ version: "2.1"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
- tags: "slack, bot, events-api, block-kit, cloudflare-workers, hono, kv, observability, agents"
+ tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, cloudflare-workers, hono, kv, observability, tracing, agents"
 ---
 # Slackbot Builder
 
@@ -47,7 +49,7 @@ business logic, that's the bug.
 | **L0** | Skeleton — *it responds* | `/health`, `/events`, signature verify, `url_verification`, fast `200` | [level-0-skeleton.md](level-0-skeleton.md) |
 | **L1** | Responsive Q&A (MVP) — *a working bot* | 3s ack + async work, `event_id` dedupe, ignore bots, strip mentions, threaded `chat.postMessage`, thin `fetch` wrappers, JSON logs + trace id | [level-1-mvp.md](level-1-mvp.md) |
 | **L2** | Context-aware — *feels conversational* | threads-as-sessions + TTL store, bounded thread/channel context, DMs, empty-mention nudge, 👀 reaction + `assistant.threads.setStatus` | [level-2-context.md](level-2-context.md) |
-| **L3** | Interactive / agentic — *acts, human in the loop* | `/interactions` (signed), Block Kit approvals that resolve in place, dry-run validation, slash commands, routing/clarification ladder, rich/actionable drafts (evidence + artifacts, bulk + edit-before-apply, deep links), live status streaming, monitored-thread "should I reply?" | [level-3-interactive.md](level-3-interactive.md) |
+| **L3** | Interactive / agentic — *acts, human in the loop* | `/interactions` (signed), Block Kit approvals that resolve in place, dry-run validation, slash commands, routing/clarification ladder, rich/actionable drafts (evidence + artifacts, bulk + edit-before-apply, deep links), file/media uploads with in-message control buttons + a `views.open` settings modal (per-thread), live status streaming, monitored-thread "should I reply?" | [level-3-interactive.md](level-3-interactive.md) |
 | **L4** | Native agent surface — *first-class agent UX* | Agents & AI Apps container, `assistant_thread_started` greeting + suggested prompts, thread titles, native text streaming (`chat.startStream`/`appendStream`/`stopStream`) mapping your `emit` stream to a typed answer + tool-call timeline, graceful fallback to the message flow | [level-4-native-agent.md](level-4-native-agent.md) |
 | **L5** | Hardened — *won't page you at 2am* | long-running signed callbacks + durable URL, App Home prefs/dashboard (allowlisted), rate-limit backoff + `ok:false` handling, sanitized user-facing errors, storage TTL table, service-user attribution + audit, full observability, security/testing checklists, scope degradation, manifest setup | [level-5-hardened.md](level-5-hardened.md) |
 | **L6** | Multi-surface / scale — *polished platform* | one core across web/Slack/cron, multi-workspace/tenancy, queues + backpressure for heavy work, target caching, usage analytics + answer-quality feedback, break-glass/degraded config | [level-6-scale.md](level-6-scale.md) |
@@ -67,6 +69,8 @@ business logic, that's the bug.
 - **Slack flags configure the core; they are not a second product.** `!help` (static guide, no model), `!model <slug>` (planner tier), `!audit` (opt-in history + stronger default model + server prefetch). Parse once, strip before planning, document slugs in help. See [L3 § inline flags](level-3-interactive.md#inline-message-flags-help-model-audit).
 - **Route on the raw request, never the context.** Any intent classifier / keyword router / fast-path heuristic must inspect **only** the user's actual message — never the channel topic, thread history, or session memory you prepend for grounding. Context is for grounding the model, not for deciding *how* to handle the request. (See the war story in [level-3-interactive.md](level-3-interactive.md).)
 - **Don't degrade silently.** When a request takes a non-default path (canned/deterministic answer, model skipped, provider fell back), **log it**. A bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
+- **Instrument every model call, not just the text one.** Image/audio/embedding/classifier calls are billable too. Trace at the **core function** so every adapter inherits the span; capture usage tokens; price per modality; never put binary in attributes. The text planner is the one you remember; the image call is the one that ships dark.
+- **Generated artifacts get affordances, not just a file drop.** A produced image/chart/PDF should arrive with iterate buttons (Regenerate/Variation) and a `:gear:` settings modal — the Cursor-agent pattern. (Gotcha: `files.completeUploadExternal` drops `blocks` if `initial_comment` is set — use `blocks` to carry buttons.)
 - **Flat JSON logs with trace ids everywhere.** Slack bots are otherwise painful to debug.
 
 ## How to use this skill

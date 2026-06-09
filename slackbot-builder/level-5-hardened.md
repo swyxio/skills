@@ -86,6 +86,35 @@ against circular/bad data; convert `Error` → `error_message`/`error_type`/`err
 **Log every non-default path** (deterministic/canned answer, model skipped,
 provider fallback) so silent degradation is greppable, not a mystery.
 
+### Instrument *every* model call, not just the text one
+
+If you ship LLM tracing (OpenInference/Arize, Langfuse, OTel spans), the text
+planner is the obvious one to wire — and the easy one to **forget everywhere
+else**: image generation, audio/TTS, embeddings, a re-rank, the "should I reply?"
+classifier. Each is a billable model call your dashboards should see.
+
+> **War story.** A bot had clean Arize spans on its text planner, then grew an
+> image-generation feature — which shipped with **zero** telemetry. It only
+> surfaced when someone asked "why don't image calls show up in Arize?" Fix +
+> rules that prevent the next gap:
+>
+> - **Trace at the core function** (`generateImage`, `embed`, `transcribe`), not at
+>   each Slack/web call site — then every adapter path (mention, button, slash,
+>   cron) inherits the span for free. Wrap the provider call in `try/catch/finally`
+>   so you `recordError` on failure and `flush` always.
+> - **Capture usage tokens.** Return the *full* provider payload from your call
+>   helper, not just the bytes/text you render — usage lives alongside `data`, and
+>   you'll drop it if the helper's return type only exposes the result.
+> - **Per-modality cost.** Image/audio tokens bill far above text rates (e.g. GPT
+>   Image: ~$8 in / $30 out per 1M vs text's $2/$8). A single price table keyed on
+>   *model* keeps `llm.cost.usd` honest.
+> - **Never put binary in span attributes.** No base64 image/audio in `input`/
+>   `output` — summarize (`"2 images · 1024x1536 · gpt-image-2"`) and let the
+>   redactor strip any stray `data:` URLs.
+> - **Reuse the request `trace_id`** so the media span correlates with the rest of
+>   the turn. **Zero-overhead when disabled** (return a no-op tracer unless the
+>   tracing env is fully set).
+
 ## Scopes: least privilege, graceful degradation
 
 | Capability | Scope(s) |
@@ -96,7 +125,8 @@ provider fallback) so silent degradation is greppable, not a mystery.
 | Channel topic | `channels:read` / `groups:read` |
 | Composer status | `chat:write` (+ enable Agents & AI Apps) |
 | Suggested prompts / thread titles (L4) | `assistant:write` (+ enable Agents & AI Apps) |
-| Modals (edit-before-apply) | `commands` / interactivity (no extra scope) |
+| Modals (edit-before-apply, settings) | interactivity enabled (no extra scope) |
+| File / media uploads + reading attachments | `files:write` + `files:read` |
 | App Home | `views.publish` (App Home tab enabled) |
 | Mentions / DMs / monitored threads | `app_mentions:read`, `message.im`, `message.channels`/`groups`/`mpim` |
 
@@ -130,6 +160,9 @@ a signed `url_verification` request.
 - [ ] Completion callback signature validation.
 - [ ] Slack `{ ok:false, error }` handling; `429` backoff.
 - [ ] Native streaming start/append/stop; fallback when the Agents feature is disabled.
+- [ ] File upload (single + multi-file in one message); buttons render via `blocks` (no `initial_comment`).
+- [ ] Modal open within the `trigger_id` window; `view_submission` closes + persists; bad option rejected.
+- [ ] Every model call (text + image/audio/embeddings/classifier) emits a trace span with usage + cost.
 - [ ] Slow backend: Slack still gets the immediate ack.
 
 ## Anti-patterns
@@ -139,6 +172,9 @@ a signed `url_verification` request.
 - ❌ Processing a signed callback with the wrong shape.
 - ❌ Trusting a stored preference without re-validating against the allowlist.
 - ❌ Leaking raw backend/provider error text into the channel instead of a sanitized message + `trace_id`.
+- ❌ Tracing only the text planner while image/audio/embedding/classifier model calls ship dark.
+- ❌ Pricing image/audio tokens at text rates (or dropping `usage` because the call helper only returned the result, not the full payload).
+- ❌ Putting base64 media into trace attributes.
 
 ## Graduate when…
 

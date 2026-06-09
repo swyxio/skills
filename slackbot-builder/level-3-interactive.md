@@ -15,6 +15,7 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **Routing / clarification ladder** for ambiguous targets.
 - [ ] **Live status streaming** of agent steps into the composer (native version → L4).
 - [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
+- [ ] **Rich outputs + in-message settings** — file/media uploads, control buttons under output (Regenerate/Variation/Settings), a `views.open` settings modal persisted per thread.
 
 ## Mutations require a human
 
@@ -158,6 +159,95 @@ Ack with an ephemeral "working on it…", then post the answer to `response_url`
 (`response_type: in_channel`). One-shot, no thread — skip session continuity but
 still record observability (L5) and support per-request flags (e.g. `--history`).
 
+## Rich outputs: file/media uploads + in-message controls + a settings modal
+
+When the bot produces an **artifact** (a generated image, a rendered chart, a PDF)
+rather than text, give it the same affordances Slack gives the Cursor/agent apps:
+the file plus buttons to iterate, plus a modal to change settings — no flag-typing
+required. This is the `:repeat: Regenerate · :sparkles: Variation · :gear: Settings`
+pattern.
+
+### Uploading files (external upload flow)
+
+Three steps, needs `files:read` (download user attachments) + `files:write`:
+`files.getUploadURLExternal` → `POST` the bytes to that URL → `files.completeUploadExternal`
+(shares it in the channel/thread). For **multiple files in one message**, reserve +
+PUT each file, then call `completeUploadExternal` **once** with all file ids.
+
+> **Gotcha (cost me an iteration):** `completeUploadExternal` **ignores `blocks`
+> when `initial_comment` is present.** To attach action buttons to a file message,
+> send `blocks` (a `section` caption + an `actions` block) and **omit
+> `initial_comment`** — you can't have both. If you only need a caption, use
+> `initial_comment`.
+
+```ts
+// caption + iterate buttons travel WITH the image (no initial_comment)
+await slack("files.completeUploadExternal", {
+  files: fileIds, channel_id: channel, thread_ts: threadTs,
+  blocks: [
+    { type: "section", text: { type: "mrkdwn", text: caption } },
+    { type: "actions", elements: [
+      { type: "button", action_id: "img_regen",   text: { type: "plain_text", text: ":repeat: Regenerate" }, value: threadKey },
+      { type: "button", action_id: "img_variation",text: { type: "plain_text", text: ":sparkles: Variation" }, value: threadKey },
+      { type: "button", action_id: "img_settings", text: { type: "plain_text", text: ":gear: Settings" },     value: threadKey },
+    ]},
+  ],
+}, env);
+```
+
+**Stateless iteration without a blob store:** to "edit the last output", re-read the
+thread (`conversations.replies`) and re-download the prior image(s) as references —
+don't stand up R2/S3 just to remember the last render. Distinguish the bot's own
+outputs (`bot_id` set) from human-supplied references so "Regenerate" replays the
+original sources instead of recursively editing its own last frame.
+
+**Attaching a file is itself an intent signal.** A picture on a mention/DM is an
+unambiguous "work with this" — route to the media path without requiring a flag
+(but still classify on the raw text, not the prepended context — see above).
+
+### A settings modal (`views.open` + `view_submission`)
+
+Mirror the Cursor "Change Settings" UX: a `:gear:` button opens a modal of
+`static_select`s (model, aspect, quality, # variations), saved **per thread** and
+reused by every later run + button press. Per-message flags (e.g. `!size`) override
+the stored setting for that one request.
+
+- **Opening:** a modal needs a fresh `trigger_id` from the `block_actions`
+  interaction; it's valid **~3s**. Ack `200` immediately, then call `views.open`
+  in the background (no slow work before it).
+- **Saving:** on `view_submission` return an **empty `200`** (or `{response_action}`)
+  within 3s to close the modal; persist in the background. Read selections from
+  `view.state.values[block_id][action_id].selected_option.value`.
+- **Carry routing context through the round-trip** in `view.private_metadata`
+  (JSON of `{ threadKey, channel, threadTs }`) — the submission payload has no
+  message context otherwise.
+- **Pre-fill** each select's `initial_option` from current settings so the modal
+  shows where things stand.
+
+### Two things the interactivity endpoint must do
+
+1. **Branch on `payload.type`** (`block_actions` vs `view_submission`) — don't
+   assume `actions[0]` exists. A modal submit has no `actions`.
+2. **A button `value` is ≤ 2000 chars** — stash a **key** (the thread key), then
+   re-derive channel/threadTs from `payload.container.thread_ts || message.thread_ts
+   || message.ts` and `payload.channel.id`. Never serialize the whole payload into a
+   button value.
+
+```ts
+const type = String(payload.type || "");
+if (type === "view_submission") {
+  if (payload.view?.callback_id === "img_settings_modal") schedule(saveSettings(payload.view));
+  return new Response("", { status: 200 });          // closes the modal
+}
+// else block_actions:
+if (actionId === "img_settings") { schedule(openModal(triggerId, channel, threadTs)); return ack200(); }
+if (actionId === "img_regen" || actionId === "img_variation") { schedule(regenerate(...)); return ack200(); }
+```
+
+Keep the heavy generate-and-upload logic in **one shared core** that both the
+events path (mention/DM/thread) and the button path call — so Regenerate behaves
+exactly like a fresh request, just replaying the stored prompt + settings.
+
 ## Inline message flags (`!help`, `!model`, `!audit`)
 
 Slack has no settings UI for model tier or sensitive lookups. Use **strip-before-planning**
@@ -238,6 +328,11 @@ Cross-surface detail: [data-chatbots](../data-chatbots/SKILL.md) § Slack inline
 - ❌ Silently taking a non-model / canned-answer path with no log — undebuggable when it misfires.
 - ❌ Computing evidence/artifacts in the core and then rendering only the prose answer on Slack — show the conflicts/metrics/plan you already have.
 - ❌ A model classifier call on *every* monitored-thread message when a cheap heuristic would filter most of them first.
+- ❌ Sending `blocks` **and** `initial_comment` to `completeUploadExternal` and expecting your buttons to show — `blocks` is silently dropped. Pick one.
+- ❌ Stuffing a whole payload into a button `value` (2000-char cap) instead of a key you re-hydrate server-side.
+- ❌ Handling only `block_actions` in `/interactions` and 400-ing or dropping `view_submission` modal saves.
+- ❌ Doing slow work before `views.open`, letting the `trigger_id` expire (~3s) so the modal never opens.
+- ❌ Building a blob store just to "remember the last image" when re-reading the thread + re-downloading is enough.
 
 ## Graduate when…
 
