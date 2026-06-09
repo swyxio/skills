@@ -15,7 +15,7 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **Routing / clarification ladder** for ambiguous targets.
 - [ ] **Live status streaming** of agent steps into the composer (native version → L4).
 - [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
-- [ ] **Rich outputs + in-message settings** — file/media uploads, control buttons under output (Regenerate/Variation/Settings), a `views.open` settings modal persisted per thread.
+- [ ] **Rich outputs + in-message settings** — file/media uploads, control buttons under output (Regenerate/Variation/Settings), a `views.open` settings modal persisted per thread. (Generating images? → [image-generation.md](image-generation.md).)
 
 ## Mutations require a human
 
@@ -204,6 +204,11 @@ original sources instead of recursively editing its own last frame.
 **Attaching a file is itself an intent signal.** A picture on a mention/DM is an
 unambiguous "work with this" — route to the media path without requiring a flag
 (but still classify on the raw text, not the prepended context — see above).
+
+> **Generating (not just uploading) images?** That's an optional capability with
+> its own gotchas — long renders must run in durable execution (a `waitUntil`
+> render gets cancelled ~30s in and the bot goes silent), and provider params must
+> be gated by model family. See [image-generation.md](image-generation.md).
 
 ### A settings modal (`views.open` + `view_submission`)
 

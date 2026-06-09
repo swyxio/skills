@@ -14,10 +14,10 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.1"
+ version: "2.2"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
- tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, cloudflare-workers, hono, kv, observability, tracing, agents"
+ tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
 ---
 # Slackbot Builder
 
@@ -54,6 +54,10 @@ business logic, that's the bug.
 | **L5** | Hardened — *won't page you at 2am* | long-running signed callbacks + durable URL, App Home prefs/dashboard (allowlisted), rate-limit backoff + `ok:false` handling, sanitized user-facing errors, storage TTL table, service-user attribution + audit, full observability, security/testing checklists, scope degradation, manifest setup | [level-5-hardened.md](level-5-hardened.md) |
 | **L6** | Multi-surface / scale — *polished platform* | one core across web/Slack/cron, multi-workspace/tenancy, queues + backpressure for heavy work, target caching, usage analytics + answer-quality feedback, break-glass/degraded config | [level-6-scale.md](level-6-scale.md) |
 
+**Optional capability references** (load only if you ship the feature — they're not
+always-on rungs): **image generation** → [image-generation.md](image-generation.md)
+(durable renders, model-param gating, iterate buttons).
+
 ## Strong opinions (apply at every level)
 
 - Prefer the **Events API over Socket Mode** for production web services unless inbound HTTP is impossible.
@@ -71,6 +75,7 @@ business logic, that's the bug.
 - **Don't degrade silently.** When a request takes a non-default path (canned/deterministic answer, model skipped, provider fell back), **log it**. A bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
 - **Instrument every model call, not just the text one.** Image/audio/embedding/classifier calls are billable too. Trace at the **core function** so every adapter inherits the span; capture usage tokens; price per modality; never put binary in attributes. The text planner is the one you remember; the image call is the one that ships dark.
 - **Generated artifacts get affordances, not just a file drop.** A produced image/chart/PDF should arrive with iterate buttons (Regenerate/Variation) and a `:gear:` settings modal — the Cursor-agent pattern. (Gotcha: `files.completeUploadExternal` drops `blocks` if `initial_comment` is set — use `blocks` to carry buttons.)
+- **Slow work is a long job, not a background promise.** Anything over ~20s (a media render, a heavy export) outlives serverless request-scoped background primitives (Cloudflare `waitUntil` is cancelled ~30s in), so the bot acks 👀 and goes silent. Run it in **durable execution** (Workflow/Durable Object/queue) triggered from the fast handler, with retries and a visible failure path (👀 → ⚠️ + trace id from inside the job). Generating images specifically? → [image-generation.md](image-generation.md).
 - **Flat JSON logs with trace ids everywhere.** Slack bots are otherwise painful to debug.
 
 ## How to use this skill

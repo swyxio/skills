@@ -6,6 +6,7 @@ stale config, and an audit. Everything degrades instead of breaking.
 ## Checklist
 
 - [ ] **Long-running work** → ack now, **signed internal callback** later, durable session URL.
+- [ ] **Slow work** (>20s; e.g. media generation) runs in **durable execution** (Workflow/Durable Object/queue), not `waitUntil`. (Image capability: [image-generation.md](image-generation.md).)
 - [ ] **App Home preferences** with server-side allowlist validation.
 - [ ] **Slack API hardening** — `429`/`Retry-After`, `5xx` backoff, `ok:false` handling, centralized.
 - [ ] **Storage keys** namespaced with explicit TTLs.
@@ -29,6 +30,14 @@ stale config, and an audit. Everything degrades instead of breaking.
 
 Never make Slack the only place the result exists — the backend retains the
 canonical transcript, artifacts, and errors.
+
+**Beware the serverless background-work cap.** Request-scoped primitives like
+Cloudflare `waitUntil()` are cancelled ~30s after the response — a "fire the
+callback" follow-up is fine, but anything slow (a 30–90s media render) gets killed
+mid-flight and the bot goes silent after its ack. Heavy work belongs in **durable
+execution** (Workflow / Durable Object / queue), triggered from the fast handler,
+which also gives you retries and a visible failure path. The image-generation
+capability has the full pattern + war story → [image-generation.md](image-generation.md).
 
 ## App Home preferences
 
@@ -164,6 +173,7 @@ a signed `url_verification` request.
 - [ ] Modal open within the `trigger_id` window; `view_submission` closes + persists; bad option rejected.
 - [ ] Every model call (text + image/audio/embeddings/classifier) emits a trace span with usage + cost.
 - [ ] Slow backend: Slack still gets the immediate ack.
+- [ ] Slow job (>30s) completes via durable execution, not a cancelled `waitUntil`; on failure the message shows ⚠️ + trace id, never a stuck 👀.
 
 ## Anti-patterns
 
@@ -175,6 +185,7 @@ a signed `url_verification` request.
 - ❌ Tracing only the text planner while image/audio/embedding/classifier model calls ship dark.
 - ❌ Pricing image/audio tokens at text rates (or dropping `usage` because the call helper only returned the result, not the full payload).
 - ❌ Putting base64 media into trace attributes.
+- ❌ Running slow work (a 30–90s render) inside `waitUntil` / a request-scoped promise — it's cancelled mid-flight and the bot goes silent after the ack.
 
 ## Graduate when…
 
