@@ -6,9 +6,10 @@ description: >-
   prompting, multistep compound requests (remove + add in one turn), FIFO client
   queuing for long agent loops, validation, session memory, optimistic versioning
   UX, copilot panel/surface ergonomics (floating-dockable panel, summon-hotkey
-  size state machine), and test matrices. Use when building
-  scheduling/admin chatbots, proposal workflows, human-in-the-loop agents, or
-  reviewing aiebot-style features.
+  size state machine), LLM tracing/observability (OpenInference + OTLP session.id
+  grouping, orphan-span fixes, human thumbs up/down feedback annotations), and test
+  matrices. Use when building scheduling/admin chatbots, proposal workflows,
+  human-in-the-loop agents, or reviewing aiebot-style features.
 ---
 
 # Data chatbots
@@ -25,6 +26,7 @@ Real failures from running aiebot against live data. Each one shipped, bit us, a
 4. **Audit/history run silently killed on serverless.** The slowest path (opt-in prefetch + token-heavy + tempting strongest model + multi-turn) blew the background execution budget and was killed mid-flight — no reply, no error, no telemetry row. **Guardrail: hard per-call timeout, mid-tier audit default model, capped turns, terminal state in `finally`, per-run telemetry.** See [audit-log.md](audit-log.md).
 5. **"Open" in the UI ≠ "open" in the index.** Seed placeholder holder rows make a slot look empty while the DB still has an active assignment; `open_slot` lookups missed them and metrics undercounted. **Guardrail: two placeable kinds (open + placeholder); feed `placeableSlotsByDayRoom`; exclude HOLD/reserved.** See *Schedule data*.
 6. **Bulk apply fanned out one fixed `expectedVersion`.** Applying N drafts with the same starting version made #2..N throw `version_conflict`. **Guardrail: chain each apply's returned version into the next; one final refresh.** See *Bulk review / mass-approve*.
+7. **Second overwrite — a real talk misclassified as an empty placeholder (no TOCTOU).** Months after #1 we lost another talk by a *different* route. A **confirmed** talk titled `"TBD — <speaker> on <topic>"` had its speaker named only in the title (empty `speakers` array). The placeholder heuristic was "no linked speaker ⇒ empty holder", so it was listed as placeable and a **benign `assignment` update** overwrote its content **in place** — no slot change, no version skew, nothing the #1 apply-time guard watched for. A prod query showed *dozens* of real talks (speaker pending) were sitting ducks. **Two guardrails: (a) don't infer "empty" from one fragile signal — a real talk can lack a linked speaker; classify by content (descriptive title ⇒ real booking) and treat ambiguous as real (default-deny). (b) A REPLACEMENT is destructive too — enforce "no destroy without explicit opt-in" at the *write layer* (the reducer), keyed on the target's actual content, so it catches every vector regardless of how the planner classified the row.** See *Destruction must be explicit* below + test §5.11.
 
 > **Cheap forensic check:** a read-only script that walks the audit log for **cancels whose reviewed proposal did not approve a cancel** (executed op cancelled a talk, but the stored proposal was a placement/move, not an explicit cancel or a batch with a visible cancel op) finds every silent overwrite after the fact. Run it periodically; once the apply-time guard ships it should always return zero.
 
@@ -45,6 +47,10 @@ One orchestration function per product surface (web, Slack, email) so behavior s
 
 The audit/change log is **immutable (append-only)** and **tracks the actor (which user) and the action taken** on every change to canonical state. Ideally it also backs **snapshot / rollback / restore** of canonical state. Every apply path writes through it (see *Apply path* above). Operational deep-dive (audit-mode access, prefetch/turn caps, serverless execution budget): [audit-log.md](audit-log.md).
 
+### Observability / tracing (separate from the audit log)
+
+The audit log is your *immutable record of canonical-state changes*; **LLM tracing is a separate, lossy observability stream** of what the agent did per turn (spans, tokens, cost, tool calls) sent to a backend like Arize AX / Phoenix over OpenInference + OTLP. Don't conflate them. The non-obvious traps — grouping multi-turn traces with **`session.id`** (each turn is correctly its own trace; without `session.id` it just *looks* like single-turn capture), the **"spans without root spans"** orphan bug on serverless (root span dropped at flush), and **human 👍/👎 feedback capture** (own-DB source of truth + best-effort vendor annotation, span id resolved server-side) — live in [observability.md](observability.md).
+
 ### Slot occupancy (schedule-shaped products)
 
 Enforce in **SQLite**, not only application code:
@@ -53,7 +59,16 @@ Enforce in **SQLite**, not only application code:
 - **CHECK** `(status != 'cancelled' OR slot_id IS NULL)` — cancelled rows cannot keep a `slot_id` (prevents “NO PROGRAMMING” ghosts shadowing a real talk).
 - **App layer** mirrors DB: `releaseSlotWhenCancelled` on update; grid uses active-only `assignmentsBySlot`; map `UNIQUE`/`CHECK` failures to `409 slot_occupied`.
 
-### Apply == review: never expand scope at apply time (TOCTOU overwrite)
+### Destruction must be explicit (apply == review, and replacements count too)
+
+**A write that erases existing real content — overwrite, replace, or cancel — is destructive and must be (1) explicitly shown to the human and (2) enforced at the write layer.** We learned this in two incidents from two different angles:
+
+- **Battle scar #1 (apply-time scope expansion / TOCTOU):** the *apply* path re-derived a more destructive op than the reviewed draft. (Below.)
+- **Battle scar #7 (draft-time misclassification):** a real talk was wrongly classified as an empty placeholder, so a *benign-looking in-place update* destroyed it — with no slot change, no version skew, nothing #1's guard watched. (Case study below.)
+
+The unifying lesson: **don't rely on the planner/heuristics to decide what's safe to destroy.** Put the invariant in the reducer — the single chokepoint every write flows through — keyed on the *target's actual current content at write time*: refuse to overwrite/replace a real booking's identity unless the caller explicitly opts in (`allowReplace`), and refuse to synthesize a cancel the human didn't approve. A write-layer guard catches both vectors regardless of classifier accuracy or draft/apply timing.
+
+> **Case study — battle scar #7 (placeholder misclassification).** "Empty placeholder" was inferred from one fragile signal: an empty `speakers` array. But a real talk can have its speaker pending or named only in the title (`"TBD — Charlie Holtz on Conductor for coding agents"`, status `confirmed`). It got exposed as placeable and overwritten in place by an `assignment` update. **Fixes:** (a) classify by *content* — a descriptive title means real booking even with no linked speaker; only short/empty label-like titles (`Keynote`, `M1`, sponsor holders) are fillable; treat ambiguous as real (**default-deny**). (b) Move occupant classification into **one shared module** used by both the planner index and the reducer, so the two layers can never disagree. (c) Add the write-layer `isDestructiveReplace` guard: an in-place update that swaps a booked row's title+speaker (or a different external/CFP id) for a different talk is refused unless `allowReplace` is set. Legit edits (rename, link a speaker, fill a real placeholder) pass untouched.
 
 **The operation you APPLY must be identical in scope to the draft the human REVIEWED.** The dangerous gap is *time-of-check vs time-of-use*: a draft is reviewed against one snapshot and applied against a later one. If the apply path **re-derives** the operation from live state, it can quietly become **more destructive** than what was approved.
 
@@ -450,6 +465,7 @@ Side files (deeper dives, reference as needed):
 | [test-cases.md](test-cases.md) | Acceptance criteria / test scenarios while building or reviewing |
 | [tiered-operation-harness.md](tiered-operation-harness.md) | **Secondary** refactor plan — collapse the copilot write surface into 3 tiers + 1 selector **after** an MVP teaches you the real use cases |
 | [audit-log.md](audit-log.md) | Operational deep-dive on audit/history mode + the serverless execution budget |
+| [observability.md](observability.md) | **LLM tracing + human feedback** — session.id grouping of multi-turn traces, orphan/"spans without root spans" fix on serverless, thumbs up/down annotation capture, Arize AX (GraphQL) vs Phoenix (REST) APIs |
 
 ## Quick build checklist
 
@@ -459,6 +475,7 @@ Side files (deeper dives, reference as needed):
 [ ] Dry-run + dropped list in answer when drafts fail
 [ ] Dry-run models ALL DB invariants (unique external ids/FKs/CHECKs), not just occupancy
 [ ] Apply == review: a placement whose slot got occupied after drafting FAILS at apply (no synthesized cancel); destructive replace is decided + shown at draft time (preview vs apply mode on the lowering fn)
+[ ] Destruction is explicit at the write layer: reducer refuses to overwrite/replace a real booking's identity in place unless `allowReplace`; "empty placeholder" is classified by content (descriptive title ⇒ real, default-deny), shared by planner + reducer
 [ ] Unique external id reuse → create rewritten to update/reactivate (incl. soft-deleted rows); guard predicate matches index predicate
 [ ] Every dedupe key the agent reasons about is searchable in a lookup (or deduped deterministically server-side)
 [ ] Session context includes DRAFT/APPLIED/IGNORED/FAILED per proposal set

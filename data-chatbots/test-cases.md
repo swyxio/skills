@@ -169,6 +169,16 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 - **Expect:** The *stored* draft is an explicit replace `batch[cancel X, place Y]` (visible cancel card, destructive → unchecked by default), **not** a bare create whose cancel would only materialize at apply.
 - **Forensic:** A read-only audit-log scan for cancels whose reviewed proposal was a placement/move (not an explicit cancel / not a batch with a visible cancel op) returns **zero** once the guard ships.
 
+### 5.11 Replacement is destructive — in-place identity overwrite refused unless opted in
+
+- **Setup:** A **real** booking with a descriptive title but **no linked speaker** (speaker named only in the title, empty `speakers` array), status `confirmed`.
+- **Classify:** Occupant kind is **booking**, not `placeholder` — it must **not** appear in the placeable index. (A short/empty label-like title — `Keynote`, `M1`, sponsor holder — *does* stay a fillable placeholder.)
+- **Action:** Apply an `assignment` update on that row whose patch swaps in a **different** talk (title + speaker changed, or a different external/CFP id).
+- **Expect:** Apply **fails** (`destructive_replace` → re-draft); the booked row is untouched.
+- **Expect (opt-in):** The same op with `allowReplace: true` **succeeds** (intentional in-place replacement).
+- **Expect (edits still pass):** Renaming the same talk, linking its real speaker, or filling a genuine empty placeholder are **not** flagged.
+- **Note:** Same classifier module backs both the planner index and the reducer, so "what's placeable" and "what's protected" can never disagree.
+
 ---
 
 ## 6. Agent loop & tools
