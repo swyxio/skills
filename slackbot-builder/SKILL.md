@@ -63,6 +63,7 @@ their level files so they load only when you're there):
 - Prefer the **Events API over Socket Mode** for production web services unless inbound HTTP is impossible.
 - **Verify every request from the raw body before parsing.** No exceptions, including the `url_verification` handshake.
 - **Return fast.** Authenticate, dedupe, background the work, log, and `200` within Slack's 3-second window.
+- **Never run agent work inline.** Every serverless handler has a silent timeout ceiling (~30s on Cloudflare `waitUntil`) that *cancels* slow work with no error — the bot just goes quiet. Ack instantly, run agent loops / renders / audit turns in **durable execution**, and guarantee a final result-or-error. Fix the execution model on one surface, then **audit every entry point** (mention, DM, slash, button, cron) that calls the same core. → [L5](level-5-hardened.md)
 - **Threads are the session boundary.** Key state by `channel` + `thread_ts`.
 - **Never answer yourself.** Drop `bot_id` / `bot_message` and message subtypes before expensive work.
 - **Real shared store for state** (idempotency, sessions, pending clarifications, prefs). In-memory maps are dev-only.
@@ -74,9 +75,12 @@ their level files so they load only when you're there):
 
 **Level-specific opinions** (full rationale + war stories in the linked file): mutations
 require a human, inline flags configure the core, route on the raw request not the
-context, artifacts get iterate-button + settings-modal affordances → [L3](level-3-interactive.md);
+context, interactive actions ack the click *instantly* + batch ops show *incremental*
+progress, artifacts get iterate-button + settings-modal affordances → [L3](level-3-interactive.md);
 instrument *every* model call (not just text), slow work runs in durable execution not a
-background promise → [L5](level-5-hardened.md); image-gen specifics → [image-generation.md](image-generation.md).
+background promise, every entry surface protected equally, every job ends in a guaranteed
+result-or-error delivered by the right surface mechanism → [L5](level-5-hardened.md);
+image-gen specifics → [image-generation.md](image-generation.md).
 
 ## How to use this skill
 

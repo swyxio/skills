@@ -7,7 +7,8 @@ the right target, streams progress, and only chimes into threads when addressed.
 
 - [ ] **`POST /interactions`** route (signed like everything else).
 - [ ] **Human-in-the-loop approvals** — drafts as Block Kit, applied only on click.
-- [ ] **Buttons resolve in place** (`chat.update`) so they can't be actioned twice.
+- [ ] **Buttons resolve in place** (`chat.update`) so they can't be actioned twice — with an **instant ephemeral ack** before any async work so the button can't be double-fired in the gap.
+- [ ] **Batch actions show incremental progress** — rewrite the message after each item, not once at the end.
 - [ ] **Dry-run validation** before presenting drafts.
 - [ ] **Rich, actionable drafts** — render computed evidence/artifacts, bulk + edit-before-apply, deep links.
 - [ ] **Slash commands** for one-shot invocations.
@@ -46,6 +47,53 @@ const blocks = original.blocks.map(b =>
     : b);
 await slack("chat.update", { channel, ts, text, blocks }, env);
 ```
+
+**Acknowledge the *click* before the work, or users double-fire.** The `chat.update`
+above only lands *after* the apply finishes — that's 2–5s where the button is still
+visually live and gets clicked again (→ duplicate ops, `version_conflict`, confusing
+errors). Fire a **non-blocking ephemeral ack** the instant the interaction arrives,
+*then* schedule the real work. Don't `await` it; it must not delay the `200`.
+
+```ts
+// fire-and-forget — instant "received", does not block the 200 or the apply
+void postToResponseUrl(payload.response_url, {
+  response_type: "ephemeral", replace_original: false, text: ":hourglass_flowing_sand: Applying…",
+});
+schedule(resolveAction(payload, params));   // durable/offloaded real work
+return ack200();
+```
+
+(For truly fast in-place toggles you can skip the ephemeral and just `chat.update`;
+the ephemeral ack earns its keep the moment the action schedules async work.)
+
+## Batch actions: incremental progress, not one final rewrite
+
+"Approve all 6 drafts" processes items sequentially (~3s each). If you only rewrite
+the message *once at the end*, the user stares at unchanged buttons for 20+ seconds
+and assumes it hung (→ re-click, "is it broken?"). Rewrite the message **after each
+item**, best-effort, so progress is visible:
+
+```ts
+const resolved = new Map<string, string>();
+for (const item of items) {
+  await applyOne(item);                                   // the real, awaited work
+  resolved.set(item.id, statusLineFor(item));
+  void slack("chat.update", {                             // best-effort, don't block the next item
+    channel, ts: messageTs,
+    text: `:hourglass_flowing_sand: Applied ${resolved.size}/${items.length}…`,
+    blocks: rebuildBlocks(originalBlocks, resolved),
+  }, env);
+}
+await slack("chat.update", { channel, ts: messageTs, text: summary, blocks: finalBlocks }, env);
+```
+
+- The per-item rewrite is **best-effort** — a failed `chat.update` must not abort
+  the remaining items.
+- One bad item records its error on that row and the loop **keeps going**; post a
+  summary line (`Applied 5 of 7 — 2 need attention`).
+- The version/concurrency mechanics of bulk apply (chain `expectedVersion`, one
+  final snapshot refresh) live in [data-chatbots](../data-chatbots/SKILL.md)
+  § Bulk review / mass-approve.
 
 ## Rich, actionable drafts
 
@@ -323,6 +371,8 @@ Cross-surface detail: [data-chatbots](../data-chatbots/SKILL.md) § Slack inline
 
 - ❌ Applying changes straight from a query (no approval).
 - ❌ Leaving buttons live after a click → double-applies.
+- ❌ Relying on the post-work `chat.update` alone to disable a button — the 2–5s gap before it lands invites a double-click; fire an instant ephemeral ack first.
+- ❌ Bulk-applying N items with a single final message rewrite → 20s of frozen-looking UI; rewrite per item.
 - ❌ Presenting drafts you never validated → 409 on approve.
 - ❌ Guessing the target when several are plausible.
 - ❌ Replying to every thread message → the bot becomes a nuisance.

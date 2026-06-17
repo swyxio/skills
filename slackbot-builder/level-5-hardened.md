@@ -5,8 +5,11 @@ stale config, and an audit. Everything degrades instead of breaking.
 
 ## Checklist
 
+- [ ] **Never run agent work inline** — the fast handler acks; slow work runs in **durable execution** (Workflow/Durable Object/queue), not a request-scoped promise (`waitUntil`) that's silently cancelled at the platform ceiling. (Image capability: [image-generation.md](image-generation.md).)
+- [ ] **Every entry surface protected** — after fixing the execution model on one surface, audit *every* call site of the core (mention, DM, slash, button, modal, cron, inbound email).
+- [ ] **Guaranteed result-or-error** — every offloaded job posts a final message in a `finally`/error branch; the ack indicator never hangs forever.
+- [ ] **Delivery branches by surface** — the completion step posts via the right mechanism (thread reply vs `response_url` vs SSE vs email).
 - [ ] **Long-running work** → ack now, **signed internal callback** later, durable session URL.
-- [ ] **Slow work** (>20s; e.g. media generation) runs in **durable execution** (Workflow/Durable Object/queue), not `waitUntil`. (Image capability: [image-generation.md](image-generation.md).)
 - [ ] **App Home preferences** with server-side allowlist validation.
 - [ ] **Slack API hardening** — `429`/`Retry-After`, `5xx` backoff, `ok:false` handling, centralized.
 - [ ] **Storage keys** namespaced with explicit TTLs.
@@ -17,7 +20,133 @@ stale config, and an audit. Everything degrades instead of breaking.
 - [ ] **Manifest-based setup**; secrets applied at deploy time.
 - [ ] **Security + testing checklists** pass.
 
+## Never run agent work inline (the silent timeout ceiling)
+
+Every serverless handler has a **hard time limit that silently kills your work**.
+When the ceiling is hit your callback is *cancelled* — no error thrown, no `catch`,
+no cleanup. The user stares at a 👀 / "is thinking…" forever and never gets a
+result *or* an error. This is the single worst Slack-agent failure mode, and it's
+invisible in logs (no row is even written).
+
+| Platform | Background mechanism | Typical ceiling |
+|---|---|---|
+| Cloudflare Pages / Workers | `waitUntil()` (request-scoped promise) | **~30s, silently cancelled** |
+| Cloudflare Workers (paid) | CPU time | 30s CPU (wall-clock can be longer) |
+| AWS Lambda behind API Gateway | synchronous invoke | 29s (API GW) — Lambda itself 15min |
+| Vercel Functions | function duration | 10s hobby / 60s pro / 300s enterprise |
+
+`waitUntil` (the L1 ack pattern) is fine for a **quick** reply — a sub-~20s model
+call, or to *fire* a signed callback. It is **not** where agent loops, multi-turn
+audit runs, or 30–90s media renders belong. Those exceed the budget and die
+mid-flight. The fix is always the same three moves:
+
+1. **Ack instantly** (return `200` within Slack's 3s; drop a 👀 / status).
+2. **Offload slow work** to **durable execution** — Cloudflare Workflow / Durable
+   Object / Queue; AWS Step Functions / SQS+Lambda; Vercel via Inngest/Trigger.dev
+   or a long-running service. You get retries, a real timeout, and a *visible*
+   failure path.
+3. **Deliver asynchronously** via the Slack Web API (post / `response_url` /
+   callback) — see *Deliver by surface* below.
+
+```ts
+// ❌ Silent death ~30s in — no catch runs, no log, 👀 hangs forever
+ctx.waitUntil((async () => {
+  const result = await runBotQuery(query);   // 45s+ for a compound/audit turn
+  await postResult(result);                  // never reached
+})());
+
+// ✅ Durable: retries, real timeout, guaranteed error visibility
+await triggerWorkflow(env, { query, channel, threadTs, responseUrl, traceId });
+return ack200();
+```
+
+> **Audit prompt:** grep every deferred-execution call site —
+> `rg "waitUntil|executionCtx|ctx\.waitUntil|schedule\(" --type ts` — and for each
+> ask: *"if this takes 60s, does the user ever find out it failed?"* If no, it
+> moves to durable execution.
+
+The image-generation capability has the full Workflow pattern + war story →
+[image-generation.md](image-generation.md).
+
+## Fix one surface, audit all of them
+
+The same core (`runBotQuery`, `generateImage`, `applyDraft`) is reachable from
+**many entry points**, each with its own handler and ack mechanism:
+
+- `@mention` in channels/threads
+- DMs / assistant threads
+- `/slash` commands (different handler, different ack)
+- Button clicks + modal submissions (`/interactions`)
+- Scheduled / cron triggers
+- Inbound email, web API
+
+When you fix a timeout (or any execution-model) bug on one surface, the *identical*
+bug usually still lives on the others that call the same slow function. After every
+such fix, grep the call sites and verify each is offloaded + delivers a guaranteed
+result-or-error:
+
+```bash
+rg "runBotQuery|generateImage|applyDraft" --type ts -l
+```
+
+> **War story.** A scheduling bot moved its **@mention** path to a durable Workflow
+> after silent ~30s deaths — but the **slash command** and the **"Approve all"
+> button** still ran the same planner inline in `waitUntil`. They kept dying
+> silently for weeks because the fix was scoped to one handler instead of the core.
+
+## Three-phase guarantee: ack → progress → result-or-error
+
+Every user-initiated action must hit all three phases. Phase 3 is the one teams
+skip — and it's the one that turns a transient backend hiccup into a bot that
+"just goes quiet".
+
+| Phase | When | Slack mechanism |
+|---|---|---|
+| **1. Instant ack** | <1s | 👀 reaction + `assistant.threads.setStatus`; slash → ephemeral body; button → ephemeral via `response_url` |
+| **2. Live progress** | every 3–10s for >5s work | `setStatus("is searching speakers…")`; slash → `response_url` + `replace_original`; button (bulk) → rewrite message in place |
+| **3. Guaranteed result _or_ visible error** | always | final message — never a hung indicator |
+
+Phase 3 must be **unconditional**. In a durable workflow, put delivery and error
+reporting in steps that always run, even after retries are exhausted:
+
+```ts
+try {
+  const result = await step.do("plan", { retries: { limit: 1 }, timeout: "5 minutes" },
+    () => runBotQuery(query));
+  await step.do("deliver", () => deliver(params, result));      // by surface, below
+} catch (err) {
+  // ALWAYS runs — the user gets an error, not silence
+  await step.do("report-error", () => deliverError(params, `:warning: Couldn't finish that. (ref ${traceId})`));
+}
+```
+
+On a request-scoped runner (no workflow), the equivalent is a `finally` that
+resolves the ack surface to ✅ / ❌ / a reply — **the 👀 must never stay stuck.**
+
+## Deliver by surface
+
+A single core/workflow serves multiple surfaces, so the **delivery step must branch**
+— a slash command has no thread to reply into and no message to react to; a button
+came from `response_url`; a web request wants the SSE stream.
+
+```ts
+async function deliver(params: DeliveryCtx, result: Result) {
+  if (params.responseUrl) {                               // slash command / button
+    await postToResponseUrl(params.responseUrl, { response_type: "in_channel", text: result.text, blocks: result.blocks });
+  } else if (params.channel) {                            // mention / DM
+    await slack("chat.postMessage", { channel: params.channel, thread_ts: params.threadTs, text: result.text, blocks: result.blocks }, env);
+  } else if (params.sse) {
+    params.sse.send(result);                              // web chat
+  }
+}
+```
+
+Apply the same branching to **error reporting** and **reaction/status cleanup** —
+don't call `reactions.remove`/`setStatus` for a slash command that never had a 👀.
+
 ## Long-running work + signed callbacks
+
+When the durable backend is a *separate* service (not an inline workflow step):
 
 1. Post an ack in the thread: `Working on …`.
 2. Create/resume a backend session; store the Slack callback context (`channel`,
@@ -30,14 +159,6 @@ stale config, and an audit. Everything degrades instead of breaking.
 
 Never make Slack the only place the result exists — the backend retains the
 canonical transcript, artifacts, and errors.
-
-**Beware the serverless background-work cap.** Request-scoped primitives like
-Cloudflare `waitUntil()` are cancelled ~30s after the response — a "fire the
-callback" follow-up is fine, but anything slow (a 30–90s media render) gets killed
-mid-flight and the bot goes silent after its ack. Heavy work belongs in **durable
-execution** (Workflow / Durable Object / queue), triggered from the fast handler,
-which also gives you retries and a visible failure path. The image-generation
-capability has the full pattern + war story → [image-generation.md](image-generation.md).
 
 ## App Home preferences
 
@@ -174,6 +295,9 @@ a signed `url_verification` request.
 - [ ] Every model call (text + image/audio/embeddings/classifier) emits a trace span with usage + cost.
 - [ ] Slow backend: Slack still gets the immediate ack.
 - [ ] Slow job (>30s) completes via durable execution, not a cancelled `waitUntil`; on failure the message shows ⚠️ + trace id, never a stuck 👀.
+- [ ] **Every** entry surface (mention, DM, slash, button, cron) routes slow work to durable execution — none left running the core inline.
+- [ ] A job that throws *after* retries still posts a visible error to the correct surface (thread vs `response_url`); nothing hangs on 👀.
+- [ ] Same workflow invoked from a slash command delivers via `response_url`; from a mention, via a thread reply — no path assumes a thread that isn't there.
 
 ## Anti-patterns
 
@@ -186,9 +310,14 @@ a signed `url_verification` request.
 - ❌ Pricing image/audio tokens at text rates (or dropping `usage` because the call helper only returned the result, not the full payload).
 - ❌ Putting base64 media into trace attributes.
 - ❌ Running slow work (a 30–90s render) inside `waitUntil` / a request-scoped promise — it's cancelled mid-flight and the bot goes silent after the ack.
+- ❌ Fixing the timeout on one surface (@mention) while a sibling surface (slash command, button) still runs the same core inline.
+- ❌ A durable job whose only failure path is a log line — the user's 👀 / "working…" hangs forever with no result and no error.
+- ❌ A single delivery path that assumes a thread to reply into (slash commands have none) or reacts to a message that doesn't exist.
 
 ## Graduate when…
 
-A slow job acks instantly and completes via a signed callback; Slack `429`/`5xx`
-are handled centrally; user-facing errors are sanitized with a trace id; the
-security + testing checklists pass; and missing scopes degrade silently.
+A slow job acks instantly and completes via durable execution (no surface still
+runs the core inline); every job ends in a guaranteed result *or* a visible error,
+delivered by the right surface mechanism; Slack `429`/`5xx` are handled centrally;
+user-facing errors are sanitized with a trace id; the security + testing checklists
+pass; and missing scopes degrade silently.

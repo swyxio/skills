@@ -51,7 +51,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [smart-entity-resolution](./smart-entity-resolution) — resolves named people or organizations in messy databases with aliases, duplicates, sparse records, common names, LLM retrieval repair, reranking, and visible runner-up candidates.
 - [autoreview](./autoreview) — runs structured closeout code review with a selected helper, verifies accepted findings, reruns focused tests, and stops only when no actionable findings remain.
 - [public-qa-chatbot](./public-qa-chatbot) — builds unauthenticated public Q&A chatbot widgets with rate limits, origin/input hardening, semantic caching, observability, streaming UX, and robust chat scroll behavior.
-- [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, fast acknowledgements, thread sessions, Block Kit interactions, App Home preferences, callbacks, and structured observability.
+- [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, fast acknowledgements, thread sessions, Block Kit interactions, App Home preferences, durable execution for slow agent work (never inline past the silent serverless timeout ceiling), guaranteed result-or-error delivery branched by surface, and structured observability.
 - [sync-url-navigation](./sync-url-navigation) — syncs URL query params with app navigation, tabs, and filter state so views are bookmarkable and shareable (`view`, `table`, `q`, deep links, `popstate`).
 - [app-ux-paradigms](./app-ux-paradigms) — standard web UX defaults: Esc/backdrop/× for modals, ⌘/Ctrl shortcuts, form save states, tables, menus, and help text for discoverable interactions.
 - [data-chatbots](./data-chatbots) — copilots over structured data that **propose** mutations (draft → Apply), not direct writes: prompting, validator allowlists, session memory with DRAFT/APPLIED/IGNORED, version-stale UX, and test matrices.
@@ -74,6 +74,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [conference-developer-endpoints](./conference-developer-endpoints) — adds and reviews developer-facing conference endpoints such as `llms.txt`, `sessions.json`, `speakers.json`, and MCP routes.
 - [europe-developer-api](./europe-developer-api) — works with AI Engineer Europe developer endpoints, public schedule JSON, speakers JSON, MCP access, and the local `aieng` CLI.
 - [schedule-design](./schedule-design) — builds polished conference schedule views with React grids, filters, modals, favorites, sticky layouts, and normalized data.
+- [sessionize-automation](./sessionize-automation) — automates authenticated Sessionize organizer workflows, including private UI endpoint tracing, bulk status staging, speaker/session form submits, and post-write verification.
 - [sync-accelevents](./sync-accelevents) — pulls Accelevents speaker headshots, social data, bios, and schedule metadata into local conference source data.
 - [testing-schedule-preview](./testing-schedule-preview) — tests the AI Engineer Europe internal Bun schedule preview and public schedule page workflows.
 - [web-animation-perf](./web-animation-perf) — debugs jank, layout thrash, and drift in JS-driven CSS animation across AI Engineer conference sites.

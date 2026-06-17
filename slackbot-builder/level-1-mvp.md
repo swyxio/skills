@@ -41,6 +41,11 @@ app.post("/events", async (c) => {
 On non-Worker platforms, replace `waitUntil` with a job queue, durable workflow,
 or immediate handoff to a worker.
 
+> ⚠️ `waitUntil` is fine for a **quick** reply (a sub-~20s model call), but it is
+> itself **silently cancelled** at a platform ceiling (~30s on Cloudflare). Agent
+> loops, audit runs, and media renders exceed it and die mid-flight with no error —
+> they graduate to **durable execution** at [L5](level-5-hardened.md).
+
 ## Dedupe Slack retries
 
 Slack retries on timeout/error. Store `event_id` with a short TTL (~1h); skip if
