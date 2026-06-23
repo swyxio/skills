@@ -91,6 +91,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 
 - [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
 - [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
+- [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
 - [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
 - [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
 
