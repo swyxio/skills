@@ -93,6 +93,15 @@ Use regex `/^tbd\b/i` to detect placeholder speaker names and render them with r
 ### Modal state syncs to URL query param
 Opening a modal sets `?session=<id>` via shallow router replace. On mount, check `router.query.session` to restore the modal. This makes session links shareable.
 
+### Persistent identity must be stable across schedule rebuilds
+Never use array indexes, sort positions, or regenerated numeric ordinals as identities for detail API lookups, cache keys, favorites, or new deep links. Schedule restructuring changes those numbers and can pair a current title with another session's cached description.
+
+- Use the stable scheduled-occurrence/assignment ID; fall back to a stable slot ID for assignment-less logistics such as lunch.
+- Store stable IDs in favorites and deep links. Keep numeric-link parsing only as a temporary compatibility path.
+- When session details load separately from the page payload, include the schedule version in the request/cache key and return it in the response.
+- Reject a page/API schedule-version mismatch instead of merging potentially unrelated content.
+- Add a regression test that reorders slots and proves each stable session ID still resolves to the same description.
+
 ## Semantic Search
 
 ### Debounced API call with request-ID guard
@@ -107,3 +116,4 @@ Each keystroke increments a `semanticRequestIdRef`. Only the response whose ID m
 5. **Line height in dense grid cells**: Default line height is too spacious for 9-10px text in grid cells. Use `lineHeight: 1.15`.
 6. **Room name typos**: Always validate room names against the source data (e.g. "Westley" vs "Wesley"). A bulk rename in the JSON source is safer than patching in rendering code.
 7. **Filter state invisible to users**: The most common UX complaint was "I don't know why I'm seeing fewer sessions." Always make active filter state visible even when the filter panel is collapsed.
+8. **Ordinal IDs are not cache keys**: A positional session ID may point to a different talk after any insertion, removal, or reorder. Lazy detail endpoints keyed by ordinals can transiently attach the wrong abstract to a title when page and API caches come from different schedule builds. Use stable occurrence IDs plus schedule-versioned requests.
