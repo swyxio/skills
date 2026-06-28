@@ -106,8 +106,23 @@ Open popup:
     .find(e => (e.innerText || e.textContent || e.getAttribute("aria-label") || "")
       .includes("Edit video visibility status"));
   if (!button) return JSON.stringify({ ok: false, error: "missing visibility button" });
+  button.scrollIntoView({ block: "center" });
   button.click();
   return JSON.stringify({ ok: true });
+})()
+```
+
+Then poll for the popup before selecting Schedule. A click can succeed without the
+popup being ready yet:
+
+```js
+(() => {
+  const popup = document.querySelector("ytcp-video-visibility-edit-popup");
+  const text = popup ? (popup.innerText || popup.textContent || "") : "";
+  return JSON.stringify({
+    ready: !!popup && /Save or publish|Schedule|Public|Unlisted/.test(text),
+    text: text.slice(0, 1000)
+  });
 })()
 ```
 
