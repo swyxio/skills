@@ -4,6 +4,28 @@ Reusable skills for Claude Code, Codex, Cursor, and similar agent environments.
 
 Each folder is a self-contained workflow with a `SKILL.md`, optional supporting scripts, and a focused trigger description so an agent can pick the right tool quickly.
 
+## Quick Routing
+
+Use the most specific skill that matches the job. When a workflow spans multiple stages, start with the orchestrator skill, then hand off to the atomic skill for the active stage.
+
+| User intent | Start with | Hand off to |
+| --- | --- | --- |
+| Download, transform, transcribe, thumbnail, or publish media end-to-end | [media-transform](./media-transform) | `download-*`, `transcribe-anything`, `thumbnail-extraction`, `youtube-*` |
+| Download a video from a page, X/Twitter, or Zoom | [download-video](./download-video), [download-x-video](./download-x-video), or [zoom-download](./zoom-download) | [media-transform](./media-transform) if more stages follow |
+| Upload many submitted talks from Airtable/local files to YouTube Studio | [youtube-studio-batch-upload](./youtube-studio-batch-upload) | [youtube-studio-computer-use](./youtube-studio-computer-use) for post-upload Studio cleanup |
+| Edit existing YouTube Studio videos, thumbnails, playlists, visibility, or schedules through Chrome | [youtube-studio-computer-use](./youtube-studio-computer-use) | [youtube-api](./youtube-api) if API credentials exist and the task is API-friendly |
+| Use the YouTube Data API for metadata, thumbnails, uploads, or channel listing | [youtube-api](./youtube-api) | [youtube-studio-computer-use](./youtube-studio-computer-use) for Studio-only states |
+| Build conference schedule, speaker, or developer data surfaces | [schedule-design](./schedule-design), [conference-developer-endpoints](./conference-developer-endpoints), or [europe-developer-api](./europe-developer-api) | `accelevents-*` or [sync-accelevents](./sync-accelevents) when syncing source systems |
+| Harden a software repo | [codebase-maintainability-guardrails](./codebase-maintainability-guardrails) for defaults, then [antislop-codebase](./antislop-codebase) for larger cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
+| Build a structured-data chatbot or Slack bot | [data-chatbots](./data-chatbots) or [slackbot-builder](./slackbot-builder) | [app-ux-paradigms](./app-ux-paradigms) for interaction details |
+
+### Routing Notes
+
+- Prefer API skills for stable, supported bulk operations; prefer Computer Use skills for authenticated browser states, Studio-only controls, file pickers, disabled buttons, and save verification.
+- Keep source acquisition, metadata staging, and upload ledgers in batch/upload skills. Keep existing-video cleanup, thumbnails, scheduling, playlist fixes, and save recovery in `youtube-studio-computer-use`.
+- Treat status, reviewer, and operations fields as private by default. Public descriptions should use submitted abstracts, bios, company/project links, and social links entered for publication.
+- Do not physically reorganize skill folders into categories unless every target agent loader supports nested skill discovery. The top-level `folder/SKILL.md` layout is intentional.
+
 ## Skill Index
 
 ### Coding, Agents, And Workstations
@@ -74,7 +96,6 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [conference-developer-endpoints](./conference-developer-endpoints) — adds and reviews developer-facing conference endpoints such as `llms.txt`, `sessions.json`, `speakers.json`, and MCP routes.
 - [europe-developer-api](./europe-developer-api) — works with AI Engineer Europe developer endpoints, public schedule JSON, speakers JSON, MCP access, and the local `aieng` CLI.
 - [schedule-design](./schedule-design) — builds polished conference schedule views with React grids, filters, modals, favorites, sticky layouts, and normalized data.
-- [sessionize-automation](./sessionize-automation) — automates authenticated Sessionize organizer workflows, including private UI endpoint tracing, bulk status staging, speaker/session form submits, and post-write verification.
 - [sync-accelevents](./sync-accelevents) — pulls Accelevents speaker headshots, social data, bios, and schedule metadata into local conference source data.
 - [testing-schedule-preview](./testing-schedule-preview) — tests the AI Engineer Europe internal Bun schedule preview and public schedule page workflows.
 - [web-animation-perf](./web-animation-perf) — debugs jank, layout thrash, and drift in JS-driven CSS animation across AI Engineer conference sites.
@@ -92,6 +113,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
 - [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
 - [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
+- [youtube-studio-computer-use](./youtube-studio-computer-use) — automates live YouTube Studio cleanup through Chrome/Computer Use: thumbnails, schedules, playlist fixes, visibility, save-state recovery, and DOM-assisted edit pages.
 - [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
 - [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
 
