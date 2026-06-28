@@ -10,6 +10,8 @@ description: Batch YouTube Studio upload workflow for videos sourced from Airtab
 - Use the browser/computer-use skill for live YouTube Studio or Airtable UI work. Call `get_app_state` before direct UI actions in a turn.
 - Treat upload as a batch waterfall: download/source recovery, filename staging, metadata staging, upload, per-video titling/playlist/visibility/save, verification, ledger.
 - Do not include source video URLs in YouTube descriptions. Strip Drive, Loom, WeTransfer, and source YouTube links from final descriptions unless the user explicitly asks to publish those links.
+- Use the full submitted talk abstract in the description by default; do not compress it to a teaser unless the user asks for short copy.
+- Do not publish internal Airtable fields such as `Additional Notes`, reviewer notes, source status, or operational comments unless the user explicitly marks them as public copy.
 - Always select the target playlist before advancing to visibility.
 - Always choose `Unlisted` and click `Save` before opening or editing the next upload.
 - If YouTube blocks saving because SD processing is not finished, wait on the modal and save after processing clears. Do not assume the draft is published.
@@ -18,7 +20,7 @@ description: Batch YouTube Studio upload workflow for videos sourced from Airtab
 
 ## Workflow
 
-1. Export or scrape the source table into CSV/TSV with at least: speaker name, talk title, talk description, video source URL, bio, company, handles, LinkedIn/GitHub, and notes.
+1. Export or scrape the source table into CSV/TSV with at least: speaker name, talk title, talk description, video source URL, bio, company, handles, LinkedIn/GitHub, and any public links. Treat notes/status fields as private unless told otherwise.
 2. Build a manifest and metadata JSON:
    - Run `scripts/youtube_batch_helper.py build-metadata presenters.csv --out work/youtube_metadata.json`.
    - Use `--playlist "Playlist Name"` and `--skip-source-url` unless the user says otherwise.
@@ -53,16 +55,17 @@ Speakers:
   X/Twitter: <url-or-handle>
   LinkedIn: <url>
   GitHub: <url-or-handle>
-
-Additional notes/links:
-- <notes that are not source video URLs>
 ```
+
+Include the whole submitted talk description/abstract when it is suitable for public viewing. Include social media and company/project URLs entered by the speaker, but omit blank lines for missing fields. Do not include source video URLs or internal `Additional Notes`/reviewer fields.
 
 Keep descriptions factual and avoid inventing missing affiliations. For incomplete presenter names, use available fields and web search if the user asked to fill missing public info.
 
 ## UI Automation
 
 Read `references/ui-js-snippets.md` when using Chrome DOM automation for YouTube Studio. These snippets cover setting contenteditable title/description boxes, selecting playlists, clicking through steps, saving unlisted, and verifying row state.
+
+For Studio-only cleanup on existing videos, such as thumbnail replacement, schedule times, save-state recovery, or playlist fixes after upload, switch to the `youtube-studio-computer-use` skill. Keep this skill focused on source acquisition, metadata preparation, staged filenames, upload batching, and upload ledgers.
 
 Use direct Computer Use clicks for file pickers and modal buttons when DOM automation cannot reach native UI. Use coordinates only after confirming the screenshot state.
 
