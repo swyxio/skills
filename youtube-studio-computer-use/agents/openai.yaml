@@ -1,0 +1,4 @@
+interface:
+  display_name: "YouTube Studio Computer Use"
+  short_description: "Drive YouTube Studio through Chrome UI"
+  default_prompt: "Use $youtube-studio-computer-use to automate YouTube Studio edit pages through Chrome and Computer Use."
