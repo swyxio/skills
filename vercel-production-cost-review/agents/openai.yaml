@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vercel Production Cost Review"
+  short_description: "Audit Vercel spend, transfer, caching, and abuse"
+  default_prompt: "Use $vercel-production-cost-review to audit Vercel production spend across projects and zones, identify the largest Fast Data Transfer drivers, and verify safe cost reductions."

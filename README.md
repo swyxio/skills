@@ -35,6 +35,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
       <ul>
         <li><a href="./observability-hardening">observability-hardening</a> — <strong>Production visibility.</strong> Adds privacy-safe structured logs, error classes, request IDs, traces, metrics, dashboards, alert thresholds, user-visible operation status, and debug paths.</li>
         <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Safe ship gates.</strong> Defines env validation, deploy checklist, smoke tests, rollback path, feature flags, migration checks, production verification, and post-deploy monitoring.</li>
+        <li><a href="./vercel-production-cost-review">vercel-production-cost-review</a> — <strong>Recurring platform cost control.</strong> Audits Vercel spend across projects and zones, ranks Fast Data Transfer drivers, diagnoses caching, payload, asset, and abusive-traffic causes, and verifies safe remediations.</li>
       </ul>
       <p><strong>Quality</strong></p>
       <ul>
