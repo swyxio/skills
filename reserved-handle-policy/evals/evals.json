@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Our app is opening username signup. Add a reserved-handle policy covering routes, 1-3 character names, common names, and impersonation-prone developer identities without permanently banning legitimate claimants.",
-      "expected_output": "A two-tier policy with hard reservations, manual claims, confusable normalization, explicit API reasons, and tests.",
+      "expected_output": "A two-tier policy with hard reservations, manual claims, confusable normalization, an inspectable TOML registry, explicit API reasons, and tests.",
       "files": []
     },
     {

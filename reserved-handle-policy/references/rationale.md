@@ -11,6 +11,10 @@ The registry therefore uses:
 
 Every alphanumeric skeleton of three characters or fewer requires review even when the exact spelling is absent from the file. If separators are accepted, `a_i`, `a-i`, and `ai` share the same skeleton and inherit the stricter tier.
 
+## Registry format
+
+`reserved-handles.toml` is canonical. Its top-level tables preserve policy rules, capture metadata, cohort counts, source URLs, and ordered cohort entries. Each entry is one compact inline TOML table, retaining optional source rank, karma, source spelling, or sex-specific name ranks without expanding a single handle across several lines. Python 3.11+ can parse it with the standard-library `tomllib` module. `reserved-handles.csv` remains a flattened exact-handle export for spreadsheets and simple imports.
+
 ## Included cohorts
 
 The 2026-07-13 snapshot contains 3,181 unique exact handles before algorithmic separator variants:
