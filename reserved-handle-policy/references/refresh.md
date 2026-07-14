@@ -55,5 +55,5 @@ Maintain a small reviewed cohort with a one-line reason for each addition. Broad
 2. Deduplicate within each cohort while preserving cross-cohort membership.
 3. Generate exact-name and separator-skeleton collision reports against current and historical product handles.
 4. Confirm cohort counts, excluded-row counts, and the unique union.
-5. Run `scripts/validate.mjs` and representative classifier checks.
+5. Run `scripts/validate.py` and representative classifier checks.
 6. Update the capture date, policy version, rationale counts, and release notes together.

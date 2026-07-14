@@ -16,7 +16,7 @@ Separate two kinds of restriction:
 
 Do not report both as merely `taken`. A caller needs to distinguish an existing account, a permanent platform reservation, and a claim that can be reviewed.
 
-Read [rationale.md](references/rationale.md) before changing the tiers or source cohorts. Load [reserved-handles.json](references/reserved-handles.json) only when implementing, auditing, or inspecting the concrete list; it is intentionally kept out of the default context because it contains thousands of names.
+Read [rationale.md](references/rationale.md) before changing the tiers or source cohorts. Load [reserved-handles.toml](references/reserved-handles.toml) only when implementing, auditing, or inspecting the concrete list; it is intentionally kept out of the default context because it contains thousands of names.
 
 ## Implementation workflow
 
@@ -39,16 +39,16 @@ Read [rationale.md](references/rationale.md) before changing the tiers or source
 Run the classifier against one or more candidates:
 
 ```bash
-node reserved-handle-policy/scripts/check-handle.mjs admin swyx a_i available-name
+python3 reserved-handle-policy/scripts/check_handle.py admin swyx a_i available-name
 ```
 
 Validate the registry after editing it:
 
 ```bash
-node reserved-handle-policy/scripts/validate.mjs
+python3 reserved-handle-policy/scripts/validate.py
 ```
 
-The JSON resource is the source of truth. The CSV is a flattened convenience export containing one row per exact handle and all matching cohorts.
+The TOML resource is the source of truth. It uses one compact inline table per handle while retaining ranks, karma, source spelling, cohort metadata, and policy rules. The CSV is a flattened convenience export containing one row per exact handle and all matching cohorts. The bundled readers require Python 3.11 or newer for the standard-library `tomllib` parser and install no dependencies.
 
 ## Refreshing cohorts
 
