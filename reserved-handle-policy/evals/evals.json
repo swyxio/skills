@@ -1,0 +1,23 @@
+{
+  "skill_name": "reserved-handle-policy",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our app is opening username signup. Add a reserved-handle policy covering routes, 1-3 character names, common names, and impersonation-prone developer identities without permanently banning legitimate claimants.",
+      "expected_output": "A two-tier policy with hard reservations, manual claims, confusable normalization, explicit API reasons, and tests.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Audit our existing signup and profile rename code. People can register @admin and @a_i, and the API just says taken for everything. Fix the policy and user-facing semantics.",
+      "expected_output": "An implementation audit and fix that distinguishes hard reserved, taken, and manual review while covering separator skeletons.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Refresh our protected social handles from current public rankings, but explain what data is defensible and avoid importing a junk Reddit leaderboard.",
+      "expected_output": "A dated, source-attributed refresh with collision reporting, preserved ranks, and a curated Reddit rationale.",
+      "files": []
+    }
+  ]
+}
