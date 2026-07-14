@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reserved Handle Policy"
+  short_description: "Protect public username and handle namespaces"
+  default_prompt: "Use $reserved-handle-policy to design or audit this product's reserved username policy, integrate the bundled registry, preserve legitimate manual claims, and test signup, rename, and administrator assignment behavior."
