@@ -10,15 +10,18 @@ Use this skill to counter the common coding-model drift toward giant files, vagu
 
 ## Default Posture
 
-- Treat existing apps as production apps unless the user explicitly says the code is disposable.
-- Preserve behavior while refactoring. Do not mix broad cleanup with behavioral changes unless the bug fix is explicit and tested.
-- Protect persisted state, stored schemas, localStorage, database rows, and deployed API contracts. Prefer compatibility normalizers and migrations over resets.
+- Treat most apps as breakable toy apps (dont need to migrate or put in a lot of if statements) unless the environment or user strongly indicates that code is already in production - ask if uncertain.
 - Keep implementation slices buildable and reviewable. Every staged refactor should leave the repo easier for the next agent to edit.
+
+## If in Production
+
+- Preserve behavior while refactoring. Do not mix broad cleanup with behavioral changes unless the bug fix is explicit and tested.
+- Protect persisted state, stored schemas, localStorage, database rows, and deployed API contracts. Prefer compatibility normalizers and migrations over resets. Be explicit about the before vs after of changes.
 
 ## Code Shape Rules
 
 - Keep app entrypoints thin. `main`, `App`, route files, layouts, and top-level stylesheets should orchestrate, not own product behavior.
-- Prefer focused modules over huge files. Aim for roughly 250-400 LOC per source file when practical. Anything over 500 LOC needs a reason and should be considered for splitting.
+- Prefer focused modules over huge files. Aim for roughly 100-400 LOC per source file when practical. Anything over 500 LOC needs a reason and is a candidate for splitting.
 - Split by product feature and behavior, not by vague `utils` buckets. Good module names describe the domain, such as `messageActions`, `themeModel`, `ReferenceImagePicker`, `providerRetry`, or `characterDraftWorkflow`.
 - Separate pure domain logic from React rendering and side effects. Put schemas, reducers, normalizers, prompt builders, retry helpers, provider parsing, and transformations in testable pure modules.
 - Centralize frontend/backend contracts and shared request/response types at the boundary between client and server.
@@ -27,7 +30,7 @@ Use this skill to counter the common coding-model drift toward giant files, vagu
 
 ## Frontend And CSS Rules
 
-- Use Tailwind when available, but keep styling feature-owned.
+- Use Tailwind CSS unless opted out/overridden, keep styling feature-owned.
 - Keep global CSS limited to reset, tokens, browser fixes, and small shared primitives.
 - Use semantic theme tokens as the source of truth. Avoid one-off hard-coded palettes scattered across components.
 - Do not allow a prototype screen to grow into a permanent god component. For greenfield apps, create feature folders and typed contracts early.
@@ -42,6 +45,7 @@ Use this skill to counter the common coding-model drift toward giant files, vagu
 
 - Tests should carry their weight. Prefer focused tests for pure helpers and high-value E2E flows over broad duplicated snapshots.
 - Add or update tests for risky paths: migrations, schema compatibility, API contracts, provider parsing, retry behavior, reducers, and user-visible flows.
+- Proactively propose tests that should be deleted
 - For browser/E2E QA, visually inspect screenshots rather than only checking that artifacts were produced.
 
 ## Before Finishing
