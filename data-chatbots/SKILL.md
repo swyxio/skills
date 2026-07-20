@@ -42,7 +42,7 @@ Real failures from running aiebot against live data. Each one shipped, bit us, a
 | **Apply path** | Same mutation pipeline as manual UI (`expectedVersion` + audit log) |
 | **DB invariants** | Enforce mutual exclusivity in SQLite, not only in TS (partial UNIQUE + CHECK) |
 
-One orchestration function per product surface (web, Slack, email) so behavior stays identical.
+One orchestration function per product surface (web, Slack, email) so behavior stays identical. The **email surface** (forward-an-email-to-the-copilot) is another adapter over this same core — parse inbound MIME, call the core, reply, and mirror to Slack. Its platform-specific concerns (separate inbound Worker, durable-execution handoff for the ~30s handler limit, idempotency + loop guard + allowlist + SPF/DKIM-gated approvals, threading via `Message-ID`/`In-Reply-To`/`References`, and the deliverability bounce battle scar — *the reply `From:` must round-trip or approvals bounce*) live in [email-surface.md](email-surface.md).
 
 ### Audit / change log (immutable)
 
@@ -421,6 +421,10 @@ Use [test-cases.md](test-cases.md) for scenarios and assertions. Minimum categor
 | **Bulk apply** | Apply N drafts at once with one fixed version → #2..N hit `version_conflict`; one bad row aborts the rest |
 | **Multi-tab** | Poll raises stale banner; reload clears it |
 | **Cross-surface** | Slack approve vs web ignore share same session semantics |
+| **Cross-surface control resolution** | A draft resolved from one surface (email/web) leaves another surface's live buttons (Slack card) clickable → double-apply of an already-resolved draft (store the card's channel+ts; rewrite from the resolving path — see [email-surface.md](email-surface.md)) |
+| **Email reply From round-trips** | Reply sent from a send-only address → human's `approve` bounces `550`; approval loop silently dead (see [email-surface.md](email-surface.md)) |
+| **Email approval auth gate** | Spoofed `From:` "approve" applies changes without SPF/DKIM pass |
+| **Email Message-ID idempotency / loop guard** | Redelivered inbound double-replies; bot loops on its own auto-reply |
 | **Slack `!help`** | User gets guide without planner call; empty mention works |
 | **Slack `!model`** | Invalid slug ignored; valid slug reflected in footer metadata |
 | **Slack `!audit`** | Prefetch present in prompt; answer summarizes events, no “I will check…” |
@@ -465,6 +469,7 @@ Side files (deeper dives, reference as needed):
 | File | When to read |
 |------|--------------|
 | [surface-ux.md](surface-ux.md) | Copilot **panel/surface ergonomics** — floating-dockable panel, summon-hotkey size state machine, custom-resize coexistence, viewport clamping, snap animation, discoverability |
+| [email-surface.md](email-surface.md) | **Email as a copilot surface** — separate inbound Worker, durable-execution handoff for the ~30s handler limit, idempotency/loop-guard/allowlist/SPF-DKIM-gated approvals, `Message-ID` threading, the reply-`From:`-must-round-trip bounce battle scar, verified-destination degradation, button-less intent classification, bidirectional Slack↔email mirroring |
 | [test-cases.md](test-cases.md) | Acceptance criteria / test scenarios while building or reviewing |
 | [tiered-operation-harness.md](tiered-operation-harness.md) | **Secondary** refactor plan — collapse the copilot write surface into 3 tiers + 1 selector **after** an MVP teaches you the real use cases |
 | [audit-log.md](audit-log.md) | Operational deep-dive on audit/history mode + the serverless execution budget |
@@ -494,6 +499,7 @@ Side files (deeper dives, reference as needed):
 [ ] Send while busy queues (FIFO); Remove vs Stop; session turn after prior job completes
 [ ] Queued turn does not replace prior proposals — merge catalog; Pending/Applied/Ignored badges persist per turn
 [ ] Many drafts → table view: checkbox default-checked, expand for details, one-click Apply N selected (version chained, one final refresh)
+[ ] Email surface (if shipped): inbound Worker + durable handoff; Message-ID idempotency + loop guard + allowlist; approvals gated on SPF/DKIM; reply From round-trips (not send-only); Slack is the fallback when async email can't deliver (see email-surface.md)
 [ ] Slack: parse/strip !help !model !audit flags; !help bypasses planner; model registry in help blocks
 [ ] Audit: prefetch history + audit default model; exclude/actor prefixes on lookups
 [ ] Hard timeout (AbortController) on every provider call incl. stream read; degrades to fallback/error

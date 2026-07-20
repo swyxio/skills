@@ -6,7 +6,7 @@ stale config, and an audit. Everything degrades instead of breaking.
 ## Checklist
 
 - [ ] **Never run agent work inline** — the fast handler acks; slow work runs in **durable execution** (Workflow/Durable Object/queue), not a request-scoped promise (`waitUntil`) that's silently cancelled at the platform ceiling. (Image capability: [image-generation.md](image-generation.md).)
-- [ ] **Every entry surface protected** — after fixing the execution model on one surface, audit *every* call site of the core (mention, DM, slash, button, modal, cron, inbound email).
+- [ ] **Every entry surface protected** — after fixing the execution model on one surface, audit *every* call site of the core (mention, DM, slash, button, modal, cron, inbound email). The **inbound-email surface** has the same ~30s handler ceiling (ack with `message.reply()`, run the agent loop in a Workflow) plus its own gating + deliverability traps — see [data-chatbots/email-surface.md](../data-chatbots/email-surface.md).
 - [ ] **Guaranteed result-or-error** — every offloaded job posts a final message in a `finally`/error branch; the ack indicator never hangs forever.
 - [ ] **Delivery branches by surface** — the completion step posts via the right mechanism (thread reply vs `response_url` vs SSE vs email).
 - [ ] **Long-running work** → ack now, **signed internal callback** later, durable session URL.
