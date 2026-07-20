@@ -8,7 +8,7 @@ compatibility: |
 metadata:
   author: swyxio
   version: "2.0"
-  last-updated: "2026-05-20"
+  last-updated: "2026-06-13"
   hardware: Apple Silicon (M-series)
   primary-stack: TypeScript, Python, AI/ML
 ---
@@ -30,6 +30,7 @@ The setup is opinionated. The core opinions:
 - **Docker**: Colima (not Docker Desktop — lighter weight, CLI-native, free)
 - **Editor**: Cursor (AI-native editor)
 - **AI tools**: Claude Code, Codex CLI, Antigravity CLI (`agy` via the `antigravity` Homebrew cask), Railway CLI, Ollama for local models
+- **Transcription/diarization**: ffmpeg + yt-dlp + MLX Whisper for fast local ASR, plus a Python 3.11 pyannote.audio environment for proper speaker diarization when `HF_TOKEN` is configured. Diarization should default to GPU/cloud paths; do not burn local CPU on long diarization unless explicitly requested.
 - **Agent notifications**: peon-ping shared across Claude Code, Codex, and Cursor, tuned to notify only when useful
 - **Browser**: Dia (from The Browser Company, successor to Arc)
 - **Launcher**: Raycast (replaces Alfred, Spotlight, Caffeine, window management)
@@ -116,7 +117,7 @@ elixir, erlang, python@3.13
 colima, docker, docker-completion
 
 # Media & processing
-ffmpeg, yt-dlp, tesseract
+ffmpeg, yt-dlp, tesseract, libsndfile
 
 # Build dependencies
 openssl@3, readline, sqlite, xz, zstd
@@ -195,6 +196,30 @@ brew install --cask antigravity
 ```
 
 The cask installs the desktop app and exposes `agy` as the Antigravity CLI. Prefer this over Gemini CLI for new setups: Google announced on May 19, 2026 that consumer Gemini CLI access for free, Google AI Pro, and Ultra users stops serving requests on June 18, 2026. Enterprise and paid API-key Gemini CLI access can remain available, but this new-Mac path should default to Antigravity CLI.
+
+### Transcription And Diarization Defaults
+
+Install the local transcription stack on new AI/dev Macs because it is useful for meetings, podcasts, YouTube/video workflows, and searchable archives.
+
+Add this to `03-brew-packages.sh` / `04-dev-environment.sh` generation:
+
+```bash
+brew install ffmpeg yt-dlp libsndfile
+uv tool install mlx-whisper || true
+
+mkdir -p "$HOME/.local/share/transcribe-anything"
+uv venv --python 3.11 "$HOME/.local/share/transcribe-anything/.venv-pyannote"
+uv pip install --python "$HOME/.local/share/transcribe-anything/.venv-pyannote/bin/python" \
+  "pyannote.audio" soundfile
+```
+
+Guidance for generated docs:
+
+- `mlx_whisper` is the preferred local ASR path on Apple Silicon when available.
+- `pyannote.audio` direct is the preferred diarization path when `HF_TOKEN` is configured and the user has accepted Hugging Face model terms, but run it on CUDA/cloud GPU for long files.
+- Users must accept terms for `pyannote/speaker-diarization-community-1` and `pyannote/segmentation-3.0`, then set `HF_TOKEN` in their shell or secret manager. Never bake tokens into generated setup scripts.
+- CPU pyannote on macOS is opt-in only for short tests. For real meeting/podcast diarization, use CUDA/cloud GPU or a managed diarization API such as Deepgram/AssemblyAI.
+- Do not rely on simple Resemblyzer/librosa clustering of Whisper segments for production diarization; it commonly collapses multi-speaker meetings into one speaker.
 
 ### peon-ping Defaults
 
