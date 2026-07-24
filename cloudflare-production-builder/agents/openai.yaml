@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cloudflare Production Builder"
+  short_description: "Production architecture and proof on Cloudflare"
+  default_prompt: "Use $cloudflare-production-builder to choose the right Cloudflare primitives, implement durable and secure boundaries, and verify the owning live production surfaces."
