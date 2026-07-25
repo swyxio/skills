@@ -90,6 +90,9 @@ Read [storage-and-caching.md](references/storage-and-caching.md).
   external artifact identities to the release record.
 - Record recovery evidence before schema changes. Prefer additive migrations and
   forward fixes; do not make code rollback depend on destructive schema rollback.
+- For D1, prefer a non-blocking Time Travel bookmark. Never request a full
+  production export without first checking for virtual tables and planning for
+  the documented period in which exports block database queries.
 - Upload and inspect before switching traffic when the release mechanism allows.
 
 Read [deployments-and-migrations.md](references/deployments-and-migrations.md).

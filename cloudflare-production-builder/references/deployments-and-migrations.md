@@ -79,6 +79,35 @@ replay migrations. Adoption requires:
 
 Any mismatch is an incident, not an invitation to force the ledger.
 
+### D1 recovery evidence and the export trap
+
+Prefer a Time Travel bookmark for routine pre-migration recovery evidence. Time
+Travel is always enabled on supported production-backend databases, retrieving
+a bookmark is non-blocking, and a restore can return the database to the
+recorded point if explicitly authorized.
+
+Do not treat `wrangler d1 export` as a harmless backup command:
+
+- a running export blocks other requests to that database;
+- full export is unsupported when the database contains virtual tables,
+  including FTS5;
+- an export may begin blocking queries before the provider reports that a
+  virtual table makes it unsupported;
+- Wrangler or the API may return an error while the backend export job is still
+  cancelling, so require both direct D1 reads and application health to recover
+  before continuing.
+
+Before any production export, query `sqlite_master` for virtual tables. If any
+exist, prohibit a full export. If an offline archive is truly required, use a
+planned maintenance window, export ordinary authoritative tables individually,
+and treat FTS indexes as rebuildable derived data. Consider isolating
+rebuildable search indexes in a separate D1 database.
+
+Migration automation must parse both successful Wrangler result arrays and
+provider error objects. It should stop before writes, report the provider error
+directly, and poll bounded health/read checks rather than misreporting a JSON
+shape error. Never retry writes merely because an export-related query failed.
+
 ## Durable Object lifecycle
 
 Treat Durable Object deployment as a distinct surface:
@@ -159,6 +188,8 @@ A CI green check, Wrangler success, and live smoke are separate evidence.
 ## Current first-party sources
 
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
+- [D1 import and export limitations](https://developers.cloudflare.com/d1/best-practices/import-export-data/)
+- [D1 export API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/)
 - [D1 limits](https://developers.cloudflare.com/d1/platform/limits/)
 - [Durable Object environments](https://developers.cloudflare.com/durable-objects/reference/environments/)
 - [Durable Object class lifecycle](https://developers.cloudflare.com/durable-objects/reference/durable-objects-migrations/)
