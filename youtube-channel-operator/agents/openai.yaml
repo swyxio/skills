@@ -1,0 +1,6 @@
+interface:
+  display_name: "YouTube Channel Operator"
+  short_description: "Build full-power YouTube operations with approvals"
+  default_prompt: "Use $youtube-channel-operator to design a Slack-operated YouTube workflow with raw API access and guided approvals."
+policy:
+  allow_implicit_invocation: true
