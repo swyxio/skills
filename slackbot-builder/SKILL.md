@@ -2,8 +2,9 @@
 name: slackbot-builder
 description: >
  Build production Slack bots as a maturity ladder (L0–L6): signature verification,
- fast acks + event idempotency, threads-as-sessions, responsive feedback (reactions,
- status, live streaming), Block Kit interactions + human-in-the-loop approvals, the
+ fast acks + event idempotency, causal shared-thread sessions, responsive feedback
+ (reactions, status, live streaming), stateful routing, Block Kit interactions +
+ human-in-the-loop approvals, the
  native Agents & AI Apps surface, file/media outputs + settings modals, durable
  long-running work, rate-limit + security hardening, model-call tracing, and
  multi-surface/multi-tenant scale. Use when building or hardening any Slack app, bot,
@@ -11,7 +12,7 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.2"
+ version: "2.3"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -45,15 +46,22 @@ business logic, that's the bug.
 |---|---|---|---|
 | **L0** | Skeleton — *it responds* | `/health`, `/events`, signature verify, `url_verification`, fast `200` | [level-0-skeleton.md](level-0-skeleton.md) |
 | **L1** | Responsive Q&A (MVP) — *a working bot* | 3s ack + async work, `event_id` dedupe, ignore bots, strip mentions, threaded `chat.postMessage`, thin `fetch` wrappers, JSON logs + trace id | [level-1-mvp.md](level-1-mvp.md) |
-| **L2** | Context-aware — *feels conversational* | threads-as-sessions + TTL store, bounded thread/channel context, DMs, empty-mention nudge, 👀 reaction + `assistant.threads.setStatus` | [level-2-context.md](level-2-context.md) |
-| **L3** | Interactive / agentic — *acts, human in the loop* | `/interactions` (signed), Block Kit approvals that resolve in place, dry-run validation, slash commands, routing/clarification ladder, rich/actionable drafts (evidence + artifacts, bulk + edit-before-apply, deep links), file/media uploads with in-message control buttons + a `views.open` settings modal (per-thread), live status streaming, monitored-thread "should I reply?" | [level-3-interactive.md](level-3-interactive.md) |
+| **L2** | Context-aware — *feels conversational* | shared thread sessions, root + newest causally-prior tail, merged persisted state, DMs, empty-mention nudge, 👀 reaction + `assistant.threads.setStatus` | [level-2-context.md](level-2-context.md) |
+| **L3** | Interactive / agentic — *acts, human in the loop* | `/interactions` (signed), state-aware approvals that resolve in place, remaining-draft bulk actions, dry-run validation, stateful routing + owned-resource resolution, rich/actionable drafts, file/media controls + settings modal, live status streaming | [level-3-interactive.md](level-3-interactive.md) |
 | **L4** | Native agent surface — *first-class agent UX* | Agents & AI Apps container, `assistant_thread_started` greeting + suggested prompts, thread titles, native text streaming (`chat.startStream`/`appendStream`/`stopStream`) mapping your `emit` stream to a typed answer + tool-call timeline, graceful fallback to the message flow | [level-4-native-agent.md](level-4-native-agent.md) |
-| **L5** | Hardened — *won't page you at 2am* | long-running signed callbacks + durable URL, App Home prefs/dashboard (allowlisted), rate-limit backoff + `ok:false` handling, sanitized user-facing errors, storage TTL table, service-user attribution + audit, full observability, security/testing checklists, scope degradation, manifest setup | [level-5-hardened.md](level-5-hardened.md) |
+| **L5** | Hardened — *won't page you at 2am* | per-thread durable serialization, long-running signed callbacks + durable URL, App Home prefs/dashboard, rate-limit backoff + `ok:false` handling, sanitized errors, storage TTLs, service-user attribution + audit, full observability, security/testing checklists | [level-5-hardened.md](level-5-hardened.md) |
 | **L6** | Multi-surface / scale — *polished platform* | one core across web/Slack/cron, multi-workspace/tenancy, queues + backpressure for heavy work, target caching, usage analytics + answer-quality feedback, break-glass/degraded config | [level-6-scale.md](level-6-scale.md) |
 
 **Optional capability references** (load only if you ship the feature — they're not
 always-on rungs): **image generation** → [image-generation.md](image-generation.md)
 (durable renders, model-param gating, iterate buttons).
+
+**Cross-cutting operational reference:** for multi-turn agents, named-resource
+resolution, or external mutations, also read
+[stateful-agent-workflows.md](stateful-agent-workflows.md). It covers causal
+Slack pagination/cutoffs, shared thread sessions, per-thread serialization,
+stateful routing, owned-resource catalogs, independently grounded writes,
+remaining-draft bulk approvals, and ephemeral-result publication.
 
 ## Strong opinions
 
@@ -64,7 +72,12 @@ their level files so they load only when you're there):
 - **Verify every request from the raw body before parsing.** No exceptions, including the `url_verification` handshake.
 - **Return fast.** Authenticate, dedupe, background the work, log, and `200` within Slack's 3-second window.
 - **Never run agent work inline.** Every serverless handler has a silent timeout ceiling (~30s on Cloudflare `waitUntil`) that *cancels* slow work with no error — the bot just goes quiet. Ack instantly, run agent loops / renders / audit turns in **durable execution**, and guarantee a final result-or-error. Fix the execution model on one surface, then **audit every entry point** (mention, DM, slash, button, cron) that calls the same core. → [L5](level-5-hardened.md)
-- **Threads are the session boundary.** Key state by `channel` + `thread_ts`.
+- **Threads are the shared session boundary.** Key state by workspace + channel
+  + `thread_ts`; merge live Slack context with persisted operational outcomes.
+- **Context must be causal.** Read the root plus the newest replies strictly
+  before the trigger; paginate before trimming to a token budget.
+- **Serialize operational turns per thread.** Enqueue before loading context so
+  rapid sibling mentions cannot race on stale state.
 - **Never answer yourself.** Drop `bot_id` / `bot_message` and message subtypes before expensive work.
 - **Real shared store for state** (idempotency, sessions, pending clarifications, prefs). In-memory maps are dev-only.
 - **Slack is a status surface, not the product.** Link to a durable web/session URL for long output, logs, PRs, artifacts.
@@ -88,8 +101,10 @@ image-gen specifics → [image-generation.md](image-generation.md).
 
 1. Identify your target level from the table.
 2. Open the reference file for that level (and skim the one below it).
-3. Build the checklist for each level bottom-up; don't skip L0/L1 hardening to chase L3 features.
-4. Use the "Graduate when…" gate at the end of each file before moving up.
+3. If the bot is multi-turn or mutates external systems, read
+   [stateful-agent-workflows.md](stateful-agent-workflows.md).
+4. Build the checklist for each level bottom-up; don't skip L0/L1 hardening to chase L3 features.
+5. Use the "Graduate when…" gate at the end of each file before moving up.
 
 ## Implementation bias: start boring
 

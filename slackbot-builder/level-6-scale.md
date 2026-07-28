@@ -10,8 +10,9 @@ Reach for L6 only when the product need is real. Most bots are great at L5.
 
 - [ ] **One channel-agnostic core** serves every surface; Slack/web/cron are thin adapters.
 - [ ] **Multi-workspace / tenancy** — per-workspace tokens, isolation, install lifecycle.
-- [ ] **Queues + backpressure** for heavy/bursty work; no unbounded fan-out.
+- [ ] **Queues + backpressure** for heavy/bursty work; serialize within a thread, parallelize across threads.
 - [ ] **Target/config caching** with short TTLs and stale-delete-on-failure.
+- [ ] **Owned-resource catalogs** — complete initial crawl, incremental refresh, periodic reconciliation, provider-search fallback on misses.
 - [ ] **Usage analytics store** (PostHog-free option: your own table).
 - [ ] **Answer-quality feedback** captured per run.
 - [ ] **Break-glass / degraded config** that's actually implemented.
@@ -44,15 +45,25 @@ Slack surface — = a new adapter over the same events, never new business logic
 Background heavy work through a real queue/durable workflow, not detached promises.
 Cap concurrency, dead-letter failures, and make completion callbacks idempotent.
 Bursty mentions (a noisy channel, a retry storm) must not melt the backend.
+Preserve FIFO ordering within each Slack thread while allowing unrelated threads
+to run concurrently.
 
 ## Caching dynamic config
 
 Cache target lists / config with a 1–5 min TTL; on a stale-mapping failure, delete
 and refetch. Don't hammer the control plane on every event.
 
+Frequently named provider resources need a different cache shape: maintain a
+compact owned-resource catalog with human name/title, opaque ID, URL, timestamp,
+and normalized alias tokens. Build it from a complete initial crawl, update it
+incrementally, and run periodic full reconciliation. Resolve locally first; use
+the authenticated provider's search API on a catalog miss. General web search
+remains a separately authorized/opt-in capability.
+
 | Data | Key | TTL |
 |---|---|---|
 | Dynamic target cache | `targets:cache` (or per-tenant) | 1–5 minutes |
+| Owned-resource catalog | `team:${teamId}:catalog:${provider}` | incremental + periodic full reconciliation |
 | Workspace tokens | `team:${teamId}:auth` | until revoked |
 
 ## Usage analytics + feedback
@@ -75,7 +86,9 @@ not in production.
 - ❌ Forking business logic per surface instead of sharing one core.
 - ❌ A single global bot token across workspaces.
 - ❌ Unbounded background fan-out (no queue, no concurrency cap).
+- ❌ Global concurrency control that still lets sibling turns race within one thread.
 - ❌ Refetching dynamic config on every event.
+- ❌ Treating a partial/stale owned-resource catalog as complete without a provider-search miss fallback.
 - ❌ Tenant data bleeding across workspaces via unscoped keys.
 - ❌ Advertising graceful degradation you never implemented.
 

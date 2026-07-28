@@ -6,6 +6,7 @@ stale config, and an audit. Everything degrades instead of breaking.
 ## Checklist
 
 - [ ] **Never run agent work inline** — the fast handler acks; slow work runs in **durable execution** (Workflow/Durable Object/queue), not a request-scoped promise (`waitUntil`) that's silently cancelled at the platform ceiling. (Image capability: [image-generation.md](image-generation.md).)
+- [ ] **Operational turns serialize per Slack thread** — enqueue before context loading so rapid sibling requests observe prior outcomes.
 - [ ] **Every entry surface protected** — after fixing the execution model on one surface, audit *every* call site of the core (mention, DM, slash, button, modal, cron, inbound email). The **inbound-email surface** has the same ~30s handler ceiling (ack with `message.reply()`, run the agent loop in a Workflow) plus its own gating + deliverability traps — see [data-chatbots/email-surface.md](../data-chatbots/email-surface.md).
 - [ ] **Guaranteed result-or-error** — every offloaded job posts a final message in a `finally`/error branch; the ack indicator never hangs forever.
 - [ ] **Delivery branches by surface** — the completion step posts via the right mechanism (thread reply vs `response_url` vs SSE vs email).
@@ -93,6 +94,27 @@ rg "runBotQuery|generateImage|applyDraft" --type ts -l
 > after silent ~30s deaths — but the **slash command** and the **"Approve all"
 > button** still ran the same planner inline in `waitUntil`. They kept dying
 > silently for weeks because the fix was scoped to one handler instead of the core.
+
+## Serialize operational turns per thread
+
+Durability does not imply causal ordering. Two rapid sibling mentions can start
+two healthy workflows that both read the same stale thread/session state. Enqueue
+the work immediately after event dedupe and **before** loading Slack context or
+persisted session state.
+
+Use a durable queue/ledger keyed by workspace + channel + root `thread_ts`:
+
+- assign a monotonic sequence and unique `(thread_key, trigger_ts)`;
+- claim only the earliest unfinished turn for that thread;
+- permit concurrency across different threads, not within one thread;
+- renew a lease while running and make stale-lease recovery visible;
+- mark complete only after authoritative state persistence and final delivery;
+- make retries idempotent so the same event cannot apply a mutation twice.
+
+An in-memory mutex is not sufficient across isolates, redeploys, or retries.
+Where the platform lacks a keyed FIFO queue, combine a durable ledger with a
+per-thread coordinator. Full context/routing pattern:
+[stateful-agent-workflows.md](stateful-agent-workflows.md).
 
 ## Three-phase guarantee: ack → progress → result-or-error
 
@@ -285,6 +307,9 @@ a signed `url_verification` request.
 - [ ] URL verification; valid signed event; invalid signature; stale timestamp.
 - [ ] Retry dedupe with the same `event_id`; bot-message loop prevention.
 - [ ] Fresh mention; thread follow-up; ambiguous request → clarification.
+- [ ] Long paginated thread: root + newest causally-prior tail are included; the trigger and later siblings are excluded.
+- [ ] Two rapid sibling mentions execute in causal order and the second observes the first turn's persisted outcome.
+- [ ] A teammate can continue the same thread-scoped operational session without losing context.
 - [ ] Block Kit select + modal submission with valid and invalid option.
 - [ ] App Home render + preference persistence.
 - [ ] Completion callback signature validation.
@@ -310,6 +335,8 @@ a signed `url_verification` request.
 - ❌ Pricing image/audio tokens at text rates (or dropping `usage` because the call helper only returned the result, not the full payload).
 - ❌ Putting base64 media into trace attributes.
 - ❌ Running slow work (a 30–90s render) inside `waitUntil` / a request-scoped promise — it's cancelled mid-flight and the bot goes silent after the ack.
+- ❌ Starting concurrent sibling workflows that each load the same stale thread state.
+- ❌ Using an in-memory per-thread mutex as the production serialization boundary.
 - ❌ Fixing the timeout on one surface (@mention) while a sibling surface (slash command, button) still runs the same core inline.
 - ❌ A durable job whose only failure path is a log line — the user's 👀 / "working…" hangs forever with no result and no error.
 - ❌ A single delivery path that assumes a thread to reply into (slash commands have none) or reacts to a message that doesn't exist.

@@ -5,9 +5,10 @@ and feels alive while it works.
 
 ## Checklist
 
-- [ ] **Threads as sessions** — key state by `channel` + `thread_ts`.
+- [ ] **Threads as shared sessions** — key state by workspace + channel + `thread_ts`.
 - [ ] **Session state** in a shared store with a TTL.
-- [ ] **Bounded context** — last ~10 thread replies + channel topic, fed to the core as a fenced note.
+- [ ] **Causal bounded context** — root + newest replies strictly before the trigger, paginated then token-budgeted.
+- [ ] **Merged state** — live Slack words + persisted operational outcomes and active domain.
 - [ ] **DMs** supported (`message.im`).
 - [ ] **Empty-mention nudge**.
 - [ ] **Instant feedback** — 👀 reaction + `assistant.threads.setStatus` while working.
@@ -16,7 +17,7 @@ and feels alive while it works.
 
 ```ts
 const threadKey = e.thread_ts || e.ts;
-const sessionKey = `thread:${e.channel}:${threadKey}`;
+const sessionKey = `thread:${teamId}:${e.channel}:${threadKey}`;
 ```
 
 Store a compact mapping, with a TTL (OpenInspect uses 24h; longer only if threads
@@ -29,9 +30,15 @@ await kv.put(sessionKey, JSON.stringify(session), { expirationTtl: 86400 });
 
 ## Include Slack context deliberately
 
-Enrich the prompt with the channel name, channel topic/purpose, and the last few
-thread replies (who was a user vs bot). **Keep it bounded** — ten messages is
-usually enough; never dump whole channels.
+Enrich the prompt with the channel name/topic, the root, and the newest replies
+strictly before the triggering message. `conversations.replies` is oldest-first
+and paginated: fetch every needed cursor page before selecting the tail. A fixed
+first page gives the model stale context on long threads.
+
+Use Slack's `latest=<trigger_ts>&inclusive=false` and enforce `ts < trigger_ts`
+again locally. Keep the root, then fill the remaining token/character budget
+from newest to oldest. This excludes the trigger itself and later sibling
+messages that arrived while the job was starting.
 
 Pass it to the core as a **clearly fenced note**, not as the user's request, so the
 persisted request stays clean:
@@ -39,14 +46,22 @@ persisted request stays clean:
 ```ts
 const note = [
   channelName && `Channel: #${channelName}${topic ? ` — ${topic}` : ""}`,
-  prior.length && `Conversation so far:\n${prior.slice(-10).join("\n")}`,
+  prior.length && `Conversation so far:\n${rootPlusNewestTail(prior).join("\n")}`,
 ].filter(Boolean).join("\n\n");
 
 await runBotQuery({ message: text, contextNote: note, sessionKey });
 ```
 
 Fetch context best-effort with `conversations.replies` and `conversations.info`;
-return `[]`/`null` on failure rather than throwing.
+return `[]`/`null` on failure rather than throwing. Merge this live note with
+persisted operational state (proposal outcomes, target selection, active domain)
+instead of choosing one source. Persisted APPLIED/REJECTED state is
+authoritative over earlier optimistic prose.
+
+Make the session shared so a teammate can continue the thread. If a result is
+actor-private, store per-message visibility + viewer identity rather than
+making the whole session actor-scoped. Persist only compact routing state for
+transient search turns; do not retain raw requester-scoped results.
 
 ## Instant feedback: make it feel alive
 
@@ -79,13 +94,16 @@ await slack("assistant.threads.setStatus", {
 | Data | Key shape | TTL |
 |---|---|---|
 | Event dedupe | `event:${eventId}` | 1 hour |
-| Thread session | `thread:${channel}:${threadTs}` | 24h or product-specific |
+| Thread session | `thread:${team}:${channel}:${threadTs}` | 24h or product-specific |
 
 When a stale mapping fails, delete it and fall back to a fresh session.
 
 ## Anti-patterns
 
 - ❌ Dumping entire channel history into the prompt.
+- ❌ Reading only the oldest reply page or including messages at/after the trigger.
+- ❌ Letting live Slack context replace authoritative persisted outcomes (or vice versa).
+- ❌ Keying a shared operational thread by actor so teammates lose continuity.
 - ❌ Mixing context into the user's request. Keep `contextNote` a **separate field all the way down to the prompt builder** — don't concatenate it onto `message` inside the core. Doing so pollutes the persisted request *and* any downstream intent classifier/router (see L3 "Classifier input hygiene" — a channel-topic keyword silently rerouted every prompt in prod).
 - ❌ Letting a failed reaction / `setStatus` / context fetch abort the answer.
 - ❌ In-memory session maps in production (lost on redeploy/scale-out).
