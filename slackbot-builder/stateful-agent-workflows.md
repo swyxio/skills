@@ -88,6 +88,37 @@ Use a durable database/queue with:
 
 Do not hold an in-memory mutex in serverless code.
 
+One workable ledger is:
+
+```sql
+CREATE TABLE slack_thread_turns (
+  id TEXT PRIMARY KEY,
+  thread_key TEXT NOT NULL,
+  trigger_ts TEXT NOT NULL,
+  event_id TEXT NOT NULL UNIQUE,
+  sequence INTEGER NOT NULL,
+  state TEXT NOT NULL CHECK (state IN ('queued','running','completed','failed')),
+  lease_owner TEXT,
+  lease_expires_at INTEGER,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_error_code TEXT,
+  UNIQUE (thread_key, trigger_ts),
+  UNIQUE (thread_key, sequence)
+);
+```
+
+Allocate `sequence` and insert in one transaction. Claim with one atomic
+compare-and-set that selects the lowest unfinished sequence only when no earlier
+row is queued/running. Order Slack timestamps without floating point: split the
+`seconds.microseconds` string and compare the integer parts (pad the fractional
+part to six digits). Use `event_id` only as a deterministic final tie-breaker;
+duplicates should normally have been rejected by its unique constraint.
+
+Use bounded retries with exponential backoff + jitter. After the attempt limit,
+mark the turn failed, deliver a visible terminal error with its trace ID, and
+allow the next sequence to proceed. A stale lease may be reclaimed only through
+the same atomic claim path.
+
 ## Route statefully, not by stray nouns
 
 Classify the raw current request, never the context-augmented prompt. Separate:
@@ -160,6 +191,12 @@ Buttons are projections of backend state, not state themselves.
 - Validate both HTTP status and Slack `{ok:false}` responses.
 - Log route, message timestamp, action/result ID, and actionable Slack error.
 
+Backend state stays authoritative if `chat.update` fails. Record
+`ui_sync_pending`, retry the update with bounded backoff, and always rebuild
+blocks from current backend state on the next interaction. A stale visible
+button therefore produces an idempotent “already applied/rejected” acknowledgement
+instead of executing again.
+
 For publish-private-result flows, persist a short-lived rendered-result snapshot
 and put only its ID in the button. Do not depend on Slack including
 `payload.message` for an ephemeral message. On click:
@@ -186,11 +223,14 @@ and put only its ID in the button. Do not depend on Slack including
 - [ ] Persisted outcomes and live Slack context are both present.
 - [ ] A teammate can continue the same thread session.
 - [ ] Rapid sibling requests execute in message order.
+- [ ] Same/near-identical timestamps use integer comparison and deterministic tie-breaking.
+- [ ] A stale lease retries once through atomic claim and never duplicates an effect.
 - [ ] Ambiguous follow-up retains the active domain; strong explicit intent switches.
 - [ ] Named resources resolve from the owned catalog before provider search.
 - [ ] Partial matches produce partial drafts plus an unresolved list.
 - [ ] Slack-assisted discovery can still produce independently hydrated actions.
 - [ ] Approve all acts only on remaining drafts.
 - [ ] Resolved buttons cannot be clicked again.
+- [ ] A failed `chat.update` is retried/reconciled while duplicate clicks remain no-ops.
 - [ ] Ephemeral publish works without `payload.message`.
 - [ ] Slack `ok:false` produces a visible, actionable failure.

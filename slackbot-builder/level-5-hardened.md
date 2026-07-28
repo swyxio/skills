@@ -309,7 +309,9 @@ a signed `url_verification` request.
 - [ ] Fresh mention; thread follow-up; ambiguous request → clarification.
 - [ ] Long paginated thread: root + newest causally-prior tail are included; the trigger and later siblings are excluded.
 - [ ] Two rapid sibling mentions execute in causal order and the second observes the first turn's persisted outcome.
+- [ ] Slack timestamps compare as integer seconds/fractions (not floating point), with deterministic tie-breaking.
 - [ ] A teammate can continue the same thread-scoped operational session without losing context.
+- [ ] A failed Block Kit refresh leaves backend state authoritative, retries UI reconciliation, and makes a stale button idempotent.
 - [ ] Block Kit select + modal submission with valid and invalid option.
 - [ ] App Home render + preference persistence.
 - [ ] Completion callback signature validation.
