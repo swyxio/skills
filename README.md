@@ -15,6 +15,7 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 | Upload many submitted talks from Airtable/local files to YouTube Studio | [youtube-studio-batch-upload](./youtube-studio-batch-upload) | [youtube-studio-computer-use](./youtube-studio-computer-use) for post-upload Studio cleanup |
 | Edit existing YouTube Studio videos, thumbnails, playlists, visibility, or schedules through Chrome | [youtube-studio-computer-use](./youtube-studio-computer-use) | [youtube-api](./youtube-api) if API credentials exist and the task is API-friendly |
 | Use the YouTube Data API for metadata, thumbnails, uploads, or channel listing | [youtube-api](./youtube-api) | [youtube-studio-computer-use](./youtube-studio-computer-use) for Studio-only states |
+| Build a full YouTube operations bot with raw API access, Slack approvals, playlists, comments, live operations, and change-impact analytics | [youtube-channel-operator](./youtube-channel-operator) | [slackbot-builder](./slackbot-builder), [data-chatbots](./data-chatbots), then [youtube-api](./youtube-api) or [youtube-studio-computer-use](./youtube-studio-computer-use) |
 | Build conference schedule, speaker, or developer data surfaces | [schedule-design](./schedule-design), [conference-developer-endpoints](./conference-developer-endpoints), or [europe-developer-api](./europe-developer-api) | `accelevents-*` or [sync-accelevents](./sync-accelevents) when syncing source systems |
 | Harden a software repo | [codebase-maintainability-guardrails](./codebase-maintainability-guardrails) for defaults, then [antislop-codebase](./antislop-codebase) for larger cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
 | Design, debug, migrate, cache, or deploy a production system on Cloudflare | [cloudflare-production-builder](./cloudflare-production-builder) | Product-specific skills after the Cloudflare durability, storage, security, and release boundaries are settled |
@@ -116,6 +117,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 
 ### YouTube Publishing And Thumbnails
 
+- [youtube-channel-operator](./youtube-channel-operator) — designs full-power multi-channel YouTube operators with complete typed Data/Analytics/Reporting/Live API access, raw power-user calls, guided Slack approval workflows, exact-channel OAuth isolation, immutable external-action audit, Studio-only handoffs, and post-change measurement.
 - [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
 - [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
 - [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
