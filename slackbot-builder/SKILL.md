@@ -69,6 +69,8 @@ their level files so they load only when you're there):
 - **Real shared store for state** (idempotency, sessions, pending clarifications, prefs). In-memory maps are dev-only.
 - **Slack is a status surface, not the product.** Link to a durable web/session URL for long output, logs, PRs, artifacts.
 - **Keep Block Kit terse**; canonical state lives in your backend.
+- **Render real tables with Block Kit, not Markdown pipes.** Slack `mrkdwn` does not render GitHub-style tables. For genuinely tabular results, use a native `table` block, keep the complete answer in top-level `text` as the accessibility/notification fallback, wrap descriptive columns, right-align metrics, and compact overly wide data to the columns people scan.
+- **Disable both kinds of automatic unfurls on bot replies.** Set `unfurl_links: false` and `unfurl_media: false` on `chat.postMessage`, `chat.postEphemeral`, and response-URL payloads. `unfurl_links: false` alone does not suppress media previews such as YouTube cards.
 - **Every enriching call is best-effort** — a failed reaction, status update, or context fetch must never abort the real answer.
 - **Don't degrade silently.** Log every non-default path (canned/deterministic answer, model skipped, provider fallback) — a bot that silently returns the same answer to every prompt is the worst kind of bug to debug.
 - **Flat JSON logs with trace ids everywhere.** Slack bots are otherwise painful to debug.
