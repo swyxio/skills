@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deep Trajectory Analysis"
+  short_description: "Audit whether agent behavior achieves its intent"
+  default_prompt: "Use $deep-trajectory-analysis to reconstruct paired trajectories and test whether the policy changes achieved their intended effects."
