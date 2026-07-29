@@ -35,7 +35,17 @@ Official references:
 [OAuth scopes](https://developers.google.com/identity/protocols/oauth2/scopes),
 [server-side OAuth](https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps).
 
-## Data API writes
+## Data API reads and writes
+
+`videos.list(part=snippet,id=...)` returns the complete default video
+description; a `descriptionExcerpt` is an application-created truncation, not a
+YouTube API limitation. Keep broad upload/search catalogs compact for entity
+resolution, then batch exact owned-video IDs into a targeted metadata read
+before parsing links, extracting handles, comparing descriptions, or drafting
+an update. Use 50-video application pages to match YouTube's native request
+limit, and continue larger sets with an explicit page or cursor. Do not add a
+second row-omission or silent description-truncation layer inside a selected
+page. Never treat an excerpt as authoritative content.
 
 | Surface | Supported writes | Constraints and traps |
 | --- | --- | --- |

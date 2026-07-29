@@ -19,6 +19,21 @@ Use this matrix while building or reviewing a YouTube channel operator.
 - Raw and guided forms normalize to the same provider request.
 - Exact channel/resource ownership is checked before draft and apply.
 
+## Metadata reads
+
+- Exact-ID video metadata lookup returns the complete default description beyond
+  any discovery excerpt limit.
+- Missing text in `descriptionExcerpt` triggers a targeted full metadata read
+  before the agent reports it absent.
+- Multi-video detail reads preserve requested ID order and batch within the
+  provider and application's shared 50-ID page limit.
+- Exact-ID sets larger than 50 expose stable pagination metadata and do not
+  refetch earlier pages.
+- Every selected page returns complete descriptions without a second
+  row-omission or silent description-truncation mechanism.
+- Non-public or cross-channel resources follow the operator's delivery policy
+  and never leak through a public result.
+
 ## Update replacement semantics
 
 - Description-only edit retains title, category, tags, language, and other

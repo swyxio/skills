@@ -56,9 +56,16 @@ the owning UI is actually controlled and verified.
 3. **Expose methods, not arbitrary HTTP.** Raw tools accept a registered method
    ID, typed parameters, body, and optional immutable media asset. Reject custom
    URLs, hosts, headers, tokens, or an unreviewed `execute` flag.
-4. **Read before write.** YouTube update endpoints use replacement semantics for
-   included `part`s. Fetch the full current mutable part, merge the patch, and
-   review the complete outgoing representation.
+4. **Use full metadata for content work.** Treat catalogs, search hits, and
+   `descriptionExcerpt` fields as discovery records only. After resolving exact
+   video IDs, fetch `videos.list(part=snippet,...)` and use the complete
+   `snippet.description` before extracting, comparing, or rewriting content.
+   Never conclude text is absent because it is absent from an excerpt. YouTube
+   detail reads should use 50-video pages to match YouTube's native request
+   limit and continue larger sets with an explicit page or cursor.
+   YouTube update endpoints use replacement semantics for included `part`s, so
+   merge a patch into the full current mutable part and review the complete
+   outgoing representation.
 5. **Apply exactly what was reviewed.** Persist the exact resource ID, base
    ETag, before state, desired patch, normalized provider request, actor, and
    expiry. If live state drifts, conflict and create a fresh proposal.
