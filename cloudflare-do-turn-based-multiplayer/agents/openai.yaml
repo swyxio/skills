@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cloudflare DO Turn Multiplayer"
+  short_description: "Build reliable turn-based multiplayer on DOs"
+  default_prompt: "Use $cloudflare-do-turn-based-multiplayer to design and verify a reliable remote turn-based game on Cloudflare Durable Objects."
