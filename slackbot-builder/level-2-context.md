@@ -8,6 +8,7 @@ and feels alive while it works.
 - [ ] **Threads as shared sessions** — key state by workspace + channel + `thread_ts`.
 - [ ] **Session state** in a shared store with a TTL.
 - [ ] **Causal bounded context** — root + newest replies strictly before the trigger, paginated then token-budgeted.
+- [ ] **Multimodal context integrity** — file/image-only messages survive rendering; supported media is forwarded separately from text.
 - [ ] **Merged state** — live Slack words + persisted operational outcomes and active domain.
 - [ ] **DMs** supported (`message.im`).
 - [ ] **Empty-mention nudge**.
@@ -63,6 +64,28 @@ actor-private, store per-message visibility + viewer identity rather than
 making the whole session actor-scoped. Persist only compact routing state for
 transient search turns; do not retain raw requester-scoped results.
 
+### Preserve multimodal messages
+
+Slack threads are not text transcripts. A renderer like
+`messages.map(message => message.text).filter(Boolean)` silently deletes files
+and drops image-only messages completely. Render structured message parts:
+
+- Keep a text annotation such as `[attached image: IMG_3596.jpg]` or
+  `[attached file: brief.pdf]` so a text-only planner knows media exists.
+- Pass supported attachments through a separate typed field
+  (`attachedImages`, `files`, or content parts) to the vision-capable planner.
+  Never accept a parameter that is not forwarded at the next seam.
+- Download Slack `url_private` bytes server-side with the bot token and
+  `files:read`, validate `Content-Type` (for example, require `image/*`), then
+  inline bytes/data URLs for the model. HTTP 200 alone is not proof: an
+  unauthenticated private-file request may return an HTML login page.
+- Preserve the message author and timestamp beside each media reference so
+  downstream routing can distinguish human inputs from the bot's own outputs.
+
+Test the integration seam, not only extraction helpers: construct a handler
+params object with an attachment, assert the downstream workflow receives it,
+and include an image-only thread message in the context test.
+
 ## Instant feedback: make it feel alive
 
 All best-effort, in parallel, never blocking the answer.
@@ -101,6 +124,11 @@ When a stale mapping fails, delete it and fall back to a fresh session.
 ## Anti-patterns
 
 - ❌ Dumping entire channel history into the prompt.
+- ❌ Flattening a multimodal thread to `message.text` and filtering empty strings.
+- ❌ Treating a private Slack file URL as model-readable or accepting HTTP 200
+  without checking the response media type.
+- ❌ Adding `attachedImages` to a type signature without asserting that the
+  downstream workflow call receives it.
 - ❌ Reading only the oldest reply page or including messages at/after the trigger.
 - ❌ Letting live Slack context replace authoritative persisted outcomes (or vice versa).
 - ❌ Keying a shared operational thread by actor so teammates lose continuity.

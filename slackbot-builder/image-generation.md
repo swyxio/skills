@@ -85,6 +85,74 @@ distinguish the bot's own outputs (`bot_id` set) from human-supplied references 
 **Regenerate** replays the original sources instead of recursively editing its own
 last frame. (Full upload/button/modal mechanics in [L3](level-3-interactive.md).)
 
+## Route image mode once, then keep it sticky
+
+Choose mode with one small pure function rather than inline conditionals spread
+across signature verification, D1, and webhook code. A stable policy is:
+
+```ts
+function shouldRouteToImage(input: {
+  explicitImage: boolean;
+  noImage: boolean;
+  inThread: boolean;
+  threadHasImageActivity: boolean;
+}): boolean {
+  if (input.explicitImage) return true;
+  if (input.noImage) return false;
+  return input.inThread && input.threadHasImageActivity;
+}
+```
+
+- Require explicit opt-in (`!image`, an image action, or equivalent) to start.
+- A bare attachment alone must not **start** image mode. In an already-sticky
+  image thread it is the current edit reference unless the user invokes the
+  ordinary-work escape hatch.
+- Persist image mode in existing per-thread state, then keep later mentions in
+  that thread in image mode without repeating the flag.
+- Provide an explicit one-message escape hatch (`!ask`) for ordinary bot work.
+- Never let stickiness leak outside the thread.
+- Put the opt-in/escape-hatch rules in help and every generated-image footer.
+  Undiscoverable routing controls are broken controls.
+
+Exhaustively unit-test the pure policy; separately test state lookup and handler
+wiring. Keep docs in the same change whenever routing behavior changes.
+
+## Select references from intent; do not vacuum and blend
+
+Reference selection is a routing decision. Treat text as the authority for
+*which* visual is the subject, not merely as a spelling hint after collecting a
+pile of pixels.
+
+Use this precedence:
+
+1. A file attached to the triggering message, or an explicitly replied-to image,
+   is authoritative.
+2. An explicit "edit my last render" or plain refinement ("make it darker")
+   may use the bot's newest output as the primary edit base.
+3. A semantic correction/redirection ("no, use the subway design"; "that's the
+   wrong logo"; "use the retro colorway instead") rejects the prior render. Drop
+   bot-authored outputs and rebuild from human-shared references.
+4. A request to make something new from shared designs uses human references,
+   not the bot's prior renders.
+5. If multiple human images remain, use thread text (or a bounded vision
+   relevance pass) to rank/select the referenced design.
+6. If intent does not resolve one candidate, use the newest human-shared image
+   as the fallback primary. Do not give every image equal weight.
+
+Keep correction detection conservative and require a human reference on the
+triggering message or earlier in the thread to fall back to; otherwise preserve
+normal refinement behavior. Detect the instruction's intent, not the mere
+presence of an isolated negation keyword: "make it darker, but don't change the
+logo" is a refinement, not a rejection of the render. Include both positive
+corrections and negative-constraint refinements in tests. Separate **reference
+selection** from **image generation** so selection can be tested without calling
+the provider.
+
+Log safe selection metadata on every render: routing mode, refinement versus
+redirection, human-only versus mixed references, reference count, primary source
+kind, and stable non-secret identifiers. This makes a wrong-base render
+diagnosable without logging private file URLs or image bytes.
+
 ## Checklist
 
 - [ ] Generation runs in **durable execution** (Workflow/Durable Object/queue), not `waitUntil`.
@@ -94,6 +162,15 @@ last frame. (Full upload/button/modal mechanics in [L3](level-3-interactive.md).
 - [ ] Steps are idempotent — retry re-renders from re-read thread state, no double-post.
 - [ ] Image call emits a trace span with usage + per-modality cost (L5).
 - [ ] Generated artifact arrives with iterate buttons + settings modal (L3).
+- [ ] Image mode is explicit to start, sticky only within its thread, and has a
+  documented one-message escape hatch.
+- [ ] Thread image/file-only messages survive context rendering and attachments
+  reach the durable workflow.
+- [ ] Direct/replied-to references outrank thread fallback; corrections exclude
+  the bot's rejected output; plain refinements may keep it.
+- [ ] Thread text selects/ranks the intended human reference when several designs
+  are present.
+- [ ] Render logs record safe routing/reference metadata.
 
 ## Anti-patterns
 
@@ -102,3 +179,14 @@ last frame. (Full upload/button/modal mechanics in [L3](level-3-interactive.md).
 - ❌ Treating a fixed latency bug as the *only* bug — removing the timeout often unmasks a correctness failure cut off before it could surface.
 - ❌ Flipping the success/failure reaction from the trigger instead of the durable job — they diverge the moment a retry happens.
 - ❌ Standing up R2/S3 just to remember the last image when re-reading the thread is enough.
+- ❌ Flattening thread context to text and silently deleting image-only messages.
+- ❌ Passing a private `url_private` to a model instead of downloading it with the
+  bot token and validating the response `Content-Type`.
+- ❌ Accepting an attachment field at the handler but dropping it before the
+  workflow/provider seam.
+- ❌ Requiring the image flag on every iteration, or auto-entering image mode for
+  unrelated requests.
+- ❌ Feeding the bot's rejected render back after a semantic correction such as
+  "no, use the subway design" and compounding the mistake.
+- ❌ Vacuuming every thread image most-recent-first and expecting a short text
+  correction to overcome an equal-weight visual blend.

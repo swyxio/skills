@@ -12,7 +12,7 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.3"
+ version: "2.4"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -54,7 +54,8 @@ business logic, that's the bug.
 
 **Optional capability references** (load only if you ship the feature — they're not
 always-on rungs): **image generation** → [image-generation.md](image-generation.md)
-(durable renders, model-param gating, iterate buttons).
+(multimodal thread context, sticky routing, reference selection, durable renders,
+model-param gating, iterate buttons).
 
 **Cross-cutting operational reference:** for multi-turn agents, named-resource
 resolution, or external mutations, also read
@@ -76,6 +77,9 @@ their level files so they load only when you're there):
   + `thread_ts`; merge live Slack context with persisted operational outcomes.
 - **Context must be causal.** Read the root plus the newest replies strictly
   before the trigger; paginate before trimming to a token budget.
+- **Context must stay multimodal.** Preserve image/file-only messages, pass
+  attachments through every seam, and let thread text select the relevant visual
+  reference instead of blindly blending every image.
 - **Serialize operational turns per thread.** Enqueue before loading context so
   rapid sibling mentions cannot race on stale state.
 - **Never answer yourself.** Drop `bot_id` / `bot_message` and message subtypes before expensive work.

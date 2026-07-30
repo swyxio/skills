@@ -299,9 +299,13 @@ don't stand up R2/S3 just to remember the last render. Distinguish the bot's own
 outputs (`bot_id` set) from human-supplied references so "Regenerate" replays the
 original sources instead of recursively editing its own last frame.
 
-**Attaching a file is itself an intent signal.** A picture on a mention/DM is an
-unambiguous "work with this" — route to the media path without requiring a flag
-(but still classify on the raw text, not the prepended context — see above).
+**Do not equate an attachment with image-mode intent.** Files and images may be
+evidence for an ordinary question. Require an explicit image action/flag to start
+image mode, then keep it sticky only inside that thread with a documented
+one-message escape hatch for normal bot work. Preserve and forward bare
+attachments to the ordinary multimodal planner instead of silently deleting them.
+The complete routing/reference policy lives in
+[image-generation.md](image-generation.md).
 
 > **Generating (not just uploading) images?** That's an optional capability with
 > its own gotchas — long renders must run in durable execution (a `waitUntil`
