@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Blog Writing"
+  short_description: "Write evidence-led MDX research posts with usable previews."
+  default_prompt: "Write or improve an AI research blog post as an MDX-first, visual, evidence-bounded article."
