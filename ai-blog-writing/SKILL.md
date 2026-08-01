@@ -36,6 +36,24 @@ artifact, not a source-code handoff.
   anatomy, 3D board reconstruction tabs, and result panels across the blog,
   Strategy Guide, and AI Lab.
 
+## Audience ownership
+
+- Give each post exactly one primary reader and declare it in front matter:
+  **strategy** for a player trying to make a better move, or **development**
+  for a reader following the AI research and engineering process.
+- Do not use sections such as “At the table” and “In the lab” to make one post
+  serve both audiences. When both stories are worth telling, split them into
+  two linked posts. The strategy post owns the playable lesson; the
+  development post owns the mechanism, evidence, and uncertainty.
+- Make the two paths visually unmistakable in the index, reading rail, topic
+  pages, eyebrows, and tags. Dates should carry more visual weight than an
+  arbitrary sequence number. Use lighter, highly readable typography rather
+  than dense all-caps display type for navigation and article metadata.
+- Strategy posts should read like expanded, memorable chapters of the
+  Strategy Guide. Development posts should read like dated laboratory notes.
+  Cross-link the paired article when the same finding has both a player and a
+  research story.
+
 ## Evidence and voice
 
 1. Start with the reader’s question or a surprising observed failure, not an
@@ -117,6 +135,37 @@ walkthrough; expose free alternate-move exploration only when it proves a
 lesson the walkthrough cannot. A chart should explain a relationship, not
 decorate.
 
+### Teaching-board grammar
+
+A board illustration must explain a sequence, not merely display a small board
+beside a detached paragraph. Prefer the Strategy Guide's scenario data and
+renderer so the blog and guide teach with the same visual language.
+
+- Show the smallest useful chain: **before → candidate move → strongest public
+  reply → surviving result**. Omit a state only when the relationship remains
+  unambiguous without it.
+- Keep a persistent legend. Put the important labels, rings, arrows, contested
+  regions, and continuation markers on or immediately beside the relevant
+  board state; do not make the reader translate a prose paragraph back onto
+  anonymous tiles.
+- Attach state-specific metrics and short captions to the state they describe.
+  End with a plain-language **Read this as** receipt that states the reusable
+  lesson.
+- State the provenance boundary: identify an exact recorded position as such;
+  otherwise call it a simplified teaching position and never imply that it is
+  a replay.
+- Interaction is optional. The base claim must be visible without clicking.
+  Use a stepper, hover, or animation only when it reveals a real dependency;
+  provide touch controls, reduced-motion behavior, and a static fallback.
+
+### Research-figure grammar
+
+For non-board research, organize the visual as **question → observation or
+control → falsification or intervention → verdict**. Let the figure carry the
+causal comparison; do not dress up four paragraphs as decorative cards. An
+evidence badge labels the confidence boundary but does not count as an
+illustration by itself.
+
 ## Visual coverage is a publishing requirement
 
 - Every substantive research post must carry at least three purposeful visual
@@ -143,15 +192,19 @@ decorate.
   3D board sequence, timeline, funnel, result ledger) over one-off artwork.
   Reusable does not mean identical: vary the teaching position and annotation
   to fit the claim.
+- Inspect the rendered result, not only the source. Capture and review mobile,
+  desktop, tablet, and ultrawide screenshots for site-wide or shared-component
+  changes. Check annotations at their actual reading size and explicitly test
+  for horizontal overflow.
 
 ## Workflow
 
 1. Inspect the actual result artifacts, source fingerprint, and prior context.
    Do not write a research conclusion from memory alone.
-2. Choose a specific audience and one job for the post. Separate, visibly,
-   **At the table** (the player’s tactic) from **In the lab** (the mechanism,
-   schedule, and uncertainty). For game AI, usually: “help players recognize
-   the mechanism” or “explain why the research changed direction.”
+2. Choose exactly one audience and one job for the post. A strategy post helps
+   a player recognize and use a mechanism. A development post explains why the
+   research changed direction, including its schedule and uncertainty. Split
+   the material into linked posts if both jobs are substantial.
 3. Draft the MDX body and front matter first. Add a short prior-context section
    before describing the latest patch.
 4. Build only the visuals required to make the measured evidence legible.
