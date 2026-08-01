@@ -1,34 +1,59 @@
 # Test Strategy Hardening Checklist
 
-## Inventory
+## New or changed tests
 
-- Commands: unit, typecheck, build, e2e, visual, smoke, coverage.
-- Runtime: cold and warm time for each suite.
-- Flake/skips: skipped tests, retries, sleeps, network dependencies, date/randomness.
-- Fixtures: size, ownership, determinism, hidden coupling.
-- Mocks: where they replace real contracts and where they hide risk.
+- Name the behavioral contract and a plausible regression.
+- Search for existing equivalent coverage.
+- Choose the lowest faithful boundary.
+- Prefer semantic assertions over implementation shape or broad snapshots.
+- Control time, randomness, IDs, global state, storage, networks, and teardown.
+- Keep mocks smaller than the real contract they replace.
+- Run focused, related, affected, and full suites proportionally.
 
-## High-Value Coverage
+## Suite inventory
 
-- API request/response contracts.
-- Provider parsing and retry behavior.
-- State/schema migrations and compatibility normalizers.
-- Auth/permissions and role boundaries.
-- Critical create/edit/delete flows.
-- Error, empty, loading, cancel, timeout, and retry states.
-- Browser viewport journeys for mobile/desktop/tablet/wide when UI matters.
+- Commands: unit, typecheck, build, contract, integration, e2e, visual, smoke, load, migration.
+- Runtime: cold and warm time by setup, imports, execution, and teardown.
+- Flakes: skips, retries, sleeps, timeouts, order dependence, clock and network dependence.
+- Fixtures: size, ownership, determinism, invalidation, and hidden coupling.
+- Mocks: where they isolate safely and where they conceal the real boundary.
+- CI: change routing, parallelism, cache correctness, and release gates.
 
-## Dedupe/Removal Signals
+## High-value coverage
 
-- Multiple tests assert the same text or button presence without proving different behavior.
-- Snapshot churn dominates failures.
+- Domain invariants and past regressions.
+- API, protocol, and provider contracts.
+- Schema migrations and compatibility behavior.
+- Auth, permissions, tenancy, and ownership.
+- Critical create, edit, delete, retry, rollback, and recovery flows.
+- Error, empty, loading, cancel, timeout, and partial-success states.
+- Browser journeys and real viewport checks when UI matters.
+
+## Dedupe or removal signals
+
+- Multiple cases assert the same behavior with different prose.
+- Snapshots generate churn without explaining a product regression.
 - Tests duplicate framework behavior.
-- Tests only assert implementation shape and would pass during user-visible breakage.
-- Test setup is longer than the behavior under test without a good reason.
+- Mocks merely replay the implementation.
+- Assertions cover private structure rather than observable outcomes.
+- Setup dominates the behavior without a boundary-based reason.
+- A stronger test asserts the same invariant with comparable diagnostics.
+
+## Flake repair
+
+- Reproduce the smallest failure repeatedly before editing.
+- Capture seed, execution order, wall clock, environment, and resource state.
+- Replace sleeps and retries with explicit synchronization.
+- Freeze time and seed randomness.
+- Isolate state and close every resource.
+- Separate product races from test-harness defects.
+- Record quarantine ownership and removal criteria when repair is blocked.
 
 ## Output
 
-- Keep / rewrite / delete / quarantine list.
-- New suite map and commands.
-- Before/after runtime.
-- Remaining blind spots.
+- Keep, rewrite, merge, delete, quarantine, and add list.
+- Replacement coverage for every removed test.
+- Suite map and change-routing rules.
+- Before and after runtime and flake evidence.
+- Focused and full commands actually run.
+- Remaining blind spots and next highest-value target.

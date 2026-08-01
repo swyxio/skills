@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Strategy Hardening"
-  short_description: "Make test suites trustworthy, focused, fast"
-  default_prompt: "Use $test-strategy-hardening to audit this repo test suite, remove low-value coverage, add high-value regression checks, and produce a test hardening plan."
+  short_description: "Write and harden trustworthy, efficient tests"
+  default_prompt: "Use $test-strategy-hardening to write or improve tests that are focused, deterministic, non-duplicative, and proportionate to the change."

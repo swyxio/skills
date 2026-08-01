@@ -64,7 +64,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
       </ul>
       <p><strong>Quality</strong></p>
       <ul>
-        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Trustworthy tests.</strong> Audits whether tests carry their weight, then hardens flaky tests, contract tests, golden-path e2e, regression fixtures, runtime, dedupe, and coverage quality.</li>
+        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Trustworthy tests.</strong> Guides everyday test writing and suite-wide audits, then hardens flaky tests, contracts, golden-path e2e, fixtures, runtime, dedupe, and coverage quality.</li>
       </ul>
     </td>
   </tr>
