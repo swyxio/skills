@@ -21,6 +21,14 @@ not a source-code handoff.
   request time.
 - Reuse one restrained article shell. Add small feature-owned React visual
   components only where the data needs a diagram or chart.
+- Make a public series discoverable outside its own shell: link its collection
+  landing page from the product homepage navigation or footer, and from other
+  durable guide footers where readers finish adjacent material. Do not make a
+  single article URL the only global entry point.
+- When a research series starts with an implementation-heavy note, add a
+  `00 · Start here` primer ahead of it. In plain language, explain the game or
+  product, the questions the series will answer, the reading contract, and the
+  next note. Register it first in both the post index and the reading rail.
 
 ## Evidence and voice
 
@@ -37,6 +45,18 @@ not a source-code handoff.
    and “does this close safely?” rather than vague advice to play aggressively.
 6. Keep references to hidden state, player labels, future deals, RNG, and
    evaluation harnesses precise. If the policy cannot use something, say so.
+
+## Search-complexity reporting
+
+- Say **raw placement triples**, **traversal paths**, or **distinct legal
+  constructions**—not an undifferentiated “permutation” count. Label whether a
+  number is pre-legality geometry, an exhaustive census, or the live bounded
+  budget.
+- Pair any complexity example with its exact conditions: map dimensions,
+  terrain/height context, dealt hand, and board state. Explain separately what
+  scoring changes (candidate value) and what it does not (the raw
+  orientation/origin space). If the game ends on a territory target rather
+  than a score target, say so before listing point values.
 
 ## Visual standard
 
@@ -64,6 +84,9 @@ expandable section. A chart should explain a relationship, not decorate.
 4. Build only the visuals required to make the measured evidence legible.
    Keep them accessible: semantic figures, captions, and text equivalents.
 5. Build and visually inspect desktop and mobile or a narrow viewport.
+   For site-chrome or reading-layout changes, also check tablet and ultrawide
+   viewports; confirm that navigation remains visible, the mobile rail stays
+   usable, and wide tables remain horizontally accessible.
 6. End every handoff with either:
    - a verified production URL after deployment, or
    - a running local preview URL.
