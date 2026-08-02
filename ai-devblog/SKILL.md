@@ -54,11 +54,17 @@ material to a public target merely because public is the default.
 Before writing:
 
 1. Inspect the relevant source, diff, issue, transcript, experiment, or incident.
-2. Identify exact versions: commit SHA, package/model/runtime version, dataset,
+2. Inspect screenshots and other media the user supplied in the coding thread.
+   Reuse them when they are primary evidence for the problem, diagnosis, or
+   shipped result. Preserve provenance in the caption, sanitize browser chrome,
+   identifiers, and private data, and distinguish a diagnostic snapshot from
+   production proof. Do not substitute a reconstructed mockup when an authentic
+   supplied screenshot tells the story accurately.
+3. Identify exact versions: commit SHA, package/model/runtime version, dataset,
    configuration, date range, and environment where material.
-3. Re-run or read the most relevant tests and measurements when reasonably
+4. Re-run or read the most relevant tests and measurements when reasonably
    cheap. Do not convert stale or unavailable evidence into a current claim.
-4. Separate these boundaries explicitly:
+5. Separate these boundaries explicitly:
    - local source changed;
    - committed;
    - pushed or merged;
@@ -168,6 +174,15 @@ Choose the smallest useful form:
 - tabbed code examples for meaningful before/after or cross-stack comparisons;
 - interactive demo, calculator, explorer, or stepper when readers benefit from
   changing inputs or walking a causal sequence.
+
+For performance work, default to both a before/after visual and a timing
+waterfall, flame chart, or stacked stage diagram when measured stage timings
+exist. Keep before and after on a common scale, show units and totals, identify
+the exact environment or sample boundary, and pair the graphic with an
+accessible table or textual equivalent. If timing attribution is incomplete,
+label the remainder as overhead or unmeasured time; never invent a stage
+breakdown. Use user-supplied screenshots alongside the chart when they show the
+original symptom or operational surface better than reconstructed UI.
 
 Heavily favor an interactive visual when manipulating inputs, replaying a
 sequence, exploring an artifact, or switching implementations reveals the
