@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Devblog"
-  short_description: "Turn completed technical work into a visual devblog."
-  default_prompt: "Use $ai-devblog to propose evidence-backed angles, then write and publish a technical account of this work."
+  short_description: "Report interesting technical work with evidence and visuals."
+  default_prompt: "Use $ai-devblog to decide whether this work merits a post, propose evidence-backed angles, and publish a visual site-native technical account."

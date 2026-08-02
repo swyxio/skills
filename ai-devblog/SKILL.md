@@ -1,20 +1,29 @@
 ---
 name: ai-devblog
-description: Turn completed coding, debugging, research, migration, or deployment work into a dated technical devblog. Use when an agent should offer blog angles, write or revise an evidence-backed MDX post, add purposeful diagrams or interactive demonstrations, cite exact technical receipts, preview the result, and publish it publicly or internally.
+description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated technical devblog. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a site-native evidence-backed article, strongly prefer purposeful visuals, interactive demonstrations, code samples, and diffs where useful, cite exact technical receipts, preview the result, and publish it publicly or internally.
 ---
 
 # AI Devblog
 
-Write the technical account that only the agent who did the work could write.
-Capture what changed, why it mattered, the evidence behind the conclusion, and
-what remains uncertain. Prefer a concise, useful field report over a polished
-but generic content-marketing article.
+Write a technical account grounded in work the agent performed or can fully
+reconstruct from primary artifacts. Capture what changed, why it mattered, the
+evidence behind the conclusion, and what remains uncertain. Prefer a concise,
+useful field report over polished but generic content marketing.
 
 ## Entry contract
 
 - Use this skill after technical work produced inspectable artifacts: code,
   diffs, commits, logs, traces, benchmarks, screenshots, tests, deployments, or
   operational receipts.
+- Apply an interestingness gate before proposing a post. Continue only when the
+  work contains at least one of:
+  - a non-obvious finding;
+  - a meaningful design decision or tradeoff;
+  - a measurable improvement or shipped capability;
+  - a surprising failure or corrected assumption;
+  - a reusable technique, tool, or operating lesson.
+  If none applies, recommend a changelog entry, commit message, or internal
+  status note instead of manufacturing a devblog.
 - Do not invent a post from memory or plans alone. Inspect the current evidence.
 - Unless the user already chose an angle or explicitly asks to write
   immediately, first offer 2-4 possible directions. For each, give:
@@ -58,6 +67,12 @@ Before writing:
 5. Preserve failed attempts, reversals, and uncertainty when they explain the
    final design. Do not edit the causal history into a clean fictional path.
 
+Distinguish what this agent directly executed or observed from repository
+history, another agent's work, and human decisions. Attribute material ideas,
+discoveries, and playbooks. Use the project's editorial voice where
+appropriate, but do not imply sole authorship or first-hand observation that
+the evidence does not support.
+
 Link claims to primary evidence whenever possible. Prefer exact-SHA source
 links, official documentation, original issues or papers, test output,
 deployment receipts, and public URLs over secondary summaries. Use inline
@@ -79,8 +94,9 @@ Good shapes:
 Avoid vague titles such as `Some Thoughts on Agents` or hooks that conceal the
 actual result.
 
-Adapt to the destination's established front-matter schema. When the site has
-no convention yet, prefer:
+Adapt to the destination's established metadata or front-matter schema. Do not
+add fields or redesign the site's content model merely to satisfy this skill.
+When the site has no convention yet, prefer:
 
 ```yaml
 title: "Short result — optional hook"
@@ -95,10 +111,11 @@ an exhaustive keyword list.
 
 ## Shape the article
 
-Use MDX when the destination supports it; otherwise use the site's native
-human-editable format. Discover and reuse the site's content directories,
-layouts, components, typography, metadata, citation style, and build pipeline.
-Do not force a new blog framework into an established site.
+Use the site's native human-editable format. Use MDX when the destination
+already supports it and the article benefits from components or interaction.
+Discover and reuse the site's content directories, layouts, components,
+typography, metadata, citation style, and build pipeline. Do not introduce a
+new blog framework merely to enable one article without the user's approval.
 
 Open with a two-part BLUF:
 
@@ -120,17 +137,24 @@ definitions, operator notes, and surprising secondary observations without
 breaking the main narrative.
 
 Prefer small exact code excerpts over large dumps. Explain why each excerpt is
-present. Link to the exact source revision when readers need the full context.
-When reproducibility is part of the value, give readers the minimum
-prerequisites, commands, expected result, and safe cleanup needed to follow
-along. Do not turn every devblog into a start-to-finish tutorial.
+present. Use a focused code diff when the change itself tells the story. Use
+tabbed examples when readers benefit from comparing before/after code,
+alternative implementations, languages, frameworks, or configuration modes;
+do not hide the only complete example behind interaction. Link to the exact
+source revision when readers need the full context. When reproducibility is
+part of the value, give readers the minimum prerequisites, commands, expected
+result, and safe cleanup needed to follow along. Do not turn every devblog into
+a start-to-finish tutorial.
 
-## Illustrate the reasoning
+## Make the mechanism visible
 
-Use frequent purposeful visuals because the agent can produce them from the
-underlying artifacts. A substantial article should normally contain 2-4 visual
-beats; a short release note may need only one. Every visual must explain a
-relationship that prose alone would make slower to understand.
+Strongly prefer purposeful visuals because a coding agent can derive them from
+the same artifacts it used to do the work. For every substantial post,
+actively look for multiple opportunities to show the mechanism, comparison,
+or proof instead of only describing it. There is no fixed quota: publish
+without a visual when every candidate would be decorative, misleading, or
+require disproportionate new infrastructure. Every included visual must make a
+relationship faster to understand than prose alone.
 
 Choose the smallest useful form:
 
@@ -140,12 +164,19 @@ Choose the smallest useful form:
 - chart for measured comparisons with units and sample boundaries;
 - annotated screenshot for user-visible or operational proof;
 - code diff for a small decisive implementation change;
+- syntax-highlighted code sample for the key technique;
+- tabbed code examples for meaningful before/after or cross-stack comparisons;
 - interactive demo, calculator, explorer, or stepper when readers benefit from
   changing inputs or walking a causal sequence.
 
-For interactive MDX:
+Heavily favor an interactive visual when manipulating inputs, replaying a
+sequence, exploring an artifact, or switching implementations reveals the
+finding better than a static image. Do not add interaction solely as polish.
 
-- reuse existing components before creating new ones;
+For interactive visuals or MDX components:
+
+- reuse existing components before creating new ones; if the destination has
+  no component system, ask before expanding the publishing stack;
 - keep data and logic in feature-owned, reusable components;
 - make the central claim visible without interaction;
 - provide a static or textual fallback;
