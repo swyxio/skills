@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Apps with ImageGen"
+  short_description: "Prototype and visually match app designs"
+  default_prompt: "Use $design-apps-with-imagegen to explore, prototype, compare, and integrate this interface."
