@@ -135,6 +135,13 @@ Add a periodic repair loop for:
 The reconciler must use the same idempotency keys and authorization rules as the
 primary path. Repair must not create an alternative semantics.
 
+Persist dispatch failures before returning from `waitUntil`; console output is
+not a recovery mechanism. Alert on age and convergence, not only error counts.
+For example: page when the oldest eligible outbox row exceeds 5 minutes or when
+two reconciliation passes leave the same row pending. Test repeated dispatch
+and reconciliation calls and assert one external job, one domain transition,
+and a stable idempotency receipt.
+
 ## User-visible progress
 
 Users should never infer progress from placeholder skeletons that may never

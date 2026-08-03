@@ -124,6 +124,55 @@ when its columns and zero-row behavior are proven sufficient, all writes fail,
 and it has an owner, expiry, rollback command, and verified removal gate. Do not
 design a normal release around such a view.
 
+#### D1 contraction gate
+
+Before removing or renaming any D1 object, write a compatibility matrix for
+every active and retained rollback binary. Include API Workers, runners,
+Workflows, cron jobs, service bindings, and maintenance tools:
+
+| Binary | Reads | Writes | Candidate schema | Allowed to contract? |
+| --- | --- | --- | --- | --- |
+| live API `v41` | `deploy_releases` | `deploy_outbox` | passes | yes |
+| rollback runner `v39` | `site_deployments` | lock UPSERT | fails | no |
+
+The contraction gate passes only when every listed binary works against the
+candidate schema or has been removed from the live and rollback sets. Record a
+schema epoch range such as `min_schema=71, max_schema=73` in each release
+contract so activation and rollback can reject incompatible combinations.
+
+Compile or prepare every SQL statement from each exact deployed bundle against
+a disposable database with the candidate schema. Exercise uncommon and
+apparently unreachable branches: SQLite resolves missing tables and columns in
+`COALESCE`, subqueries, triggers, and views before runtime branch selection.
+Inspect generated columns and hidden columns with `PRAGMA table_xinfo`, not only
+`table_info`.
+
+Treat writable bridges as schema dependencies, not harmless compatibility:
+
+```sql
+-- Unsafe bridge: reads may work, but the old writer still cannot UPSERT it.
+CREATE VIEW site_deployments AS SELECT * FROM deploy_releases WHERE 0;
+INSERT INTO site_deployments(id) VALUES (?) ON CONFLICT(id) DO UPDATE SET id=id;
+```
+
+SQLite cannot use a normal view as an UPSERT target. Do not add triggers or
+dual-write shims to prolong an obsolete writer. Keep the old table through the
+activation window, replace the writer, verify the exact new binaries remotely,
+then remove the table in a separate contraction migration and release.
+
+Minimum contraction canary:
+
+1. Start from a production-shaped pre-expand fixture.
+2. Apply the expand migration and run both old and new binaries.
+3. Activate the new binaries; run the real outbox/Workflow/runner path.
+4. Apply contraction; prove only the new binaries remain eligible.
+5. Exercise release, reconciliation, activation, and compensation through the
+   public or service-bound path using exact version IDs.
+
+Do not combine expand and contract in one migration or release. A source build
+or local harness is insufficient when a retained live binary executes different
+generated SQL, bindings, or asynchronous paths.
+
 If production schema exists but the migration ledger does not, never blindly
 replay migrations. Adoption requires:
 
