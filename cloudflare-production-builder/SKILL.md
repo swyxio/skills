@@ -90,6 +90,11 @@ Read [storage-and-caching.md](references/storage-and-caching.md).
   external artifact identities to the release record.
 - Record recovery evidence before schema changes. Prefer additive migrations and
   forward fixes; do not make code rollback depend on destructive schema rollback.
+- Test D1 migrations with D1's implicit-transaction and always-on foreign-key
+  semantics. Do not rely on `PRAGMA foreign_keys = OFF` in a migration.
+- For a self-hosting control plane, prove that every intermediate schema leaves
+  the live version able to release its successor. Expand, release and verify the
+  compatible runtime, then contract obsolete schema.
 - For D1, prefer a non-blocking Time Travel bookmark. Never request a full
   production export without first checking for virtual tables and planning for
   the documented period in which exports block database queries.
@@ -136,6 +141,10 @@ Pause and surface the blocker when:
 - the target account, environment, hostname, database, bucket, namespace, or
   Worker cannot be resolved exactly;
 - production schema is partial or differs from the expected shape;
+- a currently live runtime still queries a table, column, trigger, or view that
+  the proposed migration removes;
+- a self-hosting release path cannot deploy its successor at an intermediate
+  migration state;
 - the current deployed bindings cannot be inspected;
 - a destructive migration lacks recovery evidence;
 - a deployment would expose untrusted content on the control-plane origin;

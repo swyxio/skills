@@ -57,15 +57,72 @@ Use a forward-only, inspectable migration discipline:
 
 - one canonical numbered migration directory;
 - reject duplicate numbers and divergent histories;
-- test a clean database and realistic upgrade fixtures;
+- test a clean database and realistic populated upgrade fixtures under D1
+  transaction semantics;
 - prefer additive columns/tables/indexes and compatibility windows;
 - precheck exact expected schema before apply;
 - stop on partial or unexpected state;
 - capture a Time Travel bookmark or independently retained export before writes;
 - apply using the resolved production database ID/account;
 - verify the migration ledger and exact schema afterward;
-- keep the previous Worker compatible with the new schema when possible;
+- keep every currently live Worker, runner, Workflow, and service-binding
+  consumer compatible with each intermediate schema;
 - prefer a forward repair to routine destructive rollback.
+
+### D1 execution and test fidelity
+
+D1 runs every query and migration inside an implicit transaction with foreign
+keys enabled. `PRAGMA foreign_keys = OFF` cannot disable enforcement inside that
+transaction. Use `PRAGMA defer_foreign_keys = ON` only to defer checks until the
+transaction ends; it does not suppress `ON DELETE CASCADE` actions.
+
+Before applying a migration:
+
+1. Run the migration as one transaction with foreign keys enabled.
+2. Seed a production-shaped fixture with populated parent/child relationships,
+   triggers, implicit `UNIQUE` indexes, views, and non-null historical variants.
+3. Inspect `pragma_foreign_key_list`, `pragma_index_list`, `sqlite_master`, and
+   live query dependencies before dropping or renaming schema.
+4. Prove atomic rollback by forcing a late statement to fail and confirming no
+   earlier statement persisted.
+5. Run `PRAGMA foreign_key_check`, exact schema comparison, and ledger checks
+   after success.
+6. For high-risk contraction, execute the same migration against a disposable
+   remote D1 canary before production.
+
+Do not use SQLite CLI success as D1 proof unless the harness reproduces those
+semantics. Do not use D1's `meta.changes` as an exact compare-and-swap result:
+it is a total-change indication and can include trigger writes. Read and verify
+the authoritative target row, generation, or ref after mutation.
+
+### Runtime/schema compatibility and self-hosting cutovers
+
+Removing obsolete compatibility code from the target architecture does not make
+its database schema safe to remove while an older runtime is still live. Use a
+bounded expand/activate/contract sequence:
+
+1. Inventory every deployed API, runner, Workflow, cron, service binding, and
+   rollback version that reads or writes the affected schema.
+2. Expand additively and backfill with fenced, idempotent writes.
+3. Release a version that works with the expanded schema and no longer depends
+   on the object scheduled for removal.
+4. Exercise the owning live path, including service bindings and asynchronous
+   work, and verify the exact version and data state.
+5. Remove or disable rollback targets that still require the old schema, or
+   retain the schema until their compatibility window closes.
+6. Contract the obsolete schema in a later migration and prove its absence.
+
+For a self-hosting control plane, add a bootstrap acceptance test: the currently
+live version must be able to apply the expand migration and successfully release
+its successor. Never apply a contraction that disables the only allowed release
+path before that successor is active.
+
+Permanent backward compatibility is not required. Temporal compatibility with
+currently live and approved rollback versions is required. An empty read-only
+compatibility view may be used only as an explicitly approved incident bridge
+when its columns and zero-row behavior are proven sufficient, all writes fail,
+and it has an owner, expiry, rollback command, and verified removal gate. Do not
+design a normal release around such a view.
 
 If production schema exists but the migration ledger does not, never blindly
 replay migrations. Adoption requires:
@@ -79,12 +136,39 @@ replay migrations. Adoption requires:
 
 Any mismatch is an incident, not an invitation to force the ledger.
 
+### D1 command identity and ambiguous outcomes
+
+`wrangler whoami`, database listing, and token scope output do not prove that the
+exact target operation will succeed. Before writes, pin the account and database
+ID, inspect `d1 info`, and run a harmless query against that database. Treat a
+failure of the exact query path as unresolved even if account-level commands
+succeed.
+
+Retry read-only probes only with a small bound and preserve the first provider
+error. Do not blindly retry a write after a timeout, transport failure, 5xx, or
+unexpected response envelope: the write may have committed. Reconcile the
+authoritative row, migration ledger, ref, idempotency receipt, and relevant
+provider state first. Retry only the same fenced logical operation when that
+readback proves it is still pending.
+
+For application mutations that must commit together, use a D1 batch or one
+database transaction boundary and test rollback on a failing final statement.
+Migration tooling must parse successful result arrays and provider error objects
+without converting provider failures into JSON-shape or authentication guesses.
+
 ### D1 recovery evidence and the export trap
 
 Prefer a Time Travel bookmark for routine pre-migration recovery evidence. Time
 Travel is always enabled on supported production-backend databases, retrieving
 a bookmark is non-blocking, and a restore can return the database to the
 recorded point if explicitly authorized.
+
+Store a recovery receipt containing the exact account ID, database ID,
+bookmark, retrieval time, Wrangler version, and, for timestamp-derived
+bookmarks, the exact timestamp string used. Re-query the same timestamp and
+require the same bookmark before mutation; do not reconstruct or round the
+timestamp later. Treat restore as a separate destructive action requiring
+explicit approval and an undo bookmark.
 
 Do not treat `wrangler d1 export` as a harmless backup command:
 
@@ -188,6 +272,8 @@ A CI green check, Wrangler success, and live smoke are separate evidence.
 ## Current first-party sources
 
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
+- [D1 foreign keys](https://developers.cloudflare.com/d1/sql-api/foreign-keys/)
+- [D1 database batch API](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch)
 - [D1 import and export limitations](https://developers.cloudflare.com/d1/best-practices/import-export-data/)
 - [D1 export API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/)
 - [D1 limits](https://developers.cloudflare.com/d1/platform/limits/)
