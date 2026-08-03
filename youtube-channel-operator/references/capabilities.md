@@ -31,6 +31,12 @@ service accounts or `onBehalfOfContentOwner`.
 Use offline OAuth, securely store the refresh token, and verify the exact channel
 with `channels.list(mine=true)`.
 
+For unattended operation, keep the OAuth consent app out of Testing status;
+Testing grants for non-profile scopes can expire quickly. Store each channel's
+refresh token in Keychain or the runtime secret store, exercise it regularly,
+and convert `invalid_grant` into an explicit reauthorization-required state.
+Never fall back to another browser account or credential namespace.
+
 Official references:
 [OAuth scopes](https://developers.google.com/identity/protocols/oauth2/scopes),
 [server-side OAuth](https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps).
@@ -49,9 +55,9 @@ page. Never treat an excerpt as authoritative content.
 
 | Surface | Supported writes | Constraints and traps |
 | --- | --- | --- |
-| Videos | Upload, update, delete; title, description, tags, category, default language/localizations, recording date, privacy, scheduled publish, embedding, license, public stats, made-for-kids and synthetic-media disclosures | Update `part`s replace omitted mutable values. `snippet` updates require title and category. `publishAt` is limited to private, never-published videos. Delete is permanent. |
+| Videos | Upload, update, delete; title, description, tags, category, default language/localizations, recording date, privacy, scheduled publish, embedding, license, public stats, made-for-kids and synthetic-media disclosures | Update `part`s replace omitted mutable values. `snippet` updates require title and category. `publishAt` is documented only for private, never-published videos and must be sent with `privacyStatus: private`. Represent that release as one reviewed status write; do not require a separate make-private approval. Treat scheduling directly from unlisted as canary-only until the exact provider request succeeds for the target channel. Reject already-public videos and do not call ordinary scheduled publication a Premiere. Delete is permanent. |
 | Thumbnails | Set/replace a custom video thumbnail | JPEG/PNG, 2 MB, channel eligibility and rate limits. Not a Shorts thumbnail-frame control. |
-| Captions | List/download, upload, replace/update, delete | Caption upload/update is quota-heavy. Auto-sync control is deprecated. |
+| Captions | List/download, upload, replace/update, delete | `captions.list` returns track metadata, not text. `captions.download` returns the selected track and requires edit permission. Owner-authorized reads can cover public, private, and unlisted uploads. Caption upload/update is quota-heavy. Auto-sync control is deprecated. |
 | Playlists | Create, update, delete; title, description, privacy, podcast status, language/localizations | Special uploads playlists cannot be modified like normal playlists. Update parts have replacement semantics. |
 | Playlist items | Add, remove, reorder; notes and start/end offsets | Removal uses playlist-item ID, not video ID. Reordering requires manual sort. |
 | Playlist images | Insert, update, delete playlist thumbnail image | Treat the media upload as a durable asset operation. |
@@ -67,6 +73,8 @@ Primary references:
 [videos.insert](https://developers.google.com/youtube/v3/docs/videos/insert),
 [thumbnails.set](https://developers.google.com/youtube/v3/docs/thumbnails/set),
 [captions](https://developers.google.com/youtube/v3/docs/captions),
+[captions.list](https://developers.google.com/youtube/v3/docs/captions/list),
+[captions.download](https://developers.google.com/youtube/v3/docs/captions/download),
 [playlists](https://developers.google.com/youtube/v3/guides/implementation/playlists),
 [playlist images](https://developers.google.com/youtube/v3/docs/playlistImages),
 [comments](https://developers.google.com/youtube/v3/guides/implementation/comments),
@@ -117,6 +125,14 @@ Useful metrics include:
 - traffic sources, devices, geography, and demographics;
 - revenue metrics when the monetary scope is granted.
 
+Traffic-source reports can identify `ADVERTISING` views and support a paid
+versus organic proxy. They do not exactly reproduce Studio's browse and
+recommendation groupings, and not every metric is compatible with every
+dimension. Keep subscriber attribution in compatible channel/video reports.
+Returning/new viewer segmentation and exact Studio attribution are not exposed
+by the public Analytics API. Public retention curves support a nearest-point
+30-second approximation, not the exact Studio Intro card.
+
 References:
 [channel reports](https://developers.google.com/youtube/analytics/channel_reports),
 [metrics](https://developers.google.com/youtube/analytics/metrics),
@@ -149,6 +165,7 @@ References:
 | Shorts thumbnail frame, related-video and music controls | Use the relevant YouTube mobile/Studio surface |
 | Channel handle/avatar | Use the owning account/Studio UI |
 | Most ordinary VOD monetization controls | Use Studio; Content ID/partner APIs are a separate product |
+| Returning/new viewer segmentation and exact Studio attribution | Read the authenticated Studio analytics UI; keep API-backed metrics available when Studio authentication fails |
 
 Native A/B tests compare up to three title/thumbnail combinations by watch-time
 share. They are unavailable for several video states, and any API title or
@@ -169,6 +186,7 @@ At the time this reference was authored:
 - default allocation separated 100 `videos.insert` calls/day and 100
   `search.list` calls/day from 10,000 units/day for other methods;
 - common mutations cost 50 units;
+- `captions.list` costs 50 units and `captions.download` costs 200 units;
 - captions insert/update cost substantially more;
 - invalid requests still consumed quota;
 - quota reset at midnight Pacific Time.

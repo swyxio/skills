@@ -34,6 +34,32 @@ Use this matrix while building or reviewing a YouTube channel operator.
 - Non-public or cross-channel resources follow the operator's delivery policy
   and never leak through a public result.
 
+## Captions and transcripts
+
+- Raw `captions.list` and `captions.download` are registered typed methods.
+- Transcript lookup verifies the pinned account, channel, and exact owned video.
+- Owner-authorized public, private, and unlisted videos are not filtered by
+  visibility after ownership verification.
+- Explicit caption ID requires that exact track.
+- Default selection prefers a serving requested-language standard track, then
+  requested-language ASR.
+- Syncing, failed, forced-only, wrong-language, and ambiguous tracks return
+  explicit states rather than guessed transcript text.
+- VTT parsing preserves cue start/end time and removes styling and rolling-ASR
+  duplicate prefixes without deleting new words.
+- Cache identity includes caption ID and `lastUpdated`; caption changes
+  invalidate derived artifacts.
+- `no_captions` stops without media download, Whisper, public-page scraping, or
+  a fabricated summary.
+- Long talks use timestamp-window retrieval or map-reduce rather than injecting
+  the entire transcript into every model turn.
+- Viewer chapters start at `0:00`, contain only ascending starting times, include
+  at least three sections, and keep sections at least 10 seconds long.
+- Pull quotes are verbatim, timestamped, and distinguish uncertain ASR text.
+- Potential titles cite the timestamped transcript evidence that supports them.
+- A generated chapter list does not mutate the video description until a
+  separately reviewed `videos.update` action is approved.
+
 ## Update replacement semantics
 
 - Description-only edit retains title, category, tags, language, and other
@@ -42,6 +68,12 @@ Use this matrix while building or reviewing a YouTube channel operator.
 - Playlist-item reorder retains playlist/resource IDs and offsets.
 - Omitted values are deleted only when the reviewed patch explicitly requests it.
 - Unsupported or inconsistently documented mutable fields require a canary.
+- Scheduled release sends the complete preserved `status` with
+  `privacyStatus: private` and a future canonical UTC `publishAt` in one write.
+- Private, never-published owned uploads may be scheduled. Unlisted sources
+  remain canary-only until the exact one-write transition is verified for the
+  target channel; already-public, missing, and cross-channel videos fail before
+  approval.
 
 ## Proposal and concurrency
 
@@ -50,12 +82,16 @@ Use this matrix while building or reviewing a YouTube channel operator.
 - Resource changed after draft → conflict, no silent rebase.
 - Double-click and duplicate Slack delivery execute once.
 - Expired/rejected/applied proposals cannot execute.
+- Scheduled-release drafts reject extra patch fields and non-canonical/past
+  timestamps; approval-delay expiry sends no provider write.
 - Unauthorized approver fails closed.
 - Actual human proposer/approver appears in audit.
 
 ## Reconciliation
 
 - Successful update is refetched and compared.
+- Scheduled-release readback requires `privacyStatus: private` and an equivalent
+  `publishAt` instant, not byte-identical timestamp formatting.
 - Timeout after dispatch reconciles current resource before retry.
 - Playlist add retry does not duplicate membership.
 - Playlist removal uses playlist-item ID.
@@ -85,6 +121,9 @@ Use this matrix while building or reviewing a YouTube channel operator.
 - Sequential rotation is labeled observational.
 - Playlist sync previews adds/removes/reorders and handles duplicates.
 - Upload begins private/unlisted according to the reviewed request.
+- Scheduled-release batches render local-time cadence plus canonical UTC times,
+  use one `videos.scheduleRelease` draft per unpublished owned video, make no
+  Premiere claim, and leave a separate terminal audit outcome for every item.
 - Moderation card explains reject/ban consequences.
 - Live transition refetches broadcast/stream state immediately before apply.
 

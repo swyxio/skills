@@ -9,6 +9,8 @@ comment, publication, or channel changes.
 - [Change marker](#change-marker)
 - [Baseline and checkpoints](#baseline-and-checkpoints)
 - [Metrics](#metrics)
+- [Paid acquisition and audience quality](#paid-acquisition-and-audience-quality)
+- [API measurement boundaries](#api-measurement-boundaries)
 - [Native versus sequential experiments](#native-versus-sequential-experiments)
 - [Reporting workflow](#reporting-workflow)
 - [Slack report](#slack-report)
@@ -102,6 +104,62 @@ history and may take roughly 48 hours to begin.
 When the product grants `yt-analytics-monetary.readonly`, keep revenue metrics
 available to raw power users and explicit guided reports. Preserve the report's
 currency, finalization delay, and window boundaries.
+
+## Paid acquisition and audience quality
+
+Treat paid reach and qualified audience growth as separate, valid objectives.
+Cheap views are not inherently low quality, and attributed subscriptions are
+not inherently durable audience growth.
+
+Maintain an episode-level and campaign-arm-level scorecard:
+
+| Objective | Primary measures | Quality checks |
+| --- | --- | --- |
+| Reach | spend, impressions, paid views, view rate, average CPV, completed playback | format/network/geography mix, watch duration, paid-to-organic ratio |
+| Engagement | earned/follow-on views, comments, likes, shares, cost per follow-on view | repeat viewing, episode depth, geography and device quality |
+| Subscription | attributed subscribers, subscriber CPA and conversion rate | Studio subscribers, subscribers lost, follow-on views, returning behavior |
+
+Segment by day, campaign arm, episode, ad format, YouTube versus video-partner
+network, device, and geography. Flag unusually cheap inventory when it is paired
+with weak watch duration, follow-on behavior, comments, or repeat engagement;
+do not automatically pause it. Never scale solely because an ad platform
+recommends a larger budget.
+
+Use 24–48 hours for the first delivery check and 48–72 hours before judging
+attribution or audience quality. Require enough volume and finalized data before
+declaring a winner. Report recommendations as **hold**, **scale**, **pause**, or
+**test**, with expected impact, confidence, effort, affected metric, and an
+explicit threshold or disconfirming signal.
+
+Reconcile rather than equate:
+
+- Google Ads views versus YouTube public and Analytics views;
+- Ads-attributed subscribers versus Analytics/Studio subscriber gains;
+- paid acquisition volume versus organic recommendation, search, and follow-on
+  viewing;
+- short-term conversion versus 7- and 28-day repeat engagement.
+
+## API measurement boundaries
+
+- Treat Analytics traffic source `ADVERTISING` as the paid component and all
+  other reported traffic sources as an **organic proxy**, not a perfect Studio
+  organic-only total.
+- Derive browse/recommendation evidence from traffic-source categories such as
+  related videos, subscriber surfaces, search, channel pages, and other YouTube
+  pages. Label this a proxy because it does not reproduce Studio's grouping
+  exactly.
+- Do not request subscriber metrics grouped by traffic source when the report
+  combination is unsupported. Retrieve subscriber gains/losses from compatible
+  channel, video, or geography reports and reconcile separately.
+- Derive 30-second retention from the nearest point on the public retention
+  curve and label it an approximation, not the exact Studio Intro card.
+- Treat returning/new viewer indicators and exact Studio attribution as
+  Studio-only. Do not mark other API-backed metrics unavailable merely because
+  the current browser account cannot open Studio.
+- Use the latest complete reporting day. Mark missing or delayed rows pending,
+  never zero.
+- Import thumbnail impressions and CTR from the delayed Reporting API reach job
+  when available; preserve its report dates and capture time.
 
 ## Native versus sequential experiments
 

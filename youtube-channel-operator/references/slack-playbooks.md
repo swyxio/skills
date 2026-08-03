@@ -12,6 +12,8 @@ threads, Block Kit, durable execution, and button resolution.
 - [Top-level comment and pin handoff](#top-level-comment-and-pin-handoff)
 - [Playlist manager](#playlist-manager)
 - [Upload package](#upload-package)
+- [Scheduled release batch](#scheduled-release-batch)
+- [Transcript and viewer package](#transcript-and-viewer-package)
 - [Moderation queue](#moderation-queue)
 - [Live operations](#live-operations)
 - [Raw mode](#raw-mode)
@@ -151,6 +153,57 @@ Use durable resumable upload:
 
 Prefer private/unlisted canaries. API projects may force uploads private until a
 YouTube compliance audit is complete.
+
+## Scheduled release batch
+
+Example:
+
+> Schedule the private playlist videos every 30 minutes from 9:30 AM Pacific.
+
+1. resolve exact owned video IDs; convert the requested local cadence to future,
+   canonical UTC timestamps with milliseconds;
+2. hydrate each video and accept only private, never-published uploads by
+   default; treat unlisted sources as canary-only and reject public, missing, or
+   cross-channel videos before approval;
+3. draft one `videos.scheduleRelease` action per video. Its complete status write
+   sets `privacyStatus: private` and `publishAt` together—never draft a separate
+   make-private action;
+4. render the ordered cadence, each video, its current visibility, the scheduled
+   normal public release, and a clear statement that this is **not** a Premiere;
+5. let the human use the existing `Approve all remaining` control over these
+   independently-ready drafts; a durable executor claims, drift-checks, and
+   records each item separately;
+6. refetch each video and require `privacyStatus: private` plus the same instant
+   for `publishAt`. A slot that has expired while awaiting approval fails closed
+   before any provider write.
+
+One draft turn plus one bulk approval is appropriate because each release is a
+complete typed transition, not because the system has silently auto-approved an
+ordered plan. Retain partial failures and their exact reasons in the terminal
+summary; never blindly retry an ambiguous provider mutation.
+
+## Transcript and viewer package
+
+Examples:
+
+- “Summarize this talk with timestamped evidence.”
+- “Give me detailed YouTube chapters, pull quotes, and potential titles.”
+- “Find the best three clips about evals.”
+
+1. resolve the exact owned video and account;
+2. list caption tracks and select a serving requested-language track;
+3. download VTT through the official API;
+4. normalize timed segments and retain the exact caption/video IDs;
+5. run the requested prompt from
+   [transcripts.md](transcripts.md);
+6. render summaries as normal thread text and structured moment lists as native
+   Slack tables;
+7. deep-link timestamps to the exact video;
+8. keep any proposed description/chapter update as a separate reviewed write.
+
+Caption downloads and derived analysis are read-only and need no apply button.
+If no usable caption exists, report that state and stop; do not silently invoke
+media download, Whisper, or an unofficial scraper.
 
 ## Moderation queue
 

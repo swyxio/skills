@@ -1,6 +1,6 @@
 ---
 name: youtube-channel-operator
-description: Design, build, review, or extend a production YouTube channel operator that combines complete typed YouTube Data, Analytics, Reporting, and Live API access with guided Slack or chatbot workflows, human approval, durable execution, audit history, multi-channel OAuth isolation, and post-change measurement. Use for YouTube operations bots, creator-management copilots, raw power-user API tools, title or thumbnail experiments, description and comment workflows, playlist management, uploads, moderation, live operations, or analytics tied to channel changes. Hand atomic one-off API execution to youtube-api and Studio-only browser work to youtube-studio-computer-use.
+description: Design, build, review, or extend a production YouTube channel operator that combines complete typed YouTube Data, Analytics, Reporting, and Live API access with guided Slack or chatbot workflows, human approval, durable execution, audit history, multi-channel OAuth isolation, caption downloads, transcript summaries, viewer timestamps, paid-versus-organic acquisition analysis, and post-change measurement. Use for YouTube operations bots, creator-management copilots, raw power-user API tools, transcript processing, chapters, pull quotes, clips, title or thumbnail experiments, description and comment workflows, playlist management, uploads, moderation, live operations, Google Ads/paid-promotion measurement, or analytics tied to channel changes. Hand atomic one-off API execution to youtube-api and Studio-only browser work to youtube-studio-computer-use.
 ---
 
 # YouTube Channel Operator
@@ -30,7 +30,9 @@ persists the exact reviewed action, applies it once, and verifies the result.
 | Determine whether an operation exists, its scope, quota, or API limitation | [references/capabilities.md](references/capabilities.md) |
 | Design OAuth accounts, raw tools, proposals, execution, idempotency, or audit | [references/architecture.md](references/architecture.md) |
 | Implement common Slack workflows and approval cards | [references/slack-playbooks.md](references/slack-playbooks.md) |
+| Download captions or generate summaries, chapters, clips, quotes, and titles | [references/transcripts.md](references/transcripts.md) |
 | Measure performance after title, thumbnail, description, or playlist changes | [references/analytics-experiments.md](references/analytics-experiments.md) |
+| Reconcile paid reach, organic lift, subscriber quality, and Google Ads evidence | [references/analytics-experiments.md](references/analytics-experiments.md) |
 | Build or review the test matrix | [references/test-cases.md](references/test-cases.md) |
 
 Do not load every reference automatically.
@@ -81,6 +83,10 @@ the owning UI is actually controlled and verified.
 10. **Separate change proof from performance impact.** A successful write proves
     state changed. Analytics later describe correlation, not causality, unless
     YouTube's native concurrent experiment supplies the result.
+11. **Separate acquisition objectives and evidence.** Cheap paid views can be a
+    valid awareness outcome. Report paid reach, organic behavior, attributed
+    subscribers, and repeat engagement separately; do not collapse them into a
+    single quality score or dismiss inexpensive views by default.
 
 ## Build the two capability layers
 
@@ -93,12 +99,15 @@ youtube.data.call
 youtube.live.call
 youtube.analytics.query
 youtube.reporting.call
+youtube.transcript.get
 ```
 
 Require `accountKey`, a registered method ID, exact IDs/parameters, a validated
 body, and an optional immutable asset ID. Show the normalized provider request
 before execution. Keep the method registry complete even when common workflows
-cover only a subset.
+cover only a subset. `youtube.transcript.get` is a read-only convenience tool
+over registered `captions.list` and `captions.download` calls; it must preserve
+the selected caption track and timestamps rather than scrape watch-page HTML.
 
 ### Guided workflow layer
 
@@ -109,6 +118,8 @@ Promote frequently repeated operations into domain workflows:
 - create or update the channel-owned top-level comment;
 - playlist create/update/add/remove/reorder/shelf;
 - upload package with thumbnail, captions, playlists, scheduling, and comment;
+- scheduled-release batch for already uploaded unpublished videos;
+- caption download and transcript-derived summary/chapter/clip/quote package;
 - comment moderation and reply queue;
 - live broadcast setup and operations;
 - before/after analytics checkpoints.
@@ -170,6 +181,10 @@ conflict, or failure.
 Offer an exact Studio handoff or supervised browser workflow. Do not silently
 substitute a sequential rotation and call it a native A/B test.
 
+Google Ads campaign creation and mutation belong to an Ads operator. This skill
+may ingest Ads campaign evidence and reconcile it with YouTube analytics, but it
+must not invent Ads mutation methods inside the YouTube executor.
+
 ## Implementation order
 
 1. Record product decisions: account keys/IDs, Slack-to-role mapping, which
@@ -199,4 +214,6 @@ Do not report the operator complete until all applicable evidence exists:
 - duplicate delivery/retry test;
 - API readback or Studio owning-surface verification;
 - analytics job/checkpoint proof when measurement is promised;
+- paid/organic and attribution reconciliation when promotion is measured;
+- refresh-token health check and explicit reauthorization failure handling;
 - independent proof for every configured channel and runtime.
