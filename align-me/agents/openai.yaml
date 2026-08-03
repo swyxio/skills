@@ -1,0 +1,4 @@
+interface:
+  display_name: "Align Me"
+  short_description: "Resolve ambiguity before autonomous work"
+  default_prompt: "Use $align-me to surface the decisions I should make before you start a long autonomous run."
