@@ -70,7 +70,7 @@ Before writing:
    - pushed or merged;
    - deployed or migrated;
    - verified on the live user-facing surface.
-5. Preserve failed attempts, reversals, and uncertainty when they explain the
+6. Preserve failed attempts, reversals, and uncertainty when they explain the
    final design. Do not edit the causal history into a clean fictional path.
 
 Distinguish what this agent directly executed or observed from repository
@@ -123,7 +123,19 @@ Discover and reuse the site's content directories, layouts, components,
 typography, metadata, citation style, and build pipeline. Do not introduce a
 new blog framework merely to enable one article without the user's approval.
 
-Open with a two-part BLUF:
+Orient the reader within the first two or three paragraphs. Assume they are
+broadly familiar with the technical area but do not know this project, incident,
+architecture, experiment, or prior argument. Spend two to four sentences naming
+the relevant system, the situation before this work, why the problem matters,
+and the specific question the post answers.
+
+A catchy opener is optional. When one genuinely helps, use it briefly and put
+the orienting context immediately after it. When there is no strong opener,
+begin directly with the context rather than manufacturing a slogan, dramatic
+anecdote, or mystery. A concrete incident may supply the hook, but readers
+should not have to infer the surrounding system or stakes from that incident.
+
+Within that opening, deliver a two-part BLUF:
 
 1. what changed or was learned;
 2. the most important evidence or consequence.
