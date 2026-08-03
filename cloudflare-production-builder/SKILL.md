@@ -74,6 +74,9 @@ Read [durable-execution.md](references/durable-execution.md).
 - Treat Cache API as ephemeral, data-center-local acceleration.
 - Prefer cache keys derived from immutable content IDs, exact revisions, or a
   transactionally maintained generation.
+- For conditional R2 stream writes, handle an unmet precondition as an unread
+  body: cancel the consumer side and settle the producer. Keep duplicate checks
+  bounded to submitted keys; never replace them with broad prefix listings.
 - Resolve authorization and current visibility before reading shared internal
   caches. Keep access-controlled browser responses private unless disclosure
   equivalence is proven.
