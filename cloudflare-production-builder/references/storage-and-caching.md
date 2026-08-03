@@ -32,6 +32,39 @@ Prefer immutable object keys plus a small mutable pointer in an authoritative
 store. Avoid listing R2 on serving paths; read exact paths from a trusted
 manifest.
 
+#### Conditional writes can leave streaming bodies unread
+
+Treat a conditional `put()` that loses `If-None-Match: *` as a response that may
+arrive without R2 consuming the supplied `ReadableStream`. If a producer is
+piping into a `FixedLengthStream` or another backpressured bridge, explicitly
+cancel the unread consumer side on both a failed precondition and a thrown
+write, then await the producer pipe before continuing. Otherwise duplicate-heavy
+uploads can stall until the request or runner times out.
+
+Keep deduplication work proportional to the submitted keys:
+
+- Prefer bounded conditional writes per submitted content-addressed key.
+- Use exact-key `head()` checks only when their request count and concurrency
+  are bounded.
+- Do not enumerate repository- or tenant-wide prefixes to discover duplicates.
+  A mixed old/new object set may touch every hash prefix; one new object can
+  prevent early exit and turn ingestion into a scan of the entire namespace.
+- Publish authoritative refs or pointers only after every required object write
+  has settled successfully.
+
+Add regressions for duplicate-only and mixed duplicate/new batches. Make the
+fake store reject duplicates before reading their bodies, assert the operation
+settles, assert no broad `list()` occurs, and assert refs/pointers remain
+unchanged on failure. Preserve a generic client error when needed, but attach a
+request/ingest ID and log the bounded internal phase and cause.
+
+Incident signature: authenticated uploads reach the service but fail before
+the authoritative pointer changes; pack shape, disabled deltas, smaller
+uploads, and alternate refs fail similarly; clients see a generic unpack or
+ingest error while queues and runner duration grow. Check unread conditional
+write bodies and namespace-wide duplicate scans before blaming historical
+content corruption.
+
 ### Workers KV
 
 Use for globally read-heavy, infrequently changed, eventually consistent
