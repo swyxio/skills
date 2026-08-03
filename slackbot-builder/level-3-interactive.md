@@ -8,7 +8,7 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **`POST /interactions`** route (signed like everything else).
 - [ ] **Human-in-the-loop approvals** — drafts as Block Kit, applied only on click.
 - [ ] **Buttons resolve in place** (`chat.update`) so they can't be actioned twice — with an **instant ephemeral ack** before any async work so the button can't be double-fired in the gap.
-- [ ] **Batch actions are state-aware** — Approve all re-reads and processes only remaining drafts, rewriting after each item.
+- [ ] **Batch actions are state-aware** — model the provider's real atomic transition as one draft; Approve all re-reads and processes only independently-ready remaining drafts, with visible progress and a terminal summary.
 - [ ] **Dry-run validation** before presenting drafts.
 - [ ] **Rich, actionable drafts** — render computed evidence/artifacts, bulk + edit-before-apply, deep links.
 - [ ] **Slash commands** for one-shot invocations.
@@ -68,15 +68,21 @@ return ack200();
 (For truly fast in-place toggles you can skip the ephemeral and just `chat.update`;
 the ephemeral ack earns its keep the moment the action schedules async work.)
 
-## Batch actions: incremental progress, not one final rewrite
+## Batch actions: atomic drafts and visible progress
+
+Do not make a human approve artificial intermediate steps when one provider write
+can safely perform the intended transition. Draft the smallest typed action that
+captures the real operation, including its preconditions, before/after state, and
+readback test. A batch should contain independently hydrated, ready-to-run drafts;
+it is not a substitute for an ordered plan with implicit auto-advance.
 
 "Approve all 6 drafts" must first re-read canonical state and select only rows
 still in `draft`; an earlier individual Approve/Reject changes what “all” means.
 Never replay already resolved actions. Process the remaining items sequentially
-(~3s each). If you only rewrite
-the message *once at the end*, the user stares at unchanged buttons for 20+ seconds
-and assumes it hung (→ re-click, "is it broken?"). Rewrite the message **after each
-item**, best-effort, so progress is visible:
+(~3s each). Post a clear started state and show best-effort incremental progress
+when practical; always reconcile the card with a terminal per-item summary. A
+single final rewrite with no initial status leaves unchanged buttons for 20+ seconds
+and invites re-clicks.
 
 ```ts
 const resolved = new Map<string, string>();
@@ -97,6 +103,9 @@ await slack("chat.update", { channel, ts: messageTs, text: summary, blocks: fina
   the remaining items.
 - One bad item records its error on that row and the loop **keeps going**; post a
   summary line (`Applied 5 of 7 — 2 need attention`).
+- A durable worker may own a longer batch. It still atomically claims each draft,
+  records each terminal outcome, and re-reads the action set before applying; do
+  not use background execution to imply an unreviewed dependency auto-advance.
 - Rebuild from current backend state after every item so applied/rejected cards
   lose their buttons and cannot be clicked again.
 - The version/concurrency mechanics of bulk apply (chain `expectedVersion`, one
@@ -426,7 +435,9 @@ Cross-surface detail: [data-chatbots](../data-chatbots/SKILL.md) § Slack inline
 - ❌ Applying changes straight from a query (no approval).
 - ❌ Leaving buttons live after a click → double-applies.
 - ❌ Relying on the post-work `chat.update` alone to disable a button — the 2–5s gap before it lands invites a double-click; fire an instant ephemeral ack first.
-- ❌ Bulk-applying N items with a single final message rewrite → 20s of frozen-looking UI; rewrite per item.
+- ❌ Bulk-applying N items with no immediate started state and only a late final
+  rewrite. Add incremental per-item updates when practical and always publish a
+  terminal summary.
 - ❌ Approve all replaying actions already applied/rejected individually.
 - ❌ Depending on `payload.message` to republish an ephemeral answer.
 - ❌ Treating Slack search as write authority—or blocking a provider-verified action merely because Slack helped discover it.

@@ -187,7 +187,11 @@ Buttons are projections of backend state, not state themselves.
 - Replace/remove a resolved action’s buttons in the original message.
 - For **Approve all**, re-read the set and apply only actions still in `draft`;
   individual actions already applied/rejected must be skipped.
-- Rewrite progress after each item and continue after an isolated failure.
+- Draft the smallest real provider transition. Do not turn one safe composite
+  write into artificial staged approvals; do not use an approval set to conceal
+  an ordered plan or implicit dependent-action auto-advance.
+- Publish an immediate started state, show incremental progress when practical,
+  and always reconcile to a terminal per-item summary after isolated failures.
 - Validate both HTTP status and Slack `{ok:false}` responses.
 - Log route, message timestamp, action/result ID, and actionable Slack error.
 
@@ -230,6 +234,8 @@ and put only its ID in the button. Do not depend on Slack including
 - [ ] Partial matches produce partial drafts plus an unresolved list.
 - [ ] Slack-assisted discovery can still produce independently hydrated actions.
 - [ ] Approve all acts only on remaining drafts.
+- [ ] Every bulk draft is independently ready; no hidden plan dependency or
+      synthetic intermediate approval exists.
 - [ ] Resolved buttons cannot be clicked again.
 - [ ] A failed `chat.update` is retried/reconciled while duplicate clicks remain no-ops.
 - [ ] Ephemeral publish works without `payload.message`.

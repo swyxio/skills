@@ -94,8 +94,9 @@ their level files so they load only when you're there):
 
 **Level-specific opinions** (full rationale + war stories in the linked file): mutations
 require a human, inline flags configure the core, route on the raw request not the
-context, interactive actions ack the click *instantly* + batch ops show *incremental*
-progress, artifacts get iterate-button + settings-modal affordances → [L3](level-3-interactive.md);
+context, interactive actions ack the click *instantly* + batch ops show a started
+state and terminal summary (plus incremental progress when practical), artifacts
+get iterate-button + settings-modal affordances → [L3](level-3-interactive.md);
 instrument *every* model call (not just text), slow work runs in durable execution not a
 background promise, every entry surface protected equally, every job ends in a guaranteed
 result-or-error delivered by the right surface mechanism → [L5](level-5-hardened.md);
