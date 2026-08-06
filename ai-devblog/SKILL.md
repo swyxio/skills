@@ -111,6 +111,23 @@ Do not list numbers because they are available. Do not repeat one result as a
 metric card, paragraph, table, and chart. Put detailed receipts in an appendix
 or durable linked artifact when they matter for audit rather than explanation.
 
+Reject proof theater. For each material claim, record the claim, the evidence
+that directly changes a skeptical reader's belief, and the evidence boundary or
+limitation. Remove an evidence block when it only demonstrates that normal
+delivery machinery ran.
+
+- Treat HTTP 200 as reachability evidence only. It does not prove the requested
+  source, behavior, bindings, migration, performance, or user outcome.
+- Do not promote CI success, a green build, an uploaded artifact, or a public
+  URL into article proof unless the article's actual claim concerns that exact
+  boundary.
+- Keep publication chain-of-custody in the release handoff, a compact provenance
+  line, or a linked receipt. Do not turn it into a large in-article pipeline or
+  set of ornamental proof cards by default.
+- Prefer one compact comparison table or sentence over a sequence of status
+  badges. A visual must compress and clarify evidence, not enlarge ceremony.
+- If removing a proof graphic leaves the argument unchanged, remove it.
+
 ## Write the title and front matter
 
 Start every title with a straightforward 2-8 word summary that puts the bottom

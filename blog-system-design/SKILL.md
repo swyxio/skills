@@ -120,6 +120,27 @@ Information density does not mean tiny text. Compare how much useful content a
 reader can scan in one viewport, then check legibility, hierarchy, and touch
 targets.
 
+Measure mobile density by useful facts visible per viewport, not by font size or
+the absence of horizontal overflow. Treat repeated tall cards as a design smell.
+When each item is a label plus one or two values, use a compact row, table, or
+definition list; do not allocate a large bordered panel and centered badge to
+every item. As a practical review trigger, redesign repeated mobile cards taller
+than roughly 72px unless their content or interaction genuinely needs the space.
+Prefer locally scrolling wide evidence over vertically expanding every field.
+
+## Enforce readable contrast
+
+- Meet at least 4.5:1 contrast for normal text and 3:1 for large text, controls,
+  focus indicators, and meaningful graphical objects in every supported theme.
+- Test semantic foreground/background token pairs programmatically when colors
+  are controlled by the site. Do not rely on visual intuition alone.
+- Avoid low-opacity labels on tinted panels and text placed directly over chart
+  colors without a verified foreground. Use symbols, labels, or patterns in
+  addition to color for meaning.
+- Check default, hover, active, selected, disabled, and focus states. A readable
+  body palette does not excuse low-contrast metadata, legends, captions, or
+  keyboard controls.
+
 ## Build reusable explanatory components
 
 Prefer semantic, site-native components for recurring forms:
@@ -179,7 +200,11 @@ rendered system at representative widths such as 1600, 1280, 1024, 768, 430,
   title wrapping, locally scrolling evidence, and expanded TOC containment;
 - visible focus, semantic landmarks, touch targets, reduced motion, and theme
   contrast;
+- measured contrast for normal text and controls in light and dark themes;
+- mobile information density: compact repeated evidence, multiple useful facts
+  per viewport, and no one-card-per-screen status or proof sequences;
 - reasonable image and JavaScript weight.
 
 Treat visual inspection as required evidence. A passing build does not prove
-that a reading system works.
+that a reading system works. Neither does HTTP 200, an overflow measurement, or
+DOM presence. Inspect actual rendered screenshots at the target CSS widths.
