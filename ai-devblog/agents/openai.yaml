@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Devblog"
-  short_description: "Reconstruct and publish technical stories with evidence."
-  default_prompt: "Use $ai-devblog to reconstruct technical work from source and agent threads, propose evidence-backed angles, and publish a contextual, visual, site-native account."
+  short_description: "Publish evidenced technical stories with strong visuals."
+  default_prompt: "Use $ai-devblog to reconstruct technical work from source and agent threads, propose evidence-backed angles, iterate on story-carrying visuals with imagegen and code as appropriate, and publish a contextual site-native account."

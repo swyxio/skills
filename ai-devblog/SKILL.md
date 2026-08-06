@@ -324,16 +324,35 @@ comparison, or proof—and choose a visual form only when it improves one of
 them. Treat the visual and its nearby explanation as one unit: the prose should
 interpret the graphic, not transcribe every label in it.
 
-When a substantial visual needs art direction, use an image-generation model
-to explore two to four composition, hierarchy, palette, and publication-vibe
-studies before implementing it. Treat those studies as moodboards, not evidence
-or final technical assets. Give the model the relationship and layout
-constraints, but never trust it to supply labels, measurements, screenshots,
-or factual topology. Select a direction, then rebuild the final technical
-visual deterministically in HTML, SVG, CSS, Mermaid, or plotting code with the
-real data and an accessible textual equivalent. Ship a generated raster only
-when it is intentionally editorial artwork, earns its article space, and the
-user explicitly approves it.
+Treat visual quality as part of editorial quality, not decoration. When a
+substantial visual needs art direction, use an image-generation model for two
+to four initial studies and iterate between image generation, deterministic
+code, and human feedback until the visual carries the story at its rendered
+size. Start from a text brief, or pass an existing screenshot, SVG, chart, or
+code-generated diagram back through image generation to explore hierarchy,
+texture, composition, and publication identity. Use `align-me` when several
+materially different visual directions are plausible or the user's taste is
+the deciding constraint; show concrete passes rather than asking abstract
+style questions.
+
+Choose the strongest final form instead of forcing every exploration back into
+code:
+
+- publish a generated image directly when it is intentionally editorial,
+  coherent with the article, accessible, and free of unsupported factual
+  detail;
+- use image generation to stylize a deterministic chart or diagram, then
+  compare it with the source and restore exact labels, scales, measurements,
+  and topology in a deterministic overlay when needed;
+- rebuild the selected direction in HTML, SVG, CSS, Mermaid, or plotting code
+  when precision, interaction, responsiveness, or accessibility requires it.
+
+Generated visual studies may become final assets; they are not automatically
+disposable moodboards. However, never treat generated pixels as evidence, and
+never trust a model to preserve factual labels, measurements, screenshots, or
+topology without verification. For a prominent or technically consequential
+visual, take a few review passes with the user when practical and obtain clear
+approval before publication.
 
 Choose the smallest useful form:
 
@@ -368,15 +387,17 @@ Match the visual's semantics to its claim:
   decisive behavior, not merely demonstrate that code exists.
 
 Prefer deterministic HTML, SVG, Mermaid, plotting code, or site-native
-components for exact technical relationships. Editorial illustrations are
-welcome when they add a useful idea, memorable context, or publication identity.
+components when exact technical relationships must remain inspectable.
+Generated or hybrid editorial illustrations are welcome when they add a useful
+idea, memorable context, or publication identity and survive factual review.
 Do not let a low-information illustration dominate the initial viewport. Prefer
 an information-dense SVG diagram, chart, annotated screenshot, or compact mixed
 media treatment above the fold. Create a strong `og:image` when the publication
 supports social cards; it may be more expressive because it does not displace
-article content. Do not generate decorative hero art unless the user explicitly
-requests it. Generative imagery cannot substitute for a labeled technical
-diagram, measured chart, authentic screenshot, or other evidence.
+article content. Do not add decorative hero art by reflex; use it when the
+article's story and publication direction justify it. Generative imagery can
+support attention and explanation, but cannot substitute for a labeled
+technical diagram, measured chart, authentic screenshot, or other evidence.
 
 For performance work, use a before/after visual, timing waterfall, flame chart,
 or stacked stage diagram only when it supports a distinct claim. Do not show
