@@ -61,3 +61,21 @@ Run a second angle audit before publication:
 
 Record the approved package privately so later prose and visual iteration do
 not drift into a different article without an explicit decision.
+
+## Propagate the approved premise
+
+When an approved angle changes an existing post, do not stop after replacing
+the title. Rewrite the article wherever the prior premise still controls the
+reader's experience:
+
+- title, subtitle, description, and social-card promise;
+- opening scene, context, and BLUF;
+- section order and headings;
+- primary visual question, composition, and caption;
+- evidence emphasized, compressed, or removed;
+- counterargument, limitation, and conclusion.
+
+Remove passages that exist only to support the previous angle. Preserve useful
+evidence, but reinterpret it through the approved reader promise rather than
+forcing the new title over an unchanged report. Repeat the title-to-story audit
+after this rewrite and again after any major visual revision.
