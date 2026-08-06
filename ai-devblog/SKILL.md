@@ -1,6 +1,6 @@
 ---
 name: ai-devblog
-description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a clear site-native evidence-backed explanation, design purposeful diagrams, charts, interactive demonstrations, code samples, and diffs where useful, cite exact technical receipts, inspect the rendered result, and publish it publicly or internally.
+description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog within an existing publishing system. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a structured site-native explanation, select claim-fit evidence, design purposeful article-specific diagrams, charts, interactive demonstrations, code samples, and diffs, inspect the rendered result, and publish it publicly or internally. Pair with blog-system-design when work changes the shared index, post shell, typography, navigation, search, responsive behavior, or reusable components.
 ---
 
 # AI Devblog
@@ -9,6 +9,12 @@ Write a technical account grounded in work the agent performed or can fully
 reconstruct from primary artifacts. Capture what changed, why it mattered, the
 evidence behind the conclusion, and what remains uncertain. Prefer a concise,
 useful field report over polished but generic content marketing.
+
+Use `blog-system-design` together with this skill whenever the task creates or
+changes the shared blog index, taxonomy, article shell, typography, search,
+navigation, TOC, responsive behavior, or reusable presentation components. A
+single post must not silently redesign the publication. Keep article angle,
+prose, and evidence here; keep the shared reading system there.
 
 ## Entry contract
 
@@ -85,6 +91,21 @@ deployment receipts, and public URLs over secondary summaries. Use inline
 links where they read naturally; use footnotes or a references section for
 supporting material. Keep quotations short.
 
+### Select evidence by support, not abundance
+
+Use the minimum sufficient proof for each important claim. Weigh candidate
+evidence by:
+
+1. **fit** — it directly supports the claim being made;
+2. **directness** — it observes the result rather than relying on a loose proxy;
+3. **scope** — its environment and sample match the stated conclusion;
+4. **freshness** — it describes the relevant implementation;
+5. **explanatory value** — it helps the reader understand or trust the result.
+
+Do not list numbers because they are available. Do not repeat one result as a
+metric card, paragraph, table, and chart. Put detailed receipts in an appendix
+or durable linked artifact when they matter for audit rather than explanation.
+
 ## Write the title and front matter
 
 Start every title with a straightforward 2-8 word summary that puts the bottom
@@ -93,9 +114,9 @@ with a subtitle that adds the learning, opinion, or hook.
 
 Good shapes:
 
-- `Cut Build Time in Half — Why the Cache Wasn't the Bottleneck`
-- `Repo-Scoped Agents Are Live`
-- `We Replaced Polling with Durable Events`
+- `Exact-SHA Archives Cut Checkouts 89%`
+- `Repository Agents Stay Scoped`
+- `Durable Events Replaced Polling`
 
 Avoid vague titles such as `Some Thoughts on Agents` or hooks that conceal the
 actual result.
@@ -140,6 +161,8 @@ already supports it and the article benefits from components or interaction.
 Discover and reuse the site's content directories, layouts, components,
 typography, metadata, citation style, and build pipeline. Do not introduce a
 new blog framework merely to enable one article without the user's approval.
+If the article needs a new shared component or presentation convention, load
+`blog-system-design` and make that system change explicitly.
 
 Orient the reader within the first two or three paragraphs. Assume they are
 broadly familiar with the technical area but do not know this project, incident,
@@ -167,6 +190,17 @@ Then adapt the structure to the story. A substantial devblog usually needs:
 - alternatives considered and why they lost;
 - limitations, unresolved questions, and the next test.
 
+Prefer more visible structure than an average essay, but make every device
+earn its place:
+
+- use section headings for real transitions in the argument;
+- use bullets for sets, sequences, criteria, and alternatives;
+- use **bold** for conclusions, named concepts, and useful scan targets;
+- use *italics* sparingly for contrast or a newly defined term;
+- use quotations only for authentic statements or unusually concise language;
+- use tables, charts, code, and interactive playgrounds only when their form
+  explains the point more clearly than prose.
+
 Before drafting the body, write a private one-sentence thesis and a short causal
 outline. The thesis must state the non-obvious conclusion, not merely the work
 completed. The outline should connect the starting condition, mechanism,
@@ -188,6 +222,12 @@ Explain at the reader's altitude:
   chosen design as inevitable;
 - preserve technical precision, but define uncommon terms and give a small
   example when a mechanism is otherwise difficult to picture.
+
+Stay close to ASD-STE100 Simplified Technical English without making the prose
+mechanical. Prefer short direct sentences, active voice, one main idea per
+sentence, consistent terminology, defined abbreviations, and concrete verbs.
+Avoid idioms, inflated metaphors, vague intensifiers, marketing language, and
+clickbait that hides the technical result.
 
 After the first draft, perform an editorial pass independently from factual
 verification. Check whether the opening earns attention, each section advances
@@ -217,10 +257,9 @@ a start-to-finish tutorial.
 
 ## Make the mechanism visible
 
-Strongly prefer purposeful visuals because a coding agent can derive them from
-the same artifacts it used to do the work. For every substantial post,
-actively look for multiple opportunities to show the mechanism, comparison,
-or proof instead of only describing it. There is no fixed quota: publish
+Strongly prefer purposeful visuals when they expose a mechanism or relationship
+faster than prose. For every substantial post, look for the clearest opportunity
+to show the mechanism, comparison, or proof. There is no fixed quota: publish
 without a visual when every candidate would be decorative, misleading, or
 require disproportionate new infrastructure. Every included visual must make a
 relationship faster to understand than prose alone.
@@ -264,19 +303,21 @@ Match the visual's semantics to its claim:
   decisive behavior, not merely demonstrate that code exists.
 
 Prefer deterministic HTML, SVG, Mermaid, plotting code, or site-native
-components for exact technical relationships. Use generative imagery for tone
-or atmosphere only; it cannot substitute for a labeled technical diagram,
-measured chart, authentic screenshot, or other evidence. A decorative hero
-does not satisfy the need for an explanatory visual.
+components for exact technical relationships. Do not generate decorative hero
+art unless the user explicitly requests it. Prefer no image over an image that
+does not explain or prove anything. Generative imagery cannot substitute for a
+labeled technical diagram, measured chart, authentic screenshot, or other
+evidence. Remove any visual that could be exchanged for unrelated artwork
+without changing the argument.
 
-For performance work, default to both a before/after visual and a timing
-waterfall, flame chart, or stacked stage diagram when measured stage timings
-exist. Keep before and after on a common scale, show units and totals, identify
-the exact environment or sample boundary, and pair the graphic with an
-accessible table or textual equivalent. If timing attribution is incomplete,
-label the remainder as overhead or unmeasured time; never invent a stage
-breakdown. Use user-supplied screenshots alongside the chart when they show the
-original symptom or operational surface better than reconstructed UI.
+For performance work, use a before/after visual, timing waterfall, flame chart,
+or stacked stage diagram only when it supports a distinct claim. Do not show
+the same result in several forms by default. Keep comparisons on a common scale,
+show units and totals, identify the exact environment or sample boundary, and
+provide an accessible table or textual equivalent. If timing attribution is
+incomplete, label the remainder as overhead or unmeasured time; never invent a
+stage breakdown. Use supplied screenshots when they show the original symptom
+or operational surface better than reconstructed UI.
 
 Heavily favor an interactive visual when manipulating inputs, replaying a
 sequence, exploring an artifact, or switching implementations reveals the
@@ -291,6 +332,10 @@ For interactive visuals or MDX components:
 - provide a static or textual fallback;
 - support keyboard and touch use, reduced motion, and narrow screens;
 - avoid client-side weight that is disproportionate to the lesson.
+
+When an interactive visual establishes a reusable site convention or requires
+shared responsive infrastructure, use `blog-system-design` for the component
+system and keep only article-specific data and interpretation in this skill.
 
 Every figure needs a concise caption, units or provenance where applicable,
 and meaningful alt text or an adjacent textual equivalent. Do not use a chart,
@@ -343,6 +388,9 @@ user asks for a narrower handoff, carry the article through:
 8. commit only the intended files;
 9. push and use the owning deployment path;
 10. verify the final URL and any binding-dependent or interactive behavior.
+
+When the post changes shared layout, navigation, search, typography, or reusable
+components, also complete the `blog-system-design` verification checklist.
 
 Do not call a visual article complete when the preview is unavailable or when
 its explanatory figures have not been inspected in the rendered page. Report

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog System Design"
+  short_description: "Design dense, usable technical blog systems."
+  default_prompt: "Use $blog-system-design to design or revise a technical blog's index, post layout, navigation, typography, search, and reusable components."

@@ -22,6 +22,8 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 | Design, debug, migrate, cache, or deploy a production system on Cloudflare | [cloudflare-production-builder](./cloudflare-production-builder) | Product-specific skills after the Cloudflare durability, storage, security, and release boundaries are settled |
 | Build a structured-data chatbot or Slack bot | [data-chatbots](./data-chatbots) or [slackbot-builder](./slackbot-builder) | [app-ux-paradigms](./app-ux-paradigms) for interaction details |
 | Protect usernames and public handles from route collisions, squatting, or impersonation | [reserved-handle-policy](./reserved-handle-policy) | [security-hardening](./security-hardening) when broader auth or permission review is needed |
+| Write, revise, verify, or publish an individual technical devblog | [ai-devblog](./ai-devblog) | [blog-system-design](./blog-system-design) only when shared presentation infrastructure must change |
+| Create or redesign a technical blog index, post shell, navigation, search, typography, or reusable components | [blog-system-design](./blog-system-design) | [ai-devblog](./ai-devblog) for individual article content |
 
 ### Routing Notes
 
@@ -88,6 +90,27 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [data-chatbots](./data-chatbots) — copilots over structured data that **propose** mutations (draft → Apply), not direct writes: prompting, validator allowlists, session memory with DRAFT/APPLIED/IGNORED, version-stale UX, and test matrices.
 - [reserved-handle-policy](./reserved-handle-policy) — designs and implements two-tier public username protection with hard platform reservations, administrator-reviewed claims, separator-confusable matching, a source-attributed registry of common names and notable identities, and signup/rename/admin test guidance.
 
+### AI DevRel
+
+Use these skills to turn technical work into clear publications and repeatable
+video operations. Keep editorial decisions separate from the publishing system,
+then route YouTube work to the narrowest operational skill.
+
+#### Technical blogging
+
+- [ai-devblog](./ai-devblog) — decides whether technical work merits a post, develops an evidence-fit angle, writes a structured Simplified-Technical-English-inspired article, builds purposeful article-specific explanations, and carries the post through rendered verification and publication.
+- [blog-system-design](./blog-system-design) — designs dense technical blog systems: index and section pages, compact typography, full-text `/` search, resizable article index rails, responsive floating TOCs, reusable explanatory components, and anti-slop media policy.
+
+#### YouTube operations
+
+- [youtube-channel-operator](./youtube-channel-operator) — designs full-power multi-channel YouTube operators with typed Data/Analytics/Reporting/Live API access, transcript-derived viewer packages, paid-versus-organic analysis, guided Slack approvals, exact-channel OAuth isolation, immutable external-action audit, Studio-only handoffs, and post-change measurement.
+- [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
+- [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
+- [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
+- [youtube-studio-computer-use](./youtube-studio-computer-use) — automates live YouTube Studio cleanup through Chrome/Computer Use: thumbnails, schedules, playlist fixes, visibility, save-state recovery, and DOM-assisted edit pages.
+- [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
+- [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
+
 ### Media Download And Transformation
 
 - [media-transform](./media-transform) — orchestrates video pipelines across download, upload, transcription, chapters, thumbnails, and title testing by routing to the right atomic skill for each stage.
@@ -117,16 +140,6 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [multimodal-extraction](./multimodal-extraction) — turns local videos or video URLs into Markdown timelines with slide screenshots, key frames, and transcript spans aligned by timestamp.
 - [summarize-anything](./summarize-anything) — recursively summarizes long text with pluggable LLM backends and can emit executive summaries, YouTube descriptions, chapters, posts, titles, thumbnail prompts, blog outlines, and pull quotes.
 - [podcast-publishing-assistant](./podcast-publishing-assistant) — turns podcasts, interviews, panels, and long-form audio/video into transcripts, summaries, chapter markers, show notes, titles, descriptions, and promo copy.
-
-### YouTube Publishing And Thumbnails
-
-- [youtube-channel-operator](./youtube-channel-operator) — designs full-power multi-channel YouTube operators with typed Data/Analytics/Reporting/Live API access, transcript-derived viewer packages, paid-versus-organic analysis, guided Slack approvals, exact-channel OAuth isolation, immutable external-action audit, Studio-only handoffs, and post-change measurement.
-- [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
-- [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
-- [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
-- [youtube-studio-computer-use](./youtube-studio-computer-use) — automates live YouTube Studio cleanup through Chrome/Computer Use: thumbnails, schedules, playlist fixes, visibility, save-state recovery, and DOM-assisted edit pages.
-- [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
-- [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
 
 ## Repo Shape
 
