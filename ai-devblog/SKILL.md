@@ -31,15 +31,11 @@ prose, and evidence here; keep the shared reading system there.
   If none applies, recommend a changelog entry, commit message, or internal
   status note instead of manufacturing a devblog.
 - Do not invent a post from memory or plans alone. Inspect the current evidence.
-- Unless the user already chose an angle or explicitly asks to write
-  immediately, first offer 2-4 possible directions. For each, give:
-  - a bottom-line title;
-  - the primary reader and question;
-  - the evidence available;
-  - the strongest useful illustration;
-  - any important caveat.
-- Wait for the user's choice or approval before drafting. If the user says to
-  proceed autonomously, choose the clearest evidence-backed angle.
+- For every substantial post, complete the mandatory angle review in
+  [references/angle-review.md](references/angle-review.md) before drafting.
+  Present 3-5 materially different story packages with explicit pros, cons,
+  and a recommendation. Wait for the user's choice unless they explicitly say
+  to skip angle review. A request to “write now” does not itself waive review.
 - When the user asks to write a post, default to carrying it through publication
   unless they set a narrower boundary. In the first progress update, remind them
   that the planned endpoint includes preview, commit, push, deployment, and live
@@ -156,9 +152,11 @@ delivery machinery ran.
 
 ## Write the title and front matter
 
-Start every title with a straightforward 2-8 word summary that puts the bottom
-line up front and names the main technical achievement. Optionally follow it
-with a subtitle that adds the learning, opinion, or hook.
+Start every title with a straightforward summary that tells the reader what
+actually happened: the concrete change, result, incident, or finding. Put the
+general lesson, principle, or opinion in the subtitle or body unless that
+principle is itself the demonstrated result. Optionally follow the title with
+a subtitle that adds mechanism, context, evidence, or stakes.
 
 Good shapes:
 
@@ -167,7 +165,11 @@ Good shapes:
 - `Durable Events Replaced Polling`
 
 Avoid vague titles such as `Some Thoughts on Agents` or hooks that conceal the
-actual result.
+actual result. Also reject post-hoc principle titles that abstract away a
+concrete implementation story—for example, prefer `We Split Forge's API Into
+Five Workers` over `Release Authority Follows Ownership` for a large runtime
+refactor. Before publication, repeat the title-to-story audit from
+[references/angle-review.md](references/angle-review.md).
 
 Adapt to the destination's established metadata or front-matter schema. Do not
 add fields or redesign the site's content model merely to satisfy this skill.
