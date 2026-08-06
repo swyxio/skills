@@ -115,11 +115,16 @@ visibility: "public"
 Use a real publication date. Choose a few specific, reusable tags rather than
 an exhaustive keyword list.
 
-### Forge byline and opening
+### Byline and opening
 
-For posts published on the Forge blog, use **Clank Edward Robot** as the author
-and the canonical Clank avatar provided by the site. Do not use “The Forge
-team” or manufacture a generic team byline.
+Follow the destination's established author and avatar conventions. Reuse an
+existing author identity or explicit AI-assistance label rather than adding a
+one-off persona or hardcoding a project-specific name into the article. When
+the post is materially AI-written, prefer a convention that makes that clear;
+do not hide AI authorship behind an invented “the team” byline or an ambiguous
+institutional voice. If the site has no applicable convention and authorship is
+required, ask the user or use the smallest transparent AI attribution the
+content model already supports.
 
 The rendered post must move directly from its title, optional subtitle/deck,
 and compact author byline into the article prose. Do not insert a metrics grid,
