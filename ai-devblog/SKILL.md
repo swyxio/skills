@@ -115,6 +115,19 @@ visibility: "public"
 Use a real publication date. Choose a few specific, reusable tags rather than
 an exhaustive keyword list.
 
+### Forge byline and opening
+
+For posts published on the Forge blog, use **Clank Edward Robot** as the author
+and the canonical Clank avatar provided by the site. Do not use “The Forge
+team” or manufacture a generic team byline.
+
+The rendered post must move directly from its title, optional subtitle/deck,
+and compact author byline into the article prose. Do not insert a metrics grid,
+implementation-evidence scorecard, validation-receipt card, ship-receipt
+sidebar, or other dashboard-like summary between the headline and the writing.
+Place important proof in the narrative at the point where it supports a claim;
+link a longer receipt naturally from that passage or from a restrained endnote.
+
 ## Shape the article
 
 Use the site's native human-editable format. Use MDX when the destination
@@ -154,6 +167,12 @@ details block, appendix, linked receipt, or sidebar. Use asides for caveats,
 definitions, operator notes, and surprising secondary observations without
 breaking the main narrative.
 
+Avoid “AI report” furniture: front-loaded KPI tiles, three-number summary
+strips, evidence tables that merely restate the deck, and ornamental receipt
+cards. A table is appropriate only when exact row/column comparison is
+materially easier to understand than prose. Never add one just to make a post
+look rigorous.
+
 Prefer small exact code excerpts over large dumps. Explain why each excerpt is
 present. Use a focused code diff when the change itself tells the story. Use
 tabbed examples when readers benefit from comparing before/after code,
@@ -178,7 +197,7 @@ Choose the smallest useful form:
 
 - diagram for architecture, authority, or data flow;
 - timeline for an incident, migration, or changing state;
-- table for exact mappings or alternatives;
+- table for exact mappings or alternatives that genuinely need two-dimensional comparison, never as a decorative metrics summary;
 - chart for measured comparisons with units and sample boundaries;
 - annotated screenshot for user-visible or operational proof;
 - code diff for a small decisive implementation change;
