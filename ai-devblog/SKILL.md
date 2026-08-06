@@ -1,6 +1,6 @@
 ---
 name: ai-devblog
-description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog within an existing publishing system. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a structured site-native explanation, select claim-fit evidence, design purposeful article-specific diagrams, charts, interactive demonstrations, code samples, and diffs, inspect the rendered result, and publish it publicly or internally. Pair with blog-system-design when work changes the shared index, post shell, typography, navigation, search, responsive behavior, or reusable components.
+description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog within an existing publishing system. Use when an agent should reconstruct work from code and coding-agent threads, decide whether findings merit a post, offer angles, write or revise a structured site-native explanation, select claim-fit evidence, design purposeful article-specific visuals, inspect the rendered result, and publish it publicly or internally. Pair with blog-system-design when work changes the shared index, post shell, typography, navigation, search, responsive behavior, or reusable components.
 ---
 
 # AI Devblog
@@ -95,6 +95,32 @@ links, official documentation, original issues or papers, test output,
 deployment receipts, and public URLs over secondary summaries. Use inline
 links where they read naturally; use footnotes or a references section for
 supporting material. Keep quotations short.
+
+### Reconstruct the lived story
+
+When coding-agent threads exist, use them to recover the real prompt, surprise,
+failed assumption, and decision sequence instead of writing from the final diff
+alone. Search Codex, Claude Code, Devin, and other available thread formats.
+Match threads to the work by exact commit, changed file, command, and timestamp
+before falling back to keyword search.
+
+- Use private threads to reconstruct causality, but publish a direct excerpt
+  only after checking disclosure, secrets, identities, private paths, customer
+  data, and internal architecture.
+- Quote only a short decisive exchange. Preserve the original wording; mark
+  omissions and light trimming, name the agent or source type, and never
+  silently rewrite a quotation for polish.
+- Pair an authentic screenshot with a compact semantic transcript excerpt when
+  the visual context matters. Use transcript text alone when a screenshot would
+  be inaccessible, illegible, or mostly browser chrome.
+- Use first person only when the trace establishes who acted or observed the
+  event. Otherwise use a transparent project or agent voice.
+
+Open with the strongest real artifact: an incident, surprising prompt exchange,
+diagnostic screenshot, failed assumption, or observed user consequence. Use two
+to four short paragraphs and at most one compact artifact before the mechanism.
+State the technical BLUF by the third paragraph. Adapt the artifact to the story
+instead of forcing every post into a conversation cold open.
 
 ### Select evidence by support, not abundance
 
@@ -297,6 +323,17 @@ reader most needs to understand—such as structure, causality, sequence,
 comparison, or proof—and choose a visual form only when it improves one of
 them. Treat the visual and its nearby explanation as one unit: the prose should
 interpret the graphic, not transcribe every label in it.
+
+When a substantial visual needs art direction, use an image-generation model
+to explore two to four composition, hierarchy, palette, and publication-vibe
+studies before implementing it. Treat those studies as moodboards, not evidence
+or final technical assets. Give the model the relationship and layout
+constraints, but never trust it to supply labels, measurements, screenshots,
+or factual topology. Select a direction, then rebuild the final technical
+visual deterministically in HTML, SVG, CSS, Mermaid, or plotting code with the
+real data and an accessible textual equivalent. Ship a generated raster only
+when it is intentionally editorial artwork, earns its article space, and the
+user explicitly approves it.
 
 Choose the smallest useful form:
 
