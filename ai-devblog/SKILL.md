@@ -1,6 +1,6 @@
 ---
 name: ai-devblog
-description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated technical devblog. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a site-native evidence-backed article, strongly prefer purposeful visuals, interactive demonstrations, code samples, and diffs where useful, cite exact technical receipts, preview the result, and publish it publicly or internally.
+description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog. Use when an agent should decide whether its findings merit a post, offer angles, write or revise a clear site-native evidence-backed explanation, design purposeful diagrams, charts, interactive demonstrations, code samples, and diffs where useful, cite exact technical receipts, inspect the rendered result, and publish it publicly or internally.
 ---
 
 # AI Devblog
@@ -162,6 +162,33 @@ Then adapt the structure to the story. A substantial devblog usually needs:
 - alternatives considered and why they lost;
 - limitations, unresolved questions, and the next test.
 
+Before drafting the body, write a private one-sentence thesis and a short causal
+outline. The thesis must state the non-obvious conclusion, not merely the work
+completed. The outline should connect the starting condition, mechanism,
+consequence, evidence, and limitation. Remove it from the finished post unless
+it also works naturally as reader-facing prose.
+
+Explain at the reader's altitude:
+
+- introduce project-specific nouns before relying on them;
+- separate what happened, why it happened, how the mechanism works, and what
+  proves it;
+- use concrete subjects and verbs instead of vague abstractions such as
+  “improved the architecture” or “leveraged the platform”;
+- make causal transitions explicit when one decision or observation leads to
+  another;
+- keep one primary idea per paragraph and cut repeated conclusions, ceremonial
+  setup, and exhaustive inventories that do not advance the argument;
+- name the strongest counterargument or tradeoff instead of presenting the
+  chosen design as inevitable;
+- preserve technical precision, but define uncommon terms and give a small
+  example when a mechanism is otherwise difficult to picture.
+
+After the first draft, perform an editorial pass independently from factual
+verification. Check whether the opening earns attention, each section advances
+the thesis, examples arrive near the concepts they explain, and the ending adds
+a durable lesson rather than repeating the introduction.
+
 Keep implementation inventories, long logs, and exhaustive methods behind a
 details block, appendix, linked receipt, or sidebar. Use asides for caveats,
 definitions, operator notes, and surprising secondary observations without
@@ -193,6 +220,12 @@ without a visual when every candidate would be decorative, misleading, or
 require disproportionate new infrastructure. Every included visual must make a
 relationship faster to understand than prose alone.
 
+Plan visuals before polishing the prose. List the two or three relationships a
+reader most needs to understand—such as structure, causality, sequence,
+comparison, or proof—and choose a visual form only when it improves one of
+them. Treat the visual and its nearby explanation as one unit: the prose should
+interpret the graphic, not transcribe every label in it.
+
 Choose the smallest useful form:
 
 - diagram for architecture, authority, or data flow;
@@ -205,6 +238,31 @@ Choose the smallest useful form:
 - tabbed code examples for meaningful before/after or cross-stack comparisons;
 - interactive demo, calculator, explorer, or stepper when readers benefit from
   changing inputs or walking a causal sequence.
+
+Match the visual's semantics to its claim:
+
+- An architecture or data-flow diagram must label the meaningful entities and
+  relationships. Show direction, boundaries, ownership, protocol, or lifecycle
+  distinctions when they affect the conclusion. A collection of boxes without
+  relationships is an inventory, not an architecture diagram.
+- A comparison graphic must use a truthful common scale where comparison is
+  intended. Show units, totals or denominators, the baseline, and the sample or
+  measurement boundary. Do not imply that a proxy metric measures more than it
+  does.
+- A timeline or sequence must show state transitions and the event that moves
+  the system between them, including retries, branches, or ambiguity when those
+  are central to the lesson.
+- A screenshot must prove a user-visible or operational claim. Crop it to the
+  relevant surface and annotate the evidence when the reader would otherwise
+  have to hunt for it.
+- A code visual must be small enough to read and must call attention to the
+  decisive behavior, not merely demonstrate that code exists.
+
+Prefer deterministic HTML, SVG, Mermaid, plotting code, or site-native
+components for exact technical relationships. Use generative imagery for tone
+or atmosphere only; it cannot substitute for a labeled technical diagram,
+measured chart, authentic screenshot, or other evidence. A decorative hero
+does not satisfy the need for an explanatory visual.
 
 For performance work, default to both a before/after visual and a timing
 waterfall, flame chart, or stacked stage diagram when measured stage timings
@@ -233,6 +291,17 @@ Every figure needs a concise caption, units or provenance where applicable,
 and meaningful alt text or an adjacent textual equivalent. Do not use a chart,
 diagram, screenshot, or decorative card merely to satisfy a quota.
 
+Apply a visual explanation test before keeping a figure:
+
+1. State the exact question the figure answers.
+2. Confirm that a reader can identify the answer without relying on the
+   surrounding paragraph.
+3. Confirm that labels, scales, arrows, colors, and grouping have declared
+   meanings rather than decorative meanings.
+4. Confirm that the adjacent prose explains why the answer matters.
+5. Remove or redesign the figure if it could be exchanged for an unrelated
+   illustration without changing the argument.
+
 ## Protect readers and systems
 
 Before saving or publishing:
@@ -260,9 +329,20 @@ user asks for a narrower handoff, carry the article through:
    layout or wide interactive content changed;
 5. verify captions, code wrapping, tables, sidebars, navigation, metadata,
    dates, tags, citations, and fallbacks;
-6. commit only the intended files;
-7. push and use the owning deployment path;
-8. verify the final URL and any binding-dependent or interactive behavior.
+6. inspect every explanatory figure at its rendered size: labels must be
+   legible, relationships unambiguous, scales truthful, colors distinguishable,
+   and content unclipped without requiring unexplained interaction;
+7. test visual components through meaningful rendered or structural assertions.
+   String-presence checks alone do not prove that a chart, diagram, or fallback
+   works;
+8. commit only the intended files;
+9. push and use the owning deployment path;
+10. verify the final URL and any binding-dependent or interactive behavior.
+
+Do not call a visual article complete when the preview is unavailable or when
+its explanatory figures have not been inspected in the rendered page. Report
+that state as an incomplete handoff even if content tests and the production
+build pass.
 
 Report source, commit, push/merge, deployment, and live verification as
 separate facts. A public devblog handoff should end with a verified public URL;
