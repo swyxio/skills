@@ -89,6 +89,13 @@ better breakpoints:
   back navigation, and a minimized TOC that expands without covering the
   article permanently.
 
+Treat iPhone layouts as first-class rather than a scaled-down desktop. Test at
+320, 375, 390, and 430px when the system supports those widths. Keep the article
+index rail fully absent, preserve a visible back-to-index path, respect safe-area
+insets, keep fixed controls above browser chrome, and prevent expanded TOCs,
+tables, code, diagrams, and long titles from forcing horizontal scroll. Stack or
+scroll wide evidence locally instead of widening the page.
+
 Generate the TOC from stable heading anchors. Highlight the current section.
 Let readers minimize and restore it. Keep it sticky beside the article on wide
 screens and floating on narrower screens. Ensure transformed ancestors do not
@@ -130,10 +137,19 @@ Keep component logic and styles feature-owned. Keep article data separate from
 rendering. Do not grow one post route or global stylesheet into the permanent
 home of every custom visualization.
 
-## Reject decorative AI imagery
+## Keep visuals information-dense
 
-Do not generate decorative hero art unless the user explicitly requests it.
-Prefer no image over an image that does not explain or prove anything.
+Editorial illustration is welcome when it contributes a useful idea, memorable
+context, or recognizable publication identity. It must not become an enormous
+low-information block above the fold. Prefer a compact treatment beside the
+opening, later in the article, or in the social card.
+
+Use an information-dense SVG diagram, chart, annotated screenshot, or other
+technical visual when the opening needs a hero. Generate a dedicated `og:image`
+for social previews when useful; do not assume it must also appear at full size
+inside the article. Do not generate decorative hero art unless the user
+explicitly requests it. Prefer no in-article image over a vibes image that does
+not explain, prove, or contextualize anything.
 
 Use, in order of explanatory value:
 
@@ -148,8 +164,8 @@ the article's meaning.
 ## Verify the system
 
 Run content, type, lint, link, and production-build checks. Then inspect the
-rendered system at representative widths such as 1600, 1280, 1024, 768, and
-390px. Verify:
+rendered system at representative widths such as 1600, 1280, 1024, 768, 430,
+390, 375, and 320px. Verify:
 
 - index density and search behavior, including `/`, `Escape`, `?q=`, empty
   results, and browser back/forward;
@@ -159,6 +175,8 @@ rendered system at representative widths such as 1600, 1280, 1024, 768, and
 - title wrapping, reading measure, code overflow, figures, tables, captions,
   and interactive fallbacks;
 - no horizontal overflow, obscured text, clipped controls, or layout shifts;
+- iPhone safe areas, browser-chrome clearance, fixed-control placement, long
+  title wrapping, locally scrolling evidence, and expanded TOC containment;
 - visible focus, semantic landmarks, touch targets, reduced motion, and theme
   contrast;
 - reasonable image and JavaScript weight.

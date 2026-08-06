@@ -40,6 +40,11 @@ prose, and evidence here; keep the shared reading system there.
   - any important caveat.
 - Wait for the user's choice or approval before drafting. If the user says to
   proceed autonomously, choose the clearest evidence-backed angle.
+- When the user asks to write a post, default to carrying it through publication
+  unless they set a narrower boundary. In the first progress update, remind them
+  that the planned endpoint includes preview, commit, push, deployment, and live
+  publication at the selected visibility. Give them a clear chance to request a
+  draft-only or preview-only handoff before publication work begins.
 
 ## Choose visibility
 
@@ -176,6 +181,12 @@ begin directly with the context rather than manufacturing a slogan, dramatic
 anecdote, or mystery. A concrete incident may supply the hook, but readers
 should not have to infer the surrounding system or stakes from that incident.
 
+Be engaging to technical readers in the way the material earns. Preserve a
+weird failure, funny constraint, surprising reversal, vivid debugging moment,
+or unusual mechanism when it is authentic and helps explain the work. Do not
+flatten an interesting story into a formal report, but do not invent personality
+or suspense for routine work.
+
 Within that opening, deliver a two-part BLUF:
 
 1. what changed or was learned;
@@ -303,12 +314,15 @@ Match the visual's semantics to its claim:
   decisive behavior, not merely demonstrate that code exists.
 
 Prefer deterministic HTML, SVG, Mermaid, plotting code, or site-native
-components for exact technical relationships. Do not generate decorative hero
-art unless the user explicitly requests it. Prefer no image over an image that
-does not explain or prove anything. Generative imagery cannot substitute for a
-labeled technical diagram, measured chart, authentic screenshot, or other
-evidence. Remove any visual that could be exchanged for unrelated artwork
-without changing the argument.
+components for exact technical relationships. Editorial illustrations are
+welcome when they add a useful idea, memorable context, or publication identity.
+Do not let a low-information illustration dominate the initial viewport. Prefer
+an information-dense SVG diagram, chart, annotated screenshot, or compact mixed
+media treatment above the fold. Create a strong `og:image` when the publication
+supports social cards; it may be more expressive because it does not displace
+article content. Do not generate decorative hero art unless the user explicitly
+requests it. Generative imagery cannot substitute for a labeled technical
+diagram, measured chart, authentic screenshot, or other evidence.
 
 For performance work, use a before/after visual, timing waterfall, flame chart,
 or stacked stage diagram only when it supports a distinct claim. Do not show
