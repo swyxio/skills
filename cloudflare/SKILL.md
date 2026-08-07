@@ -1,12 +1,6 @@
 ---
 name: cloudflare
 description: Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Agents SDK), feature flags (Flagship), networking (Tunnel, Spectrum), security (WAF, DDoS), and infrastructure-as-code (Terraform, Pulumi). Use for any Cloudflare development task. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
-references:
-  - workers
-  - pages
-  - d1
-  - durable-objects
-  - workers-ai
 ---
 
 # Cloudflare Platform Skill
@@ -29,6 +23,21 @@ Fetch the **latest** information before citing specific numbers, API signatures,
 When a reference file and the docs disagree, **trust the docs**. This is especially important for: numeric limits, pricing tiers, type signatures, and configuration options.
 
 ## Quick Decision Trees
+
+### "I need production architecture or a deployment"
+
+```
+Need to design, migrate, release, or debug a production Cloudflare system?
+└─ Load cloudflare-production-builder alongside the product references
+   ├─ Multiple Workers, service bindings, or Containers → model independent rollout axes
+   ├─ Durable handoff or background work → define idempotency and repair first
+   ├─ Schema or Durable Object lifecycle change → use staged compatibility gates
+   └─ Release or rollback → verify exact live identities, not command success
+```
+
+Never assume a Worker traffic switch, service-binding target, container image,
+toolchain, schema, or Durable Object instance converges atomically with another
+surface. Use the production-builder release contract for cross-product work.
 
 ### "I need feature flags"
 
@@ -139,6 +148,12 @@ Need IaC? → pulumi/ (Pulumi), terraform/ (Terraform), or api/ (REST API)
 ```
 
 ## Product Index
+
+### Cross-product production engineering
+
+| Task | Skill |
+|---------|-----------|
+| Architecture, durable handoffs, migrations, releases, rollback, and live verification | `cloudflare-production-builder` |
 
 ### Feature Flags
 | Product | Reference |

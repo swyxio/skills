@@ -265,6 +265,59 @@ Deploying new Durable Object or container code can reset active instances.
 Classify reset errors, drain or gate new admissions, verify the exact image and
 toolchain, and only declare readiness after a deep probe.
 
+## Multi-surface rollout and service-binding handoffs
+
+Treat a Cloudflare application release as a state machine across independently
+converging surfaces. A Worker version becoming active does not prove that its
+container image, toolchain, service-binding target, schema, route, or stateful
+instance is ready. Provider traffic percentages and an HTTP 200 are evidence
+about only the surface they directly observe.
+
+For every release-sensitive service-binding handoff:
+
+1. Persist expensive or non-replayable input before calling the bound service.
+   Prefer immutable R2 objects or a durable operation record over request-local
+   memory.
+2. Give the logical operation a stable idempotency key derived from its exact
+   input generation. Make duplicate execution converge on the same result.
+3. Classify transport failures, throttling, and 5xx responses as potentially
+   transient. Honor a bounded `Retry-After` when supplied. Treat validated 4xx
+   contract or authorization failures as terminal.
+4. Retain staged input during transient retries. Delete it only after a receipt
+   proves the expected identity, digest, byte count, or generation; after a
+   terminal error; or after the explicit recovery window is exhausted.
+5. Reconcile before retrying any mutation with an ambiguous outcome. A timeout
+   does not prove the callee failed before committing.
+6. Mutate authoritative pointers or user-visible state only after the receipt
+   validates. Never convert a normal rollout transition into a corruption or
+   validation diagnostic.
+
+Do not use one global readiness boolean for every workload. Define admission
+classes explicitly, for example:
+
+| Control state | Long-running jobs | Short idempotent ingest | Deep verification |
+| --- | --- | --- | --- |
+| `ready` with exact identity | admit | admit | available |
+| `draining` with exact old identity | reject | admit when safe | available |
+| `verifying` successor | reject | caller retains and retries | in progress |
+| identity mismatch or `failed` | reject | reject/reconcile | failed |
+
+The exact classes depend on the application, but the distinction must be
+deliberate. Draining exists to stop work that would prevent or outlive a safe
+cutover; it should not create an unrelated availability outage.
+
+Test the rollout matrix, not only steady state. Include the old exact version
+draining, the new version verifying, container/image lag after Worker traffic
+activation, transient service-binding 429/5xx/transport failure, retry after an
+ambiguous response, rollback, and exact-identity mismatch. Assert that staged
+input survives transient attempts and that authoritative state changes once.
+
+Correlate deployment generation, caller request ID, operation/idempotency ID,
+target Worker version, observed container/toolchain identity, attempt number,
+delay, and sanitized reason. A routine deployment should recover transparently
+or return an explicit maintenance diagnostic; it must not masquerade as data
+corruption.
+
 ## Staged release
 
 When supported:

@@ -88,6 +88,14 @@ Read [storage-and-caching.md](references/storage-and-caching.md).
 
 - Bindings, environment variables, routes, domains, Durable Object classes,
   migrations, compatibility date, and assets are part of the release.
+- Model Worker traffic, service-binding targets, container images/toolchains,
+  schema, routes, and stateful instance lifecycle as independent rollout axes.
+  Do not infer convergence of one from another.
+- Separate admission by workload class. Draining long-running work must not
+  automatically reject short, durable, idempotent infrastructure handoffs.
+- Persist expensive or non-replayable ingress before release-sensitive compute.
+  Retain it across transient service-binding failures; delete it only after a
+  validated receipt, a terminal outcome, or an explicit bounded timeout.
 - Fail closed when a feature is enabled but a required binding is missing.
 - Attach source SHA, Worker version, configuration/policy versions, and relevant
   external artifact identities to the release record.
