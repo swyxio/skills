@@ -163,6 +163,32 @@ ends with an internal/infrastructure error while a recent external heartbeat or
 output exists, then a retry observes an in-progress command. That is evidence to
 reconcile, not evidence that the command stopped and not permission to rerun it.
 
+### War story: the build outlived its Workflow attempt
+
+In one production CI runner, a single 30-minute Workflow step owned source
+preparation, cache restore, three repository commands, publication, and cleanup.
+About five minutes into a run, while the final build command was in progress,
+the orchestration attempt ended with `WorkflowInternalError: Attempt failed due
+to internal workflows error`. The external runner lease had heartbeated 32
+seconds earlier and command output had arrived 50 seconds earlier. This was not
+the configured timeout, and successful instances of the same Workflow version
+had already run longer.
+
+The engine immediately started its configured retry. Durable state showed two
+commands complete and the build command still `in_progress`, so the retry
+correctly refused to replay arbitrary repository code. But the original attempt
+had waited on a foreground output stream: it had not retained an adoptable
+process identity, incrementally durable logs, or a terminal command receipt.
+The retry therefore could not prove whether the build was still running or had
+completed, and the run failed closed before cleanup destroyed the Sandbox.
+
+The safety property held—no ambiguous command was executed twice—but the
+availability property failed. The lesson is that an internal Workflow error
+does not prove external work stopped. A monolithic step plus a foreground stream
+turns a recoverable orchestration interruption into an ambiguous side effect;
+granular steps plus a fenced, discoverable execution and receipt make it
+reconcilable.
+
 Test interruption before start, after external acceptance but before recording
 the ID, while running, after receipt publication, during log flushing, during
 cancellation, and during cleanup. Assert one external execution, exact input
