@@ -133,6 +133,15 @@ Do not list numbers because they are available. Do not repeat one result as a
 metric card, paragraph, table, and chart. Put detailed receipts in an appendix
 or durable linked artifact when they matter for audit rather than explanation.
 
+Match numeric precision to the claim and the reader's decision. Do not copy
+machine precision into prose by default. For human-scale durations, normally
+round to whole seconds; use tenths when that precision changes the comparison,
+and milliseconds for genuinely subsecond behavior. Keep extra decimal places
+in linked receipts or raw evidence when auditability requires them. Apply the
+same judgment to percentages, byte counts, and other measurements: use
+appropriate significant figures, keep compared values at compatible precision,
+and avoid three-decimal-place figures unless the distinction is material.
+
 Reject proof theater. For each material claim, record the claim, the evidence
 that directly changes a skeptical reader's belief, and the evidence boundary or
 limitation. Remove an evidence block when it only demonstrates that normal
