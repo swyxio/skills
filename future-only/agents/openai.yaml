@@ -1,0 +1,4 @@
+interface:
+  display_name: "Future Only"
+  short_description: "Prefer clean breaks over compatibility baggage"
+  default_prompt: "Use $future-only to optimize this work for the clean future contract without preserving legacy compatibility."
