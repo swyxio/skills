@@ -1,6 +1,6 @@
 ---
 name: autoreview
-description: Run structured closeout code review after non-trivial code edits, branch or PR work, or commits using an autoreview helper. Use when the user asks for autoreview, Codex review, Claude review, second-model review, or a final review before commit, ship, merge, or release.
+description: Run structured closeout code review with the bundled autoreview helper. Use only when the user explicitly asks for autoreview, Codex review, Claude review, second-model review, or when repository instructions explicitly require autoreview. Do not trigger solely because edits are non-trivial or nearing commit, ship, merge, or release.
 ---
 
 # Auto Review
@@ -10,6 +10,7 @@ Run the bundled structured review helper as a closeout check. This is code revie
 Source attribution:
 
 - Adapted from OpenClaw's `autoreview` skill: https://github.com/openclaw/agent-skills/blob/main/skills/autoreview/SKILL.md
+- Bundled helper synchronized from OpenClaw commit `2a409d348a4bcf6f15e41e9a20efd0b298a32528`.
 - Requested source attribution: https://x.com/steipete/status/2059453909819654554
 
 Codex review is the default when no engine is set. It usually delivers the best review results and should remain the normal final closeout engine.
@@ -17,8 +18,32 @@ Codex review is the default when no engine is set. It usually delivers the best 
 Use when:
 
 - user asks for Codex review / Claude review / autoreview / second-model review
-- after non-trivial code edits, before final/commit/ship
+- repository instructions explicitly require the autoreview helper
 - reviewing a local branch or PR branch after fixes
+
+Do not invoke this skill merely because a change is non-trivial or is about to
+be committed, shipped, merged, or released. Normal diff inspection and test
+closeout remain part of ordinary coding work and do not require a second model.
+
+## Availability Preflight
+
+Before announcing that autoreview is being used:
+
+1. Resolve `scripts/autoreview` relative to this `SKILL.md`; do not search the
+   user's home directory or rely on machine-specific paths.
+2. Verify that the helper is executable and that `scripts/autoreview --help`
+   exits successfully.
+3. Only then tell the user that structured autoreview is running.
+
+If the bundled helper is missing or cannot start, say:
+
+> The optional autoreview helper is unavailable, so automated second-model
+> review was not run. I’m continuing with the repository’s normal diff review
+> and verification checks.
+
+Do not claim the skill ran, imply that an engine choice was overridden, or use
+language such as “behind your back.” The engine-preservation rule below applies
+only when the user actually requested an engine or model.
 
 ## Contract
 
@@ -85,7 +110,7 @@ Committed single change:
 or with the helper:
 
 ```bash
-/Users/steipete/Projects/agent-scripts/skills/autoreview/scripts/autoreview --mode commit --commit HEAD
+"$AUTOREVIEW" --mode commit --commit HEAD
 ```
 
 Use commit review for already-landed or already-pushed work on `main`. Reviewing clean `main` against `origin/main` is usually an empty diff after push. For a small stack, review each commit explicitly or review the branch before merging with `--base`.
@@ -134,29 +159,17 @@ Run the helper directly so target selection, engine choice, structured validatio
 
 ## Helper
 
-OpenClaw repo-local helper:
+Resolve the bundled helper relative to this skill directory once and reuse that
+absolute path for the rest of the task:
 
 ```bash
-.agents/skills/autoreview/scripts/autoreview --help
+AUTOREVIEW="<directory-containing-this-SKILL.md>/scripts/autoreview"
+"$AUTOREVIEW" --help
 ```
 
-`agent-scripts` checkout helper:
-
-```bash
-skills/autoreview/scripts/autoreview --help
-```
-
-Global helper from `agent-scripts`:
-
-```bash
-~/.codex/skills/agent-scripts/autoreview/scripts/autoreview --help
-```
-
-If installed from `agent-scripts`, path is:
-
-```bash
-/Users/steipete/Projects/agent-scripts/skills/autoreview/scripts/autoreview --help
-```
+Do not probe unrelated checkouts or hard-code a particular user's home
+directory. A copied or globally installed skill remains self-contained because
+the executable travels with `SKILL.md`.
 
 The helper:
 
