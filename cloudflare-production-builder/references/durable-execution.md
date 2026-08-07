@@ -81,6 +81,8 @@ External side effects need at least one of:
 ## Workflow design
 
 - Give steps stable semantic names.
+- Keep steps granular. Do not wrap source preparation, multiple commands,
+  publication, and cleanup in one retriable step.
 - Make step inputs/outputs serializable and bounded.
 - Keep large artifacts in R2 and pass keys/digests.
 - Use exact input generations so replay cannot silently target newer state.
@@ -91,6 +93,89 @@ External side effects need at least one of:
   searchable history, support diagnostics, or domain-specific cancellation.
 - Treat Workflow instance retention as an operational convenience, not the only
   durable business record.
+
+## Workflow interruption and external execution
+
+A Workflow step is an individually retriable orchestration unit, not a durable
+process supervisor. Its callback, response stream, RPC, or foreground command
+wait can disappear while an external system has accepted work or while a
+Sandbox process is still running. Unlimited Workflow wall time does not prove
+that one callback or connection will survive infrastructure interruption.
+
+Require the following pattern whenever a step starts arbitrary code, a deploy,
+or another long-running or non-replayable external effect:
+
+1. Split source preparation, cache restore, each external command, publication,
+   and cleanup into deterministic semantic steps.
+2. Derive an immutable execution identity from the logical operation, exact
+   source/input generation, command or request digest, job/step identity, and
+   relevant policy/toolchain version.
+3. Persist a fenced execution record containing that identity, the external
+   process/job ID, owner generation, phase, heartbeat, log cursor, and cleanup
+   state. If start and record cannot be atomic, the external substrate must
+   accept a deterministic idempotency key or make the execution discoverable
+   and adoptable by that exact identity.
+4. Supervise long-running Sandbox work as a named process rather than making a
+   foreground stream the only proof it exists. Retain a process ID and use
+   process status, accumulated logs, and exit waiting for reattachment. Treat
+   `keepAlive` as lifecycle assistance, not proof against container loss.
+5. Have the external wrapper atomically publish an immutable terminal receipt.
+   Bind it to the exact execution identity and include start/completion times,
+   exit status, output/log digests, and produced artifact identities.
+6. Flush bounded log chunks incrementally with idempotent sequence numbers.
+   Never buffer the only diagnostic copy until command completion.
+7. Fence monitoring, finalization, cancellation, process termination, and
+   Sandbox destruction. A superseded callback must not clean up work owned by a
+   newer valid attempt.
+
+On every retry, reconcile before executing:
+
+- valid terminal receipt: verify it and finalize without replay;
+- matching process/job still running: acquire the current fence and reattach;
+- deterministic process exists but acknowledgement was interrupted: adopt it;
+- stale owner or mismatched source/command digest: refuse adoption; permit
+  cleanup only through a separately fenced repair path;
+- process/job and receipt both missing after side effects may have started:
+  record an ambiguous terminal outcome and require explicit repair. Do not
+  silently replay arbitrary commands.
+
+Direct `step.do` retry remains appropriate for bounded operations that are
+provably idempotent through a conditional write, provider idempotency key,
+unique constraint, or equivalent receipt. Granularity alone does not make a
+side effect safe to repeat.
+
+### Interruption evidence
+
+Preserve the original attempt when the engine starts another attempt. Do not
+overwrite its only diagnosis with `superseded`. Record:
+
+- Workflow name, instance, step, attempt, and deployed Worker version;
+- exact input/source generation and execution identity;
+- external process/job and Sandbox identity;
+- last heartbeat, last output, log cursor, and phase;
+- provider/runtime error and whether it originated before or after side effects;
+- reconciliation result: reattached, receipt-recovered, missing, cancelled, or
+  ambiguous;
+- fence generation and the actor that finalized or cleaned up.
+
+A characteristic ambiguous-interruption signature is: the orchestration attempt
+ends with an internal/infrastructure error while a recent external heartbeat or
+output exists, then a retry observes an in-progress command. That is evidence to
+reconcile, not evidence that the command stopped and not permission to rerun it.
+
+Test interruption before start, after external acceptance but before recording
+the ID, while running, after receipt publication, during log flushing, during
+cancellation, and during cleanup. Assert one external execution, exact input
+identity, lossless deduplicated logs, one terminal transition, and cleanup by
+only the current fenced owner.
+
+Current first-party references:
+
+- [Rules of Workflows](https://developers.cloudflare.com/workflows/build/rules-of-workflows/)
+- [Workflow limits](https://developers.cloudflare.com/workflows/reference/limits/)
+- [Workflow retries](https://developers.cloudflare.com/workflows/build/sleeping-and-retrying/)
+- [Sandbox command and process API](https://developers.cloudflare.com/sandbox/api/commands/)
+- [Sandbox background processes](https://developers.cloudflare.com/sandbox/guides/background-processes/)
 
 ## Queue consumer design
 

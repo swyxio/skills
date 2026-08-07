@@ -59,6 +59,11 @@ If that sentence is fuzzy, read
   generation.
 - List every handoff and what repairs it if the initiating request disappears.
 - Define retryable, terminal, stale, superseded, and cancelled outcomes.
+- Treat a Workflow callback, response stream, RPC, or foreground command wait as
+  revocable. For long-running or non-replayable external work, use granular
+  Workflow steps plus a deterministic execution identity, fenced ownership,
+  incremental logs, and an immutable terminal receipt. On retry, reconcile the
+  external execution before deciding whether any side effect may run again.
 - Store user-facing job/progress state in a deliberate read model when the
   orchestration primitive does not expose the partial state the UI needs.
 - Use scheduled reconciliation as a safety net for missing handoffs, expired
