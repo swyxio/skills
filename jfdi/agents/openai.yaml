@@ -1,4 +1,0 @@
-interface:
-  display_name: "JFDI"
-  short_description: "Just freaking do the approved scoped work"
-  default_prompt: "Use $jfdi to finish this scoped task autonomously and report only genuine blockers."
