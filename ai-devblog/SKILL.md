@@ -255,16 +255,13 @@ Then adapt the structure to the story. A substantial devblog usually needs:
 - alternatives considered and why they lost;
 - limitations, unresolved questions, and the next test.
 
-Prefer more visible structure than an average essay, but make every device
-earn its place:
+Before preview, perform a **scan-structure pass** on the source and rendered
+article; break up any viewport that reads as an uninterrupted wall of prose.
 
-- use section headings for real transitions in the argument;
-- use bullets for sets, sequences, criteria, and alternatives;
-- use **bold** for conclusions, named concepts, and useful scan targets;
-- use *italics* sparingly for contrast or a newly defined term;
-- use quotations only for authentic statements or unusually concise language;
-- use tables, charts, code, and interactive playgrounds only when their form
-  explains the point more clearly than prose.
+- Avoid more than three consecutive body paragraphs when structure is available.
+- Use headings for transitions and bullets for parallel claims or inventories.
+- Use **bold lead-ins** for scan targets and *italics* for definitions or contrast.
+- Do not force emphasis or bullets; every device must expose the article's logic.
 
 Before drafting the body, write a private one-sentence thesis and a short causal
 outline. The thesis must state the non-obvious conclusion, not merely the work
