@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Strategy Hardening"
-  short_description: "Write and harden trustworthy, efficient tests"
-  default_prompt: "Use $test-strategy-hardening to write or improve tests that are focused, deterministic, non-duplicative, and proportionate to the change."
+  short_description: "Improve test architecture and reliability"
+  default_prompt: "Use $test-strategy-hardening to diagnose and improve this test system while keeping coverage focused, deterministic, and proportionate."

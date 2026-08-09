@@ -1,4 +1,4 @@
 interface:
   display_name: "Auto Review"
-  short_description: "Run structured closeout code review"
-  default_prompt: "Use $autoreview to run a structured final code review, verify accepted findings, rerun focused tests, and close out only when no actionable findings remain."
+  short_description: "Perform a focused final code review"
+  default_prompt: "Use $autoreview to review the completed change, verify concrete findings, and report only confirmed actionable issues."

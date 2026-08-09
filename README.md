@@ -18,7 +18,7 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 | Build a full YouTube operations bot with raw API access, Slack approvals, playlists, comments, live operations, and change-impact analytics | [youtube-channel-operator](./youtube-channel-operator) | [slackbot-builder](./slackbot-builder), [data-chatbots](./data-chatbots), then [youtube-api](./youtube-api) or [youtube-studio-computer-use](./youtube-studio-computer-use) |
 | Redesign or reskin an app through generated visual directions and matched implementation screenshots | [design-apps-with-imagegen](./design-apps-with-imagegen) | The project-specific frontend skill after the visual direction and prototype are proven |
 | Build conference schedule, speaker, or developer data surfaces | [schedule-design](./schedule-design), [conference-developer-endpoints](./conference-developer-endpoints), or [europe-developer-api](./europe-developer-api) | `accelevents-*` or [sync-accelevents](./sync-accelevents) when syncing source systems |
-| Harden a software repo | [codebase-maintainability-guardrails](./codebase-maintainability-guardrails) for defaults, then [antislop-codebase](./antislop-codebase) for larger cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
+| Harden a software repo | [antislop-codebase](./antislop-codebase) for deliberate structural cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
 | Design, debug, migrate, cache, or deploy a production system on Cloudflare | [cloudflare-production-builder](./cloudflare-production-builder) | Product-specific skills after the Cloudflare durability, storage, security, and release boundaries are settled |
 | Build a structured-data chatbot or Slack bot | [data-chatbots](./data-chatbots) or [slackbot-builder](./slackbot-builder) | [app-ux-paradigms](./app-ux-paradigms) for interaction details |
 | Protect usernames and public handles from route collisions, squatting, or impersonation | [reserved-handle-policy](./reserved-handle-policy) | [security-hardening](./security-hardening) when broader auth or permission review is needed |
@@ -38,7 +38,7 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 
 #### Kakuna Codebase Hardening Suite
 
-Use these skills as a hardening progression: prevent new slop, harden the existing codebase as-is, add product services, then tighten safety, operability, and quality gates.
+Use these skills for explicit hardening work: improve an existing codebase, add product services, then tighten safety, operability, and quality gates as needed.
 
 <table>
   <tr>
@@ -48,7 +48,6 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
     <td valign="middle">
       <p><strong>Foundation</strong></p>
       <ul>
-        <li><a href="./codebase-maintainability-guardrails">codebase-maintainability-guardrails</a> — <strong>Default engineering standards.</strong> Always-on rules for small, typed, feature-owned, contract-driven, behavior-preserving, visually verified app work.</li>
         <li><a href="./antislop-codebase">antislop-codebase</a> — <strong>Structural cleanup/migration.</strong> Staged refactors for messy or prototype repos as they already are, with concurrent workers, better tests, smaller files, clearer module boundaries, and a final migration audit microsite.</li>
       </ul>
       <p><strong>Productization</strong></p>
@@ -67,7 +66,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
       </ul>
       <p><strong>Quality</strong></p>
       <ul>
-        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Trustworthy tests.</strong> Guides everyday test writing and suite-wide audits, then hardens flaky tests, contracts, golden-path e2e, fixtures, runtime, dedupe, and coverage quality.</li>
+        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Test-system hardening.</strong> Used explicitly for test architecture, flaky tests, fixture cost, duplicated coverage, and suite selection—not ordinary regression-test work.</li>
       </ul>
     </td>
   </tr>
@@ -82,7 +81,7 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [deep-trajectory-analysis](./deep-trajectory-analysis) — reconstructs paired agent, game, or policy trajectories from exact shared pre-states, connects aggregate effects to first-divergence evidence, and validates machine-readable causal reports before promotion decisions.
 - [design-apps-with-imagegen](./design-apps-with-imagegen) — audits an existing interface, generates several visual directions, prototypes beside the live product, compares matched responsive screenshots, and integrates only after behavior and visual deltas are verified.
 - [smart-entity-resolution](./smart-entity-resolution) — resolves named people or organizations in messy databases with aliases, duplicates, sparse records, common names, LLM retrieval repair, reranking, and visible runner-up candidates.
-- [autoreview](./autoreview) — runs structured closeout code review with a selected helper, verifies accepted findings, reruns focused tests, and stops only when no actionable findings remain.
+- [autoreview](./autoreview) — performs an explicitly requested final review using whatever review capability is available, without depending on a particular helper, model, or service.
 - [public-qa-chatbot](./public-qa-chatbot) — builds unauthenticated public Q&A chatbot widgets with rate limits, origin/input hardening, semantic caching, observability, streaming UX, and robust chat scroll behavior.
 - [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, causal shared-thread sessions, per-thread serialization, stateful routing and owned-resource resolution, state-aware Block Kit approvals, durable execution for slow agent work, guaranteed result-or-error delivery, and structured observability.
 - [sync-url-navigation](./sync-url-navigation) — syncs URL query params with app navigation, tabs, and filter state so views are bookmarkable and shareable (`view`, `table`, `q`, deep links, `popstate`).
