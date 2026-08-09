@@ -28,16 +28,16 @@ When a reference file and the docs disagree, **trust the docs**. This is especia
 
 ```
 Need to design, migrate, release, or debug a production Cloudflare system?
-└─ Load cloudflare-production-builder alongside the product references
+└─ Load cloudflare-production-builder for material cross-product decisions
    ├─ Multiple Workers, service bindings, or Containers → model independent rollout axes
    ├─ Durable handoff or background work → define idempotency and repair first
    ├─ Schema or Durable Object lifecycle change → use staged compatibility gates
    └─ Release or rollback → verify exact live identities, not command success
 ```
 
-Never assume a Worker traffic switch, service-binding target, container image,
-toolchain, schema, or Durable Object instance converges atomically with another
-surface. Use the production-builder release contract for cross-product work.
+Never assume independently deployed surfaces converge atomically. Apply the
+production-builder guidance proportionally and load only references relevant to
+the requested operation.
 
 ### "I need feature flags"
 

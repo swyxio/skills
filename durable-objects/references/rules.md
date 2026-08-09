@@ -4,14 +4,14 @@
 
 ### Model Around Coordination Atoms
 
-Create one DO per logical unit needing coordination: chat room, game session, document, user, tenant.
+Create one DO per logical unit needing coordination: chat room, game session, document, user, tenant, or deliberately serialized environment.
 
 ```typescript
 // ✅ Good: One DO per chat room
 const stub = env.CHAT_ROOM.getByName(roomId);
 
-// ❌ Bad: Single global DO
-const stub = env.CHAT_ROOM.getByName("global"); // Bottleneck!
+// ❌ Bad when unrelated high-volume work does not need shared coordination
+const stub = env.CHAT_ROOM.getByName("global");
 ```
 
 ### Parent-Child Relationships
@@ -189,9 +189,12 @@ async handleRequest() {
 
 **Never** hold across external I/O (fetch, R2, KV).
 
-## RPC Methods
+## RPC and HTTP interfaces
 
-Use RPC (compatibility date >= 2024-04-03) instead of fetch() handler:
+Prefer RPC (compatibility date >= 2024-04-03) for new typed internal methods.
+Keep a `fetch()` handler when HTTP headers, routing, protocol interoperability,
+or compatibility with live callers matters. Preserve caller compatibility
+during interface migrations.
 
 ```typescript
 export class ChatRoom extends DurableObject<Env> {
@@ -253,7 +256,8 @@ const alarm = await this.ctx.storage.getAlarm();
 await this.ctx.storage.deleteAlarm();
 ```
 
-**Retry**: Alarms auto-retry on failure. Use idempotent handlers.
+**Retry**: Alarms auto-retry on failure. Use idempotent handlers, classify
+failures, and bound retries.
 
 ## WebSockets (Hibernation API)
 

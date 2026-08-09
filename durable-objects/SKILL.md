@@ -1,186 +1,49 @@
 ---
 name: durable-objects
-description: Create and review Cloudflare Durable Objects. Use when building stateful coordination (chat rooms, multiplayer games, booking systems), implementing RPC methods, SQLite storage, alarms, WebSockets, or reviewing DO code for best practices. Covers Workers integration, wrangler config, and testing with Vitest. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
+description: Create and review Cloudflare Durable Objects. Use when building stateful coordination, implementing RPC or HTTP interfaces, SQLite storage, alarms, WebSockets, bindings, migrations, or Durable Object tests.
 ---
 
 # Durable Objects
 
-Build stateful, coordinated applications on Cloudflare's edge using Durable Objects.
+Use Durable Objects for state that needs single-key coordination, strong
+consistency, persistent connections, or scheduled work. Keep the guidance
+proportional to the request: a narrow diagnosis does not require a redesign.
 
-## Retrieval Sources
+## Current documentation
 
-Your knowledge of Durable Objects APIs and configuration may be outdated. **Prefer retrieval over pre-training** for any Durable Objects task.
+Retrieve current Cloudflare documentation when API, configuration, migration,
+or platform behavior matters:
 
-| Resource | URL |
-|----------|-----|
-| Docs | https://developers.cloudflare.com/durable-objects/ |
-| API Reference | https://developers.cloudflare.com/durable-objects/api/ |
-| Best Practices | https://developers.cloudflare.com/durable-objects/best-practices/ |
-| Examples | https://developers.cloudflare.com/durable-objects/examples/ |
+- [Documentation](https://developers.cloudflare.com/durable-objects/)
+- [API reference](https://developers.cloudflare.com/durable-objects/api/)
+- [Best practices](https://developers.cloudflare.com/durable-objects/best-practices/)
 
-Fetch the relevant doc page when implementing features.
+Load local references only when relevant:
 
-## When to Use
+- [rules.md](references/rules.md) for storage, concurrency, interfaces, and alarms.
+- [testing.md](references/testing.md) for Workers Vitest setup and alarm tests.
+- [workers.md](references/workers.md) for bindings, migrations, and observability.
 
-- Creating new Durable Object classes for stateful coordination
-- Implementing RPC methods, alarms, or WebSocket handlers
-- Reviewing existing DO code for best practices
-- Configuring wrangler.jsonc/toml for DO bindings and migrations
-- Writing tests with `@cloudflare/vitest-pool-workers`
-- Designing sharding strategies and parent-child relationships
+## Design checklist
 
-## Reference Documentation
+1. Name the coordination atom and choose a deterministic object ID. A global or
+   environment-wide object is valid when deliberate low-volume serialization is
+   the requirement; it is a problem only when unrelated high-volume work is
+   forced through it.
+2. Identify authoritative state and persist it before updating in-memory caches.
+   Prefer SQLite for structured object-owned state; external stores remain
+   separate consistency boundaries.
+3. Prefer typed RPC for new internal interfaces. Keep `fetch()` when HTTP
+   semantics, headers, routing, or compatibility require it. Preserve live
+   caller compatibility during interface migrations.
+4. Keep state transitions small and deterministic. Fence or reconcile external
+   I/O because it permits interleaving.
+5. Use `blockConcurrencyWhile()` for initialization, not routine requests or
+   external I/O.
+6. Remember that each object has one alarm. Persist work and progress, make the
+   handler idempotent, classify failures, and bound retries.
+7. Verify the exact class export, binding, namespace, migration, and live path
+   touched by the change. Test only the relevant lifecycle and failure cases.
 
-- `./references/rules.md` - Core rules, storage, concurrency, RPC, alarms
-- `./references/testing.md` - Vitest setup, unit/integration tests, alarm testing
-- `./references/workers.md` - Workers handlers, types, wrangler config, observability
-
-Search: `blockConcurrencyWhile`, `idFromName`, `getByName`, `setAlarm`, `sql.exec`
-
-## Core Principles
-
-### Use Durable Objects For
-
-| Need | Example |
-|------|---------|
-| Coordination | Chat rooms, multiplayer games, collaborative docs |
-| Strong consistency | Inventory, booking systems, turn-based games |
-| Per-entity storage | Multi-tenant SaaS, per-user data |
-| Persistent connections | WebSockets, real-time notifications |
-| Scheduled work per entity | Subscription renewals, game timeouts |
-
-### Do NOT Use For
-
-- Stateless request handling (use plain Workers)
-- Maximum global distribution needs
-- High fan-out independent requests
-
-## Quick Reference
-
-### Wrangler Configuration
-
-```jsonc
-// wrangler.jsonc
-{
-  "durable_objects": {
-    "bindings": [{ "name": "MY_DO", "class_name": "MyDurableObject" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MyDurableObject"] }]
-}
-```
-
-### Basic Durable Object Pattern
-
-```typescript
-import { DurableObject } from "cloudflare:workers";
-
-export interface Env {
-  MY_DO: DurableObjectNamespace<MyDurableObject>;
-}
-
-export class MyDurableObject extends DurableObject<Env> {
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => {
-      this.ctx.storage.sql.exec(`
-        CREATE TABLE IF NOT EXISTS items (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          data TEXT NOT NULL
-        )
-      `);
-    });
-  }
-
-  async addItem(data: string): Promise<number> {
-    const result = this.ctx.storage.sql.exec<{ id: number }>(
-      "INSERT INTO items (data) VALUES (?) RETURNING id",
-      data
-    );
-    return result.one().id;
-  }
-}
-
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const stub = env.MY_DO.getByName("my-instance");
-    const id = await stub.addItem("hello");
-    return Response.json({ id });
-  },
-};
-```
-
-## Critical Rules
-
-1. **Model around coordination atoms** - One DO per chat room/game/user, not one global DO
-2. **Use `getByName()` for deterministic routing** - Same input = same DO instance
-3. **Use SQLite storage** - Configure `new_sqlite_classes` in migrations
-4. **Initialize in constructor** - Use `blockConcurrencyWhile()` for schema setup only
-5. **Use RPC methods** - Not fetch() handler (compatibility date >= 2024-04-03)
-6. **Persist first, cache second** - Always write to storage before updating in-memory state
-7. **One alarm per DO** - `setAlarm()` replaces any existing alarm
-
-## Anti-Patterns (NEVER)
-
-- Single global DO handling all requests (bottleneck)
-- Using `blockConcurrencyWhile()` on every request (kills throughput)
-- Storing critical state only in memory (lost on eviction/crash)
-- Using `await` between related storage writes (breaks atomicity)
-- Holding `blockConcurrencyWhile()` across `fetch()` or external I/O
-
-## Stub Creation
-
-```typescript
-// Deterministic - preferred for most cases
-const stub = env.MY_DO.getByName("room-123");
-
-// From existing ID string
-const id = env.MY_DO.idFromString(storedIdString);
-const stub = env.MY_DO.get(id);
-
-// New unique ID - store mapping externally
-const id = env.MY_DO.newUniqueId();
-const stub = env.MY_DO.get(id);
-```
-
-## Storage Operations
-
-```typescript
-// SQL (synchronous, recommended)
-this.ctx.storage.sql.exec("INSERT INTO t (c) VALUES (?)", value);
-const rows = this.ctx.storage.sql.exec<Row>("SELECT * FROM t").toArray();
-
-// KV (async)
-await this.ctx.storage.put("key", value);
-const val = await this.ctx.storage.get<Type>("key");
-```
-
-## Alarms
-
-```typescript
-// Schedule (replaces existing)
-await this.ctx.storage.setAlarm(Date.now() + 60_000);
-
-// Handler
-async alarm(): Promise<void> {
-  // Process scheduled work
-  // Optionally reschedule: await this.ctx.storage.setAlarm(...)
-}
-
-// Cancel
-await this.ctx.storage.deleteAlarm();
-```
-
-## Testing Quick Start
-
-```typescript
-import { env } from "cloudflare:test";
-import { describe, it, expect } from "vitest";
-
-describe("MyDO", () => {
-  it("should work", async () => {
-    const stub = env.MY_DO.getByName("test");
-    const result = await stub.addItem("test");
-    expect(result).toBe(1);
-  });
-});
-```
+Avoid Durable Objects for stateless work or high-fan-out independent requests
+that do not need serialization.

@@ -1,185 +1,74 @@
 ---
 name: cloudflare-production-builder
-description: Design, build, review, debug, migrate, or deploy production systems on Cloudflare Workers and related Developer Platform products. Use for Workers, Pages, Workflows, Queues, Durable Objects, D1, R2, KV, Cache API, Cron Triggers, multi-tenant hosting, background jobs, caching, bindings, migrations, release verification, or Cloudflare architecture choices.
+description: Design, review, debug, migrate, or deploy production systems on Cloudflare Workers and related Developer Platform products. Use for material architecture, durability, release, migration, rollback, or live-verification decisions across Workers, Durable Objects, D1, R2, Queues, Workflows, bindings, and routes.
 ---
 
 # Cloudflare Production Builder
 
-Use this skill whenever Cloudflare is an important execution, storage, routing,
-or deployment surface. Treat it as production engineering guidance, not a
-Wrangler command cheat sheet.
+Apply this guidance proportionally. It is a production reasoning aid, not a
+mandatory ceremony layer. Stay within the user's requested operation and do not
+turn a diagnosis or recovery into an architecture program.
 
-## First principles
+## Choose the operating mode
 
-1. Identify the authoritative state, coordination key, durability boundary,
-   consistency requirement, and user-visible proof before choosing products.
-2. Do not map a vague noun directly to a product:
-   - "background work" does not automatically mean Queues;
-   - "state" does not automatically mean Durable Objects;
-   - "cache" does not automatically mean KV or Cache API;
-   - "static site" does not automatically mean Pages.
-3. Prefer immutable identities and pointer changes over overwriting mutable
-   artifacts. Record the exact source, configuration, policy, toolchain, and
-   deployed version that produced an outcome.
-4. Make every retry idempotent, every external mutation fenced or conditional,
-   and every handoff observable and repairable.
-5. A local test, successful command, uploaded version, traffic switch, DNS
-   route, migration, live response, and browser behavior are separate facts.
-6. Re-open current first-party documentation before relying on limits, pricing,
-   retention, product availability, compatibility behavior, or deployment
-   support. These change.
+- **Answer or diagnose:** inspect only the evidence needed to explain the
+  behavior. Do not mutate or design a replacement unless asked.
+- **Recover:** restore a known-good capability with the smallest supported,
+  reversible operation. Preserve evidence and defer refactoring.
+- **Change or migrate:** design compatibility, durability, rollout, verification,
+  and rollback for the surfaces actually affected.
 
-## Required workflow
+Do not mix recovery and refactoring in one production operation.
 
-### 1. Inspect before designing
+## Core contract
 
-- Read `wrangler.toml`, `wrangler.json`, or `wrangler.jsonc`, package scripts,
-  deployment workflows, migration directories, binding contracts, and health or
-  smoke scripts.
-- Confirm the account, environment, Worker name, routes, domains, compatibility
-  date and flags, bindings, migrations, and current deployed version.
-- Preserve the requested Cloudflare surface. Do not silently replace Pages with
-  Workers, Workflows with Queues, or another product because it is familiar.
-- Separate current code state from provisioned production state.
+1. Identify authoritative state, the coordination key, the durability boundary,
+   and user-visible completion.
+2. Treat source, build, upload, configuration, migration, traffic, route,
+   stateful lifecycle, and live behavior as separate facts only when the task
+   depends on those surfaces.
+3. Prefer immutable artifacts and conditional pointer changes. Make external
+   mutations idempotent, fenced, conditional, or compensatable.
+4. Classify errors before retrying. Persist terminal domain failures; bound
+   transient retries; reconcile ambiguous mutations before replay.
+5. Preserve accepted work across handoff failures. Use a durable record and a
+   repair path when an initiating request can disappear.
+6. Verify the owning live path and exact identity after a production mutation.
+   Use precise language such as `version uploaded`, `traffic switched`, and
+   `live smoke passed`.
 
-### 2. Write the decision sentence
+## Proportional workflow
 
-Before implementation, state:
+1. Inspect current code and provisioned state for the touched surface. Resolve
+   the exact account, environment, resource, bindings, and live version before
+   mutation.
+2. State the intended authority and repair/rollback path. For simple work, one
+   sentence is enough.
+3. Run focused local or remote checks that can falsify the change. Do not add
+   unrelated global gates.
+4. When authorized to deploy, upload and inspect before switching when the
+   provider supports it. Use a verification path supported by the topology.
+5. After mutation, verify only the affected rollout axes plus the user-visible
+   capability. Record exact identities and rollback evidence.
 
-> The authoritative state is ____. Work is partitioned/serialized by ____.
-> The operation must survive ____. Users observe completion through ____.
-> We choose ____ because ____; we reject ____ because ____.
+Pause when the exact production target, current state, retry safety, or rollback
+target cannot be resolved. A blocker in an unrelated surface is not permission
+to broaden the operation.
 
-If that sentence is fuzzy, read
-[primitive-selection.md](references/primitive-selection.md).
+## Load references selectively
 
-### 3. Design correctness and repair
+- [primitive-selection.md](references/primitive-selection.md): use when the
+  product or coordination primitive is genuinely undecided.
+- [durable-execution.md](references/durable-execution.md): use for asynchronous
+  handoffs, retries, queues, Workflows, or long-running external work.
+- [storage-and-caching.md](references/storage-and-caching.md): use for storage,
+  cache, and authorization boundaries.
+- [deployments-and-migrations.md](references/deployments-and-migrations.md): use
+  for multi-surface rollout, schema or Durable Object lifecycle, and rollback.
+- [multitenant-hosting-and-security.md](references/multitenant-hosting-and-security.md):
+  use for untrusted code or tenant isolation.
+- [observability-testing-and-cost.md](references/observability-testing-and-cost.md):
+  use when adding or reviewing telemetry, test layers, or spend controls.
 
-- Define an immutable idempotency key from the logical operation and exact input
-  generation.
-- List every handoff and what repairs it if the initiating request disappears.
-- Define retryable, terminal, stale, superseded, and cancelled outcomes.
-- Treat a Workflow callback, response stream, RPC, or foreground command wait as
-  revocable. For long-running or non-replayable external work, use granular
-  Workflow steps plus a deterministic execution identity, fenced ownership,
-  incremental logs, and an immutable terminal receipt. On retry, reconcile the
-  external execution before deciding whether any side effect may run again.
-- Store user-facing job/progress state in a deliberate read model when the
-  orchestration primitive does not expose the partial state the UI needs.
-- Use scheduled reconciliation as a safety net for missing handoffs, expired
-  leases, and drift. It is not a substitute for a durable primary handoff.
-
-Read [durable-execution.md](references/durable-execution.md).
-
-### 4. Design storage and cache keys
-
-- Put authoritative relational state in D1 or another database, coordinated
-  per-key state in Durable Objects, large immutable blobs in R2, and globally
-  read-heavy eventually consistent configuration in KV.
-- Treat Cache API as ephemeral, data-center-local acceleration.
-- Prefer cache keys derived from immutable content IDs, exact revisions, or a
-  transactionally maintained generation.
-- For conditional R2 stream writes, handle an unmet precondition as an unread
-  body: cancel the consumer side and settle the producer. Keep duplicate checks
-  bounded to submitted keys; never replace them with broad prefix listings.
-- Resolve authorization and current visibility before reading shared internal
-  caches. Keep access-controlled browser responses private unless disclosure
-  equivalence is proven.
-- Never mark partial computation as a complete cache result.
-
-Read [storage-and-caching.md](references/storage-and-caching.md).
-
-### 5. Make deployment a checked contract
-
-- Bindings, environment variables, routes, domains, Durable Object classes,
-  migrations, compatibility date, and assets are part of the release.
-- Model Worker traffic, service-binding targets, container images/toolchains,
-  schema, routes, and stateful instance lifecycle as independent rollout axes.
-  Do not infer convergence of one from another.
-- Separate admission by workload class. Draining long-running work must not
-  automatically reject short, durable, idempotent infrastructure handoffs.
-- Persist expensive or non-replayable ingress before release-sensitive compute.
-  Retain it across transient service-binding failures; delete it only after a
-  validated receipt, a terminal outcome, or an explicit bounded timeout.
-- Fail closed when a feature is enabled but a required binding is missing.
-- Attach source SHA, Worker version, configuration/policy versions, and relevant
-  external artifact identities to the release record.
-- Record recovery evidence before schema changes. Prefer additive migrations and
-  forward fixes; do not make code rollback depend on destructive schema rollback.
-- Test D1 migrations with D1's implicit-transaction and always-on foreign-key
-  semantics. Do not rely on `PRAGMA foreign_keys = OFF` in a migration.
-- For a self-hosting control plane, prove that every intermediate schema leaves
-  the live version able to release its successor. Expand, release and verify the
-  compatible runtime, then contract obsolete schema.
-- For D1, prefer a non-blocking Time Travel bookmark. Never request a full
-  production export without first checking for virtual tables and planning for
-  the documented period in which exports block database queries.
-- Upload and inspect before switching traffic when the release mechanism allows.
-
-Read [deployments-and-migrations.md](references/deployments-and-migrations.md).
-
-### 6. Protect trust boundaries
-
-- Serve user-controlled content from a registrably separate origin from the
-  control plane.
-- Never expose raw provider bindings, account identifiers, service bindings, or
-  provider credentials to untrusted code.
-- Use exact-source builds, restricted egress, bounded output, path containment,
-  symlink/special-file rejection, immutable artifact manifests, quotas,
-  suspension, and negative cross-tenant tests.
-- Keep authorization, access epochs, suspension, and active pointers outside
-  immutable artifact caches.
-
-Read
-[multitenant-hosting-and-security.md](references/multitenant-hosting-and-security.md).
-
-### 7. Prove the live system
-
-Verify the following separately:
-
-1. intended source and clean build;
-2. migration precheck, recovery point, apply, and postcheck;
-3. uploaded/deployed Worker version and required bindings;
-4. Durable Object class lifecycle and binding path where applicable;
-5. route, DNS, certificate, custom domain, and service bindings;
-6. live headers and body on the owning hostname;
-7. a request that exercises each stateful or asynchronous dependency;
-8. logs/metrics without new errors;
-9. browser-visible behavior if the user experience matters;
-10. rollback and repair behavior.
-
-Read [observability-testing-and-cost.md](references/observability-testing-and-cost.md).
-
-## Stop conditions
-
-Pause and surface the blocker when:
-
-- the target account, environment, hostname, database, bucket, namespace, or
-  Worker cannot be resolved exactly;
-- production schema is partial or differs from the expected shape;
-- a currently live runtime still queries a table, column, trigger, or view that
-  the proposed migration removes;
-- a self-hosting release path cannot deploy its successor at an intermediate
-  migration state;
-- the current deployed bindings cannot be inspected;
-- a destructive migration lacks recovery evidence;
-- a deployment would expose untrusted content on the control-plane origin;
-- retry safety, authorization, tenant isolation, or spend bounds are undefined;
-- the requested primitive is unsupported in the target deployment model.
-
-## Completion language
-
-Use precise status:
-
-- `implemented locally`
-- `tests pass`
-- `committed`
-- `pushed`
-- `migration applied`
-- `version uploaded`
-- `traffic switched`
-- `route/DNS active`
-- `live smoke passed`
-- `browser verified`
-
-Never compress these into "deployed" unless the owning live surface was checked.
+Retrieve current first-party Cloudflare documentation before relying on API
+signatures, configuration, limits, pricing, retention, or product support.
