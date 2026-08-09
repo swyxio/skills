@@ -332,16 +332,16 @@ comparison, or proof—and choose a visual form only when it improves one of
 them. Treat the visual and its nearby explanation as one unit: the prose should
 interpret the graphic, not transcribe every label in it.
 
+Before designing article visuals, read [the visual-language reference](references/visual-language.md)
+and use its selection sequence, semantic palette, layout rules, and examples.
+
 Treat visual quality as part of editorial quality, not decoration. When a
-substantial visual needs art direction, use an image-generation model for two
-to four initial studies and iterate between image generation, deterministic
-code, and human feedback until the visual carries the story at its rendered
-size. Start from a text brief, or pass an existing screenshot, SVG, chart, or
-code-generated diagram back through image generation to explore hierarchy,
-texture, composition, and publication identity. Use `align-me` when several
-materially different visual directions are plausible or the user's taste is
-the deciding constraint; show concrete passes rather than asking abstract
-style questions.
+substantial visual needs art direction, make two to four image-generation
+studies and iterate between image generation, deterministic code, and human
+feedback. Start from a text brief or pass an exact diagram back through image
+generation to explore hierarchy, texture, composition, and publication
+identity. Use `align-me` when materially different directions remain plausible;
+show concrete passes rather than asking abstract style questions.
 
 Choose the strongest final form instead of forcing every exploration back into
 code:
