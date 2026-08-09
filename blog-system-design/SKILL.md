@@ -1,6 +1,6 @@
 ---
 name: blog-system-design
-description: Design, build, or revise a technical blog as a product system. Use when work affects the blog index, category or section pages, article layout, typography, information density, full-text search, keyboard shortcuts, resizable or collapsible navigation, table of contents, responsive breakpoints, reusable article components, media policy, accessibility, or blog-wide visual QA. Pair with ai-devblog when publishing individual technical articles; keep article writing in ai-devblog and shared presentation infrastructure here.
+description: Design, build, or revise a technical blog as a product system. Use when work affects the blog index, category or section pages, article layout, typography, information density, internal linking, full-text search, keyboard shortcuts, resizable or collapsible navigation, table of contents, responsive breakpoints, reusable article components, media policy, accessibility, or blog-wide visual QA. Pair with ai-devblog when publishing individual technical articles; keep article writing in ai-devblog and shared presentation infrastructure here.
 ---
 
 # Blog System Design
@@ -29,6 +29,8 @@ sizes. Identify:
 - index, category, archive, and post routes;
 - typography, spacing, reading width, and theme tokens;
 - navigation, heading anchors, TOC behavior, and keyboard shortcuts;
+- existing inline links, related-post metadata, and the archive's internal-link
+  graph;
 - search corpus and URL state;
 - reusable figures, tables, code blocks, callouts, tabs, and playgrounds;
 - image provenance, loading behavior, accessibility, and bundle cost.
@@ -49,6 +51,33 @@ Provide the smallest useful hierarchy:
 
 Use one canonical post URL. Make filters shareable through query parameters.
 Do not create duplicate routes for visual variants of the same article.
+
+## Build intentional internal links
+
+Treat internal linking as part of the publication's information architecture,
+not as an SEO afterthought. When adding or substantially revising a post, scan
+the existing archive for a small number of relationships that genuinely help a
+reader continue the subject.
+
+Use two complementary forms:
+
+- add contextual inline links where an earlier incident, implementation,
+  benchmark, or design decision is directly mentioned in the prose;
+- store a short ordered list of related-post identifiers in the canonical post
+  catalog and render it consistently near the end of the article.
+
+Prefer two or three strong related posts over a long automatically generated
+list. Curate for explanatory continuity, not shared keywords alone. Add
+reciprocal links when two posts are true counterparts, but do not force every
+relationship to be bidirectional. Keep stable post identity separate from link
+labels so titles can change without breaking references.
+
+Validate the link graph in tests: every related identifier must resolve to a
+public canonical post, lists must not contain duplicates or the current post,
+and ordering must be preserved. Render related reading as compact semantic
+links with useful context such as category, date, reading time, title, and a
+short description. Do not let repeated recommendation cards dominate mobile
+reading density.
 
 ## Design a useful index
 
@@ -193,6 +222,8 @@ rendered system at representative widths such as 1600, 1280, 1024, 768, 430,
 - rail resizing, minimum/maximum bounds, minimize/restore, and breakpoint
   hiding;
 - TOC anchors, active state, sticky/floating placement, and restore control;
+- contextual internal links and related-post lists, including reciprocal links
+  where intended, missing targets, duplicates, self-links, and mobile density;
 - title wrapping, reading measure, code overflow, figures, tables, captions,
   and interactive fallbacks;
 - no horizontal overflow, obscured text, clipped controls, or layout shifts;
