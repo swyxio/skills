@@ -1,0 +1,319 @@
+<div id="release-visual-organizations">
+  <div class="viz-controls" aria-label="Choose a diagram organization">
+    <button class="btn btn-primary" type="button" data-view="swimlane" aria-pressed="true">Swimlanes · recommended</button>
+    <button class="btn" type="button" data-view="sequence" aria-pressed="false">Sequence</button>
+    <button class="btn" type="button" data-view="state" aria-pressed="false">State machine</button>
+    <button class="btn" type="button" data-view="c4" aria-pressed="false">System boundaries</button>
+    <button class="btn" type="button" data-view="before-after" aria-pressed="false">Before / after</button>
+  </div>
+
+  <div class="org-legend" aria-label="Color meanings">
+    <span><i class="org-swatch org-decision"></i>Decision</span>
+    <span><i class="org-swatch org-owner"></i>Ownership</span>
+    <span><i class="org-swatch org-coordinate"></i>Coordination</span>
+    <span><i class="org-swatch org-production"></i>Production</span>
+  </div>
+
+  <section data-panel="swimlane">
+    <svg class="org-diagram" viewBox="0 0 960 620" role="img" aria-labelledby="swim-title swim-desc">
+      <title id="swim-title">Release authority organized as ownership swimlanes</title>
+      <desc id="swim-desc">Four horizontal lanes separate feature authors, release planning, component managers, and production authority. Work moves left to right with minimal crossing lines.</desc>
+      <defs>
+        <marker id="arrow-swim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
+      </defs>
+
+      <g class="org-lanes">
+        <rect x="118" y="18" width="824" height="118" rx="14" />
+        <rect x="118" y="150" width="824" height="138" rx="14" />
+        <rect x="118" y="302" width="824" height="138" rx="14" />
+        <rect x="118" y="454" width="824" height="148" rx="14" />
+      </g>
+      <g class="org-lane-labels">
+        <text x="16" y="78">Feature</text><text x="16" y="101">author</text>
+        <text x="16" y="216">Release</text><text x="16" y="239">planning</text>
+        <text x="16" y="368">Component</text><text x="16" y="391">owners</text>
+        <text x="16" y="526">Production</text><text x="16" y="549">authority</text>
+      </g>
+
+      <g class="org-node org-neutral"><rect x="154" y="48" width="174" height="58" rx="10"/><text x="241" y="82">Ready PR</text></g>
+      <g class="org-node org-decision"><rect x="388" y="48" width="212" height="58" rx="10"/><text x="494" y="72">Checked-in ownership</text><text x="494" y="94">and dependency graph</text></g>
+      <g class="org-node org-assist"><rect x="660" y="48" width="236" height="58" rx="10"/><text x="778" y="72">LLM impact analyst</text><text x="778" y="94">may widen or flag</text></g>
+
+      <g class="org-node org-decision"><rect x="174" y="188" width="220" height="64" rx="10"/><text x="284" y="215">Deterministic</text><text x="284" y="238">impact router</text></g>
+      <g class="org-node org-decision"><rect x="512" y="188" width="194" height="64" rx="10"/><text x="609" y="226">Signed route plan</text></g>
+
+      <g class="org-node org-owner"><rect x="150" y="340" width="176" height="64" rx="10"/><text x="238" y="367">Edge Manager</text><text x="238" y="389">affected only</text></g>
+      <g class="org-node org-owner"><rect x="392" y="340" width="176" height="64" rx="10"/><text x="480" y="367">Identity Manager</text><text x="480" y="389">affected only</text></g>
+      <g class="org-node org-owner"><rect x="634" y="340" width="176" height="64" rx="10"/><text x="722" y="367">Runner Manager</text><text x="722" y="389">affected only</text></g>
+      <g class="org-node org-coordinate"><rect x="824" y="340" width="96" height="64" rx="10"/><text x="872" y="367">Signed</text><text x="872" y="389">receipt</text></g>
+
+      <g class="org-node org-decision"><rect x="150" y="500" width="176" height="64" rx="10"/><text x="238" y="527">Deterministic</text><text x="238" y="549">main CAS</text></g>
+      <g class="org-node org-production"><rect x="406" y="500" width="190" height="64" rx="10"/><text x="501" y="538">ProductionDeployer</text></g>
+      <g class="org-node org-production"><rect x="676" y="500" width="218" height="64" rx="10"/><text x="785" y="527">Provider activation</text><text x="785" y="549">and health receipt</text></g>
+
+      <g class="org-arrows">
+        <path d="M241 106 V154 Q241 172 260 188"/><path d="M494 106 V154 Q494 172 374 188"/><path class="org-dashed" d="M778 106 V151 Q778 173 394 208"/>
+        <path d="M394 220 H512"/>
+        <path d="M609 252 V278 Q609 292 238 340"/><path d="M609 252 V310 Q609 326 480 340"/><path d="M609 252 V310 Q609 326 722 340"/>
+        <path d="M326 372 H824"/><path d="M568 372 H824"/><path d="M810 372 H824"/>
+        <path d="M872 404 V435 Q872 452 326 523"/><path d="M872 404 V438 Q872 456 596 523"/>
+        <path d="M596 532 H676"/>
+      </g>
+    </svg>
+  </section>
+
+  <section data-panel="sequence" hidden>
+    <svg class="org-diagram" viewBox="0 0 960 640" role="img" aria-labelledby="seq-title seq-desc">
+      <title id="seq-title">Release process organized as a sequence diagram</title>
+      <desc id="seq-desc">Five vertical actors make ordering explicit from ready pull request through routing, candidate build, promotion, and health verification.</desc>
+      <defs><marker id="arrow-seq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+      <g class="org-seq-actors">
+        <g class="org-node org-neutral"><rect x="28" y="24" width="144" height="52" rx="10"/><text x="100" y="56">Ready PR</text></g>
+        <g class="org-node org-decision"><rect x="220" y="24" width="144" height="52" rx="10"/><text x="292" y="56">Impact router</text></g>
+        <g class="org-node org-owner"><rect x="412" y="24" width="144" height="52" rx="10"/><text x="484" y="56">Affected CI</text></g>
+        <g class="org-node org-production"><rect x="604" y="24" width="164" height="52" rx="10"/><text x="686" y="56">ProductionDeployer</text></g>
+        <g class="org-node org-production"><rect x="816" y="24" width="116" height="52" rx="10"/><text x="874" y="56">Provider</text></g>
+      </g>
+      <g class="org-lifelines"><path d="M100 76 V608"/><path d="M292 76 V608"/><path d="M484 76 V608"/><path d="M686 76 V608"/><path d="M874 76 V608"/></g>
+      <g class="org-sequence-arrows">
+        <path d="M100 126 H292"/><text x="196" y="116">submit exact SHA</text>
+        <path d="M292 184 H484"/><text x="388" y="174">signed affected plan</text>
+        <path d="M484 242 H292"/><text x="388" y="232">immutable artifact receipt</text>
+        <path d="M292 300 H686"/><text x="489" y="290">merge CAS + candidate set</text>
+        <path d="M686 358 H874"/><text x="780" y="348">read current deployment</text>
+        <path d="M874 416 H686"/><text x="780" y="406">expected provider + fence</text>
+        <path d="M686 474 H874"/><text x="780" y="464">activate supporting, then edge</text>
+        <path d="M874 532 H686"/><text x="780" y="522">new deployment ID</text>
+        <path d="M686 590 H292"/><text x="489" y="580">public health receipt</text>
+      </g>
+    </svg>
+  </section>
+
+  <section data-panel="state" hidden>
+    <svg class="org-diagram" viewBox="0 0 960 600" role="img" aria-labelledby="state-title state-desc">
+      <title id="state-title">Release process organized as a state machine</title>
+      <desc id="state-desc">The happy path runs left to right. Pre-traffic failure releases the queue; post-traffic failure restores the recorded prior version using compare and set.</desc>
+      <defs><marker id="arrow-state" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+      <g class="org-node org-neutral"><rect x="26" y="184" width="136" height="66" rx="22"/><text x="94" y="211">Ready</text><text x="94" y="234">candidate</text></g>
+      <g class="org-node org-decision"><rect x="194" y="184" width="136" height="66" rx="22"/><text x="262" y="211">Route</text><text x="262" y="234">planned</text></g>
+      <g class="org-node org-owner"><rect x="362" y="184" width="136" height="66" rx="22"/><text x="430" y="211">Artifacts</text><text x="430" y="234">verified</text></g>
+      <g class="org-node org-coordinate"><rect x="530" y="184" width="136" height="66" rx="22"/><text x="598" y="211">Promotion</text><text x="598" y="234">fenced</text></g>
+      <g class="org-node org-production"><rect x="698" y="184" width="136" height="66" rx="22"/><text x="766" y="211">Traffic</text><text x="766" y="234">switched</text></g>
+      <g class="org-node org-production"><rect x="824" y="334" width="110" height="66" rx="22"/><text x="879" y="361">Healthy</text><text x="879" y="384">receipt</text></g>
+      <g class="org-node org-failure"><rect x="300" y="402" width="184" height="70" rx="18"/><text x="392" y="430">Pre-traffic failure</text><text x="392" y="454">queue immediately free</text></g>
+      <g class="org-node org-failure"><rect x="584" y="402" width="210" height="70" rx="18"/><text x="689" y="430">Post-traffic failure</text><text x="689" y="454">CAS restore prior version</text></g>
+      <g class="org-arrows">
+        <path d="M162 217 H194"/><path d="M330 217 H362"/><path d="M498 217 H530"/><path d="M666 217 H698"/><path d="M834 229 Q879 254 879 334"/>
+        <path d="M430 250 V350 Q430 375 392 402"/><text x="443" y="332">fails before switch</text>
+        <path d="M766 250 V350 Q766 375 724 402"/><text x="778" y="332">health fails</text>
+        <path d="M689 402 V322 Q689 292 598 250"/><text x="604" y="310">restore receipt</text>
+      </g>
+    </svg>
+  </section>
+
+  <section data-panel="c4" hidden>
+    <svg class="org-diagram" viewBox="0 0 960 620" role="img" aria-labelledby="c4-title c4-desc">
+      <title id="c4-title">Release system organized by authority boundaries</title>
+      <desc id="c4-desc">Repository, CI, and production are distinct trust boundaries. Only ProductionDeployer crosses into the Cloudflare provider boundary.</desc>
+      <defs><marker id="arrow-c4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+      <g class="org-boundary org-boundary-decision"><rect x="24" y="34" width="276" height="526" rx="18"/><text x="48" y="70">Repository authority</text></g>
+      <g class="org-boundary org-boundary-owner"><rect x="342" y="34" width="276" height="526" rx="18"/><text x="366" y="70">CI artifact authority</text></g>
+      <g class="org-boundary org-boundary-production"><rect x="660" y="34" width="276" height="526" rx="18"/><text x="684" y="70">Production authority</text></g>
+
+      <g class="org-node org-neutral"><rect x="60" y="112" width="204" height="62" rx="10"/><text x="162" y="149">Ready PR</text></g>
+      <g class="org-node org-decision"><rect x="60" y="216" width="204" height="70" rx="10"/><text x="162" y="244">Ownership graph</text><text x="162" y="268">+ deterministic router</text></g>
+      <g class="org-node org-decision"><rect x="60" y="330" width="204" height="62" rx="10"/><text x="162" y="367">Signed route plan</text></g>
+      <g class="org-node org-decision"><rect x="60" y="444" width="204" height="62" rx="10"/><text x="162" y="481">Main CAS</text></g>
+
+      <g class="org-node org-owner"><rect x="378" y="112" width="204" height="76" rx="10"/><text x="480" y="142">Affected managers</text><text x="480" y="166">build once in parallel</text></g>
+      <g class="org-node org-coordinate"><rect x="378" y="246" width="204" height="76" rx="10"/><text x="480" y="276">Immutable artifacts</text><text x="480" y="300">+ binding digests</text></g>
+      <g class="org-node org-coordinate"><rect x="378" y="380" width="204" height="76" rx="10"/><text x="480" y="410">Candidate set</text><text x="480" y="434">+ signed receipt</text></g>
+
+      <g class="org-node org-production"><rect x="696" y="112" width="204" height="76" rx="10"/><text x="798" y="142">ProductionDeployer</text><text x="798" y="166">sole credential holder</text></g>
+      <g class="org-node org-production"><rect x="696" y="246" width="204" height="76" rx="10"/><text x="798" y="276">Cloudflare provider</text><text x="798" y="300">version + traffic CAS</text></g>
+      <g class="org-node org-production"><rect x="696" y="380" width="204" height="76" rx="10"/><text x="798" y="410">Public health</text><text x="798" y="434">+ rollback receipt</text></g>
+
+      <g class="org-arrows"><path d="M162 174 V216"/><path d="M162 286 V330"/><path d="M264 361 H378"/><path d="M480 188 V246"/><path d="M480 322 V380"/><path d="M582 418 Q640 418 696 166"/><path d="M798 188 V246"/><path d="M798 322 V380"/><path d="M696 418 Q630 482 264 475"/></g>
+      <g class="org-exclusive"><path d="M644 86 V520"/><text x="798" y="518">Only ProductionDeployer mutates provider</text></g>
+    </svg>
+  </section>
+
+  <section data-panel="before-after" hidden>
+    <svg class="org-diagram" viewBox="0 0 960 620" role="img" aria-labelledby="ba-title ba-desc">
+      <title id="ba-title">Before and after release architecture</title>
+      <desc id="ba-desc">The old design has several overlapping authorities and production-time rebuilding. The simplified design has immutable CI artifacts and one ProductionDeployer path.</desc>
+      <defs><marker id="arrow-ba" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+      <text class="org-panel-title" x="232" y="42">Before · overlapping authority</text>
+      <text class="org-panel-title" x="728" y="42">After · one promotion path</text>
+      <path class="org-divider" d="M480 22 V594"/>
+
+      <g class="org-node org-neutral"><rect x="58" y="82" width="150" height="56" rx="10"/><text x="133" y="116">PR</text></g>
+      <g class="org-node org-decision"><rect x="262" y="82" width="150" height="56" rx="10"/><text x="337" y="116">Impact checks</text></g>
+      <g class="org-node org-owner"><rect x="38" y="204" width="150" height="66" rx="10"/><text x="113" y="232">Edge manager</text><text x="113" y="254">can activate</text></g>
+      <g class="org-node org-owner"><rect x="226" y="204" width="188" height="66" rx="10"/><text x="320" y="232">Controller / runner</text><text x="320" y="254">can rebuild or wake</text></g>
+      <g class="org-node org-coordinate"><rect x="126" y="336" width="214" height="70" rx="10"/><text x="233" y="366">Adopt / resume / reconcile</text><text x="233" y="390">shared mutable state</text></g>
+      <g class="org-node org-production"><rect x="118" y="486" width="230" height="70" rx="10"/><text x="233" y="516">Multiple provider paths</text><text x="233" y="540">unclear final authority</text></g>
+      <g class="org-arrows org-tangled"><path d="M208 110 H262"/><path d="M133 138 Q126 174 113 204"/><path d="M337 138 Q350 174 320 204"/><path d="M188 237 Q300 280 233 336"/><path d="M226 237 Q88 310 233 336"/><path d="M320 270 Q398 350 233 406"/><path d="M233 406 V486"/><path d="M113 270 Q56 430 210 486"/></g>
+
+      <g class="org-node org-neutral"><rect x="548" y="82" width="360" height="56" rx="10"/><text x="728" y="116">Ready PR + checked-in ownership graph</text></g>
+      <g class="org-node org-decision"><rect x="582" y="184" width="292" height="62" rx="10"/><text x="728" y="222">Deterministic affected plan</text></g>
+      <g class="org-node org-owner"><rect x="582" y="292" width="292" height="70" rx="10"/><text x="728" y="322">CI-built immutable artifacts</text><text x="728" y="346">supporting Workers first</text></g>
+      <g class="org-node org-production"><rect x="582" y="408" width="292" height="62" rx="10"/><text x="728" y="446">One ProductionDeployer</text></g>
+      <g class="org-node org-production"><rect x="582" y="516" width="292" height="62" rx="10"/><text x="728" y="544">Edge last + live health receipt</text></g>
+      <g class="org-arrows"><path d="M728 138 V184"/><path d="M728 246 V292"/><path d="M728 362 V408"/><path d="M728 470 V516"/></g>
+    </svg>
+  </section>
+</div>
+
+<style>
+  #release-visual-organizations {
+    color: var(--foreground);
+    width: 100%;
+  }
+  #release-visual-organizations .viz-controls {
+    margin-bottom: 12px;
+  }
+  #release-visual-organizations .org-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin: 4px 0 10px;
+    color: var(--muted-foreground);
+  }
+  #release-visual-organizations .org-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #release-visual-organizations .org-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    background: var(--muted);
+  }
+  #release-visual-organizations .org-decision { --org-series: var(--viz-series-1); }
+  #release-visual-organizations .org-owner { --org-series: var(--viz-series-2); }
+  #release-visual-organizations .org-coordinate { --org-series: var(--viz-series-4); }
+  #release-visual-organizations .org-production { --org-series: var(--viz-series-5); }
+  #release-visual-organizations .org-assist { --org-series: var(--viz-series-3); }
+  #release-visual-organizations .org-failure { --org-series: var(--destructive); }
+  #release-visual-organizations .org-neutral { --org-series: var(--muted-foreground); }
+  #release-visual-organizations .org-swatch.org-decision { background: var(--viz-series-1); }
+  #release-visual-organizations .org-swatch.org-owner { background: var(--viz-series-2); }
+  #release-visual-organizations .org-swatch.org-coordinate { background: var(--viz-series-4); }
+  #release-visual-organizations .org-swatch.org-production { background: var(--viz-series-5); }
+  #release-visual-organizations section[hidden] { display: none; }
+  #release-visual-organizations .org-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--muted-foreground);
+    overflow: visible;
+  }
+  #release-visual-organizations .org-node rect {
+    fill: color-mix(in srgb, var(--org-series) 16%, var(--background));
+    stroke: var(--border);
+    stroke-width: 1.5;
+  }
+  #release-visual-organizations .org-node text,
+  #release-visual-organizations .org-lane-labels text,
+  #release-visual-organizations .org-boundary text,
+  #release-visual-organizations .org-panel-title,
+  #release-visual-organizations .org-exclusive text {
+    fill: var(--foreground);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    text-anchor: middle;
+  }
+  #release-visual-organizations .org-lane-labels text {
+    text-anchor: start;
+    fill: var(--muted-foreground);
+  }
+  #release-visual-organizations .org-lanes rect {
+    fill: color-mix(in srgb, var(--muted) 38%, transparent);
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+  #release-visual-organizations .org-arrows path,
+  #release-visual-organizations .org-sequence-arrows path,
+  #release-visual-organizations .org-tangled path {
+    fill: none;
+    stroke: var(--muted-foreground);
+    stroke-width: 1.6;
+    marker-end: url(#arrow-swim);
+  }
+  #release-visual-organizations [data-panel="sequence"] .org-sequence-arrows path { marker-end: url(#arrow-seq); }
+  #release-visual-organizations [data-panel="state"] .org-arrows path { marker-end: url(#arrow-state); }
+  #release-visual-organizations [data-panel="c4"] .org-arrows path { marker-end: url(#arrow-c4); }
+  #release-visual-organizations [data-panel="before-after"] .org-arrows path,
+  #release-visual-organizations [data-panel="before-after"] .org-tangled path { marker-end: url(#arrow-ba); }
+  #release-visual-organizations .org-arrows text,
+  #release-visual-organizations .org-sequence-arrows text {
+    fill: var(--muted-foreground);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    text-anchor: middle;
+  }
+  #release-visual-organizations .org-dashed { stroke-dasharray: 5 5; }
+  #release-visual-organizations .org-lifelines path {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 6;
+  }
+  #release-visual-organizations .org-boundary rect {
+    fill: color-mix(in srgb, var(--muted) 22%, transparent);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    stroke-dasharray: 7 5;
+  }
+  #release-visual-organizations .org-boundary text {
+    text-anchor: start;
+  }
+  #release-visual-organizations .org-boundary-decision rect { fill: color-mix(in srgb, var(--viz-series-1) 6%, transparent); }
+  #release-visual-organizations .org-boundary-owner rect { fill: color-mix(in srgb, var(--viz-series-2) 6%, transparent); }
+  #release-visual-organizations .org-boundary-production rect { fill: color-mix(in srgb, var(--viz-series-5) 6%, transparent); }
+  #release-visual-organizations .org-exclusive path {
+    fill: none;
+    stroke: var(--viz-series-5);
+    stroke-width: 2;
+  }
+  #release-visual-organizations .org-exclusive text {
+    fill: var(--muted-foreground);
+  }
+  #release-visual-organizations .org-divider {
+    stroke: var(--border);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 6;
+  }
+  #release-visual-organizations .org-panel-title {
+    fill: var(--foreground);
+  }
+  @media (max-width: 520px) {
+    #release-visual-organizations .org-legend { gap: 8px; }
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('release-visual-organizations');
+    const buttons = Array.from(root.querySelectorAll('[data-view]'));
+    const panels = Array.from(root.querySelectorAll('[data-panel]'));
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const selected = button.dataset.view;
+        buttons.forEach((candidate) => {
+          const active = candidate === button;
+          candidate.setAttribute('aria-pressed', String(active));
+          candidate.classList.toggle('btn-primary', active);
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== selected;
+        });
+      });
+    });
+  })();
+</script>

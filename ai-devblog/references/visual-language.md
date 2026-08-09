@@ -90,8 +90,17 @@ an overview and one detail figure. Keep a stable reading axis across both.
 
 ## Canonical examples
 
-These are source examples, not screenshots. Preserve their organizational
-grammar and semantic color roles while replacing the content with article facts.
+Use [the exact tabbed organization gallery](../assets/release-visual-organizations.html)
+when one system benefits from swimlane, sequence, state-machine, boundary, and
+before/after views. It is the canonical interactive example: preserve its tabs,
+legend, palette roles, five diagrams, and accessible selected-state behavior
+while replacing labels and topology with article facts. When the user asks for
+this exact visual, commit or embed the gallery itself; do not substitute Mermaid
+approximations or a single static diagram.
+
+The examples below are lightweight source alternatives for articles that need
+only one static organization. Preserve their organizational grammar and
+semantic color roles while replacing the content with article facts.
 
 ### Authority flowchart
 
