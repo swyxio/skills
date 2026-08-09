@@ -1,6 +1,8 @@
 # Migration Audit Microsite
 
-End major migrations with a self-contained static HTML microsite.
+Use this optional artifact only when the user explicitly requests a migration
+microsite or a major migration genuinely needs a visual review surface. A
+normal refactor should end with a concise text report.
 
 ## Required Questions
 

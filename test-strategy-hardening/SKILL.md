@@ -1,11 +1,22 @@
 ---
 name: test-strategy-hardening
-description: Improve test architecture, diagnose flaky or nondeterministic tests, consolidate duplicated coverage, reduce fixture or suite cost, and design test selection. Use when the user explicitly asks to work on tests as a system. Do not trigger merely because ordinary implementation work needs a regression test.
+description: Diagnose or improve tests as a system, including flaky or nondeterministic suites, duplicated coverage, expensive fixtures, slow feedback, and test selection. Use only when the user explicitly makes test architecture or suite behavior the primary task. Do not trigger for ordinary implementation work, adding or fixing a regression test, resolving one product bug, or running existing checks.
 ---
 
 # Test Strategy Hardening
 
 Improve confidence per minute without inflating test count or ceremony.
+
+## Counterweight: confidence, not test inventory
+
+- Start from the decision the suite must support and the plausible defect it must catch.
+- Search for replacement coverage before adding a test. Delete or consolidate tests when confidence remains equivalent.
+- Do not create unit, integration, end-to-end, snapshot, fixture, and contract layers as a completeness ladder.
+- Prefer fixing product nondeterminism or simplifying the seam over building elaborate test harnesses around it.
+- Treat coverage percentage, test count, suite breadth, and green full-suite runs as signals, not goals.
+- Do not refactor unrelated tests, rewrite fixtures, add retries, expand CI matrices, or run global suites solely because test code was touched.
+- Preserve focused failure localization; deduplication is not valuable when it makes diagnosis harder.
+- Stop when the named suite problem is resolved and proportionally verified. Report remaining blind spots without filling them speculatively.
 
 ## Define the contract
 
@@ -54,7 +65,7 @@ During implementation, expand validation with risk:
 1. the changed or nearest focused test;
 2. related tests and affected package checks;
 3. cross-package contracts when a shared boundary changes;
-4. the full suite when repository policy or release risk requires it.
+4. the full suite only when repository policy or a shared high-risk boundary requires it.
 
 Never report a focused suite as proof that the full suite passed.
 

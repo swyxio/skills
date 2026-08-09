@@ -1,16 +1,27 @@
 ---
 name: vercel-production-cost-review
-description: Audit and reduce Vercel production spend across projects and monorepo zones. Use for periodic weekly or monthly cost reviews, unexpected bill spikes, Fast Data Transfer or bandwidth investigations, cache analysis, oversized route or asset diagnosis, abusive traffic, and post-remediation verification.
+description: Audit a defined Vercel production cost question using billing and usage evidence, then recommend or verify bounded remediations. Use only when the user explicitly asks for a Vercel cost review, unexpected bill or usage spike investigation, Fast Data Transfer analysis, or post-remediation savings verification. Do not trigger for ordinary Vercel deployment, generic performance work, routine caching changes, or optimizing one route without a cost question.
 ---
 
 # Vercel Production Cost Review
 
 Use this skill to turn Vercel usage into an evidence-backed remediation plan. Diagnose before changing code or firewall rules.
 
+## Counterweight: material cost before optimization
+
+- Start from the bill, usage delta, review window, and financial materiality. Do not optimize hypothetical or trivial spend.
+- Scope only the projects, zones, routes, and metrics needed to explain the cost question. Do not inventory every production surface by default.
+- Prefer Vercel billing and usage facts over proxy metrics. State plan or retention limits instead of manufacturing certainty.
+- Rank causes and investigate the smallest set that explains most of the material change.
+- Do not add telemetry, WAF rules, rate limits, cache layers, payload variants, asset pipelines, or architectural changes without evidence they address a material driver.
+- Prefer configuration or deletion over code. Preserve legitimate traffic and protocol behavior.
+- Separate diagnosis from remediation. Code edits, firewall publication, project configuration, deployment, and follow-up monitoring require the active request to authorize them.
+- A cost review may correctly conclude that current spend is expected or that no remediation is worth its complexity.
+
 ## Workflow
 
 1. **Establish scope and baseline**
-   - Confirm team, projects, production domains, monorepo zones, and review window.
+   - Confirm the relevant team, projects or zones, and review window.
    - Capture current total spend/usage and the previous comparable period.
    - Inventory Vercel project links and Root Directory settings before using project-scoped CLI commands.
 
@@ -23,7 +34,7 @@ Use this skill to turn Vercel usage into an evidence-backed remediation plan. Di
 3. **Diagnose before fixing**
    - Consider at least: abusive polling/scraping, oversized responses, oversized public assets, missing browser caching, missing CDN caching, dynamic/POST responses, duplicate middleware/function work, Next data payloads, and stale project configuration.
    - Distill to the 1–2 most likely causes.
-   - Add temporary privacy-safe request logs when method, tool/action, response bytes, user agent, or client distribution is unknown.
+   - Add temporary privacy-safe request logs only when the active request includes instrumentation and cheaper provider evidence is insufficient.
    - Measure representative response headers and compressed/uncompressed sizes.
 
 4. **Choose the right remediation**
@@ -39,7 +50,7 @@ Use this skill to turn Vercel usage into an evidence-backed remediation plan. Di
    - Stage and inspect firewall rules before publishing.
    - Preserve unrelated working-tree changes.
    - Test route patterns with a production build before deploying.
-   - Deploy the owning project and every zone that consumes shared cache/config helpers.
+   - Deploy only explicitly authorized owning projects and affected zones.
 
 6. **Verify impact**
    - Smoke critical routes, metadata, API/MCP protocol calls, redirects, and zone ownership.
@@ -56,15 +67,15 @@ Use this skill to turn Vercel usage into an evidence-backed remediation plan. Di
 - POST responses are normally not safely CDN-cacheable because the request body affects the result.
 - Runtime logs can contain both middleware and function entries for one request. Do not treat raw log rows as unique requests without checking source.
 
-## Cadence
+## Optional cadence
 
 **Weekly spike review**
 - Compare seven-day totals and top paths with the prior week.
 - Investigate new routes, sudden request-rate changes, and bytes/request regressions.
 - Confirm active firewall mitigations and recent deploy impact.
 
-**Monthly full review**
-- Review every production project/zone, not only the primary domain.
+**Monthly broader review**
+- Review the production projects or zones the user places in scope.
 - Audit large public assets, Next data/page payloads, API defaults, cache headers, project roots, and archived-site TTLs.
 - Update the baseline and prioritized savings backlog.
 

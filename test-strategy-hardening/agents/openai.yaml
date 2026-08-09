@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Strategy Hardening"
-  short_description: "Improve test architecture and reliability"
-  default_prompt: "Use $test-strategy-hardening to diagnose and improve this test system while keeping coverage focused, deterministic, and proportionate."
+  short_description: "Increase confidence while simplifying test systems"
+  default_prompt: "Use $test-strategy-hardening to solve the named test-system problem, prefer deletion and faithful boundaries, avoid test-layer inflation, and validate proportionally."

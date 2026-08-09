@@ -12,7 +12,7 @@ Prefer `rg`/`rg --files` and run these in parallel when possible:
 
 ## Plan Template
 
-Write a plan with these sections:
+Select only relevant sections; do not expand the task to fill this template:
 
 - Goal
 - Current State
@@ -32,7 +32,7 @@ Write a plan with these sections:
 
 ## Subagent Workstreams
 
-Use subagents for independent surfaces:
+When the user explicitly requests parallel work, subagents can cover independent surfaces:
 
 - API inventory and OpenAPI/agent docs.
 - Auth/permissions/API-key review.
@@ -59,7 +59,7 @@ Avoid making the frontend local sync layer the programmatic API. Server APIs sho
 
 ## API Requirements
 
-For every programmatic API:
+For a programmatic API with named consumers, consider only the requirements those consumers need:
 
 - Bearer API-key auth or equivalent.
 - Key hashing/storage, prefix display, last-used metadata, scopes, revocation.
@@ -72,7 +72,7 @@ For every programmatic API:
 
 ## Validation Checklist
 
-At minimum:
+Choose proportionally; this is not a mandatory minimum:
 
 - Lint/typecheck.
 - Unit tests for schemas, action functions, permission gates, idempotency, audit emission, and provider parsers.

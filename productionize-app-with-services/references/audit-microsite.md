@@ -1,6 +1,8 @@
 # Migration Audit Microsite
 
-Create a static, locally served microsite at the end of the productization run. Keep it honest and reviewable.
+Create this optional artifact only when the user explicitly requests it or a
+large productization migration genuinely needs a visual review surface. Use a
+concise text summary for ordinary work.
 
 ## Required Sections
 

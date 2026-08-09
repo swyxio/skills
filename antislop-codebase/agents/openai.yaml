@@ -1,4 +1,4 @@
 interface:
   display_name: "Antislop Codebase"
-  short_description: "Refactor slop repos into maintainable products"
-  default_prompt: "Use $antislop-codebase to analyze this repo, plan a behavior-preserving maintainability migration, execute it in validated slices, and produce a final migration audit microsite."
+  short_description: "Reduce demonstrated repository maintenance cost"
+  default_prompt: "Use $antislop-codebase to identify the smallest high-value structural cleanup, prefer deletion and existing conventions, preserve behavior, and validate proportionally."

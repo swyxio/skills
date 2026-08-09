@@ -1,6 +1,7 @@
 # Analysis Checklist
 
-Use this before planning or editing.
+Use only the sections relevant to the reported maintenance problem. This is a
+menu, not a requirement to inventory the entire repository.
 
 ## Repo Shape
 

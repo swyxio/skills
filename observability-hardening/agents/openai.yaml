@@ -1,4 +1,4 @@
 interface:
   display_name: "Observability Hardening"
-  short_description: "Make production behavior visible and debuggable"
-  default_prompt: "Use $observability-hardening to add privacy-safe logs, traces, metrics, dashboards, and operation visibility to this codebase."
+  short_description: "Answer named production questions with minimal telemetry"
+  default_prompt: "Use $observability-hardening to identify the unanswered production questions, reuse existing signals, add the cheapest privacy-safe telemetry, and remove noise."

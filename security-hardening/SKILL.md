@@ -1,17 +1,29 @@
 ---
 name: security-hardening
-description: Run a practical application security hardening pass on a software repo. Use when the user asks for appsec review, security audit, auth/session risk review, secrets handling, dependency security, SSRF/upload risks, CORS/CSRF, rate limits, input validation, unsafe logging, permission bypasses, security headers, or production security readiness.
+description: Audit or harden a software repository against a defined application-security threat surface. Use only when the user explicitly asks for an appsec or security review, a repository-wide security hardening pass, a threat-focused auth or permission audit, or when security posture is the primary task. Do not trigger for an ordinary auth bug, adding one rate limit or validation rule, routine dependency updates, generic production readiness, or unrelated implementation work that merely has security implications.
 ---
 
 # Security Hardening
 
 Use this skill for pragmatic appsec work that produces prioritized fixes and residual-risk notes. Do not turn it into a compliance theater exercise.
 
+## Counterweight: threat before control
+
+- Start with assets, trust boundaries, attacker capability, exposure, and plausible abuse paths. Do not apply the checklist uniformly.
+- Add or change a control only for a concrete reachable risk. Record when framework or provider defaults already cover it.
+- Prefer removing exposure, privilege, data, or code over adding middleware, policy layers, scanners, and monitoring.
+- Do not add rate limits, CORS/CSRF machinery, headers, runtime schemas, encryption, secret rotation, or dependency upgrades where the threat model does not require them.
+- Preserve one authorization source of truth; do not duplicate permission checks across artificial layers.
+- Avoid speculative findings based only on pattern matches. Confirm actual callers, deployment topology, and runtime behavior.
+- Keep fixes focused. Do not turn one vulnerability into a repo-wide security program, compliance project, dependency refresh, or release ceremony.
+- A scoped review may correctly conclude that no code change is needed. Report accepted and out-of-scope risk plainly.
+- Do not mutate production, rotate credentials, contact users, or change provider policy unless the active request explicitly authorizes it.
+
 ## Workflow
 
 1. **Map the attack surface**
-   - Identify auth/session model, roles/permissions, API routes, webhooks, file upload/download, provider calls, database access, background jobs, admin tools, client storage, and deploy config.
-   - Locate secrets, environment variables, token storage, logging, dependency entrypoints, and network egress.
+   - Identify only the assets, entrypoints, trust boundaries, privileges, storage, and egress relevant to the defined review.
+   - Trace plausible attacker paths through actual callers and deployment topology.
 
 2. **Build a risk-ranked plan**
    - Prioritize exploitable paths over theoretical issues.
@@ -22,12 +34,12 @@ Use this skill for pragmatic appsec work that produces prioritized fixes and res
    - Add or tighten authorization checks at server/action boundaries.
    - Validate untrusted input at external/API/provider boundaries.
    - Protect secrets and redact sensitive logs.
-   - Add rate limits, origin controls, CSRF/CORS policy, SSRF protections, upload constraints, and security headers where appropriate.
-   - Audit dependencies and package scripts for known risk and upgrade path.
+   - Add rate limits, origin controls, CSRF/CORS policy, SSRF protections, upload constraints, or security headers only where the mapped threat requires them.
+   - Audit dependencies and package scripts only within the reviewed attack surface.
 
 4. **Prove the fixes**
    - Add focused tests for permission bypasses, input rejection, dangerous URL/file cases, auth/session edge cases, and safe error/log payloads.
-   - Run dependency/security tools available in the repo ecosystem.
+   - Run focused dependency or security tools when their signal applies to the reviewed surface.
    - Document what could not be verified.
 
 5. **Report residual risk**
@@ -37,10 +49,10 @@ Use this skill for pragmatic appsec work that produces prioritized fixes and res
 
 ## Quality Bar
 
-- Every meaningful server mutation has an authorization story.
-- Secrets are not exposed in logs, client bundles, fixtures, or generated artifacts.
-- External inputs are validated before side effects.
-- Dangerous network/file operations have allowlists, size limits, and protocol checks.
-- Security tests prove at least the top bypass/failure cases.
+- Every reviewed server mutation has an authorization story.
+- Reviewed secrets are not exposed through reachable logs, clients, fixtures, or outputs.
+- Reviewed external inputs have threat-appropriate validation before side effects.
+- Reviewed dangerous network or file operations have threat-appropriate restrictions.
+- Focused tests prove the highest-risk changed bypass or failure cases.
 
 For the audit checklist, read [checklist.md](references/checklist.md).

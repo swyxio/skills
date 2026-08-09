@@ -1,5 +1,17 @@
 # Security Hardening Checklist
 
+Use only sections reached by the threat model. `Not applicable` is valid. Do
+not add a control merely because it appears in this checklist; first confirm a
+reachable asset, trust boundary, attacker path, and missing existing defense.
+
+## Counterweight
+
+- Reduce exposure, privilege, or retained sensitive data before adding machinery.
+- Verify framework and provider defaults before duplicating them.
+- Keep one authorization source of truth.
+- Avoid speculative pattern-match findings and unrelated dependency churn.
+- Do not rotate credentials or mutate production without explicit authorization.
+
 ## Authentication And Authorization
 
 - Session creation, renewal, revocation, cookie flags.
@@ -23,7 +35,7 @@
 
 ## Dependencies
 
-- Package manager audit.
+- Focused package manager audit when dependencies are in scope.
 - Lockfile review for unexpected packages.
 - Postinstall/build scripts.
 - Known CVEs, stale critical deps, abandoned packages.

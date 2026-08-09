@@ -1,4 +1,4 @@
 interface:
   display_name: "Security Hardening"
-  short_description: "Run a practical appsec hardening pass"
-  default_prompt: "Use $security-hardening to audit this repo for practical appsec risks, prioritize fixes, validate them, and report residual security risk."
+  short_description: "Review a defined appsec threat surface"
+  default_prompt: "Use $security-hardening to map the concrete threat surface, reuse existing defenses, fix only reachable material risks, and report scoped residual risk without compliance theater."

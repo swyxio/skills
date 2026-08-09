@@ -1,14 +1,16 @@
 # Product Principles
 
-Use these principles as defaults. Translate them into the local stack instead of copying implementation details blindly.
+Use this as a menu only after the user selects a capability. Do not apply every
+section as a default productization baseline. Prefer existing framework and
+provider features, and add no service without a named caller or operating need.
 
-## Audit Trail
+## Audit Trail — only when named actions require durable accountability
 
 - Record actor type: `user`, `system`, `rule`, and `api` so admins can distinguish human actions, automations, integrations, and background/system actions.
 - Make audit logs append-only. Do not expose update/delete operations for audit entries.
 - Include IP address and user agent where available and appropriate.
 - Restrict audit viewer endpoints and UI to owner/admin roles.
-- Add audit entries for every important product mutation: feature flag changed, webhook changed, API key created/revoked, AI title/status/label applied, rule changed, message sent, thread status changed, permission changed, token/provider state changed.
+- Add audit entries only for named actions whose accountability or support workflow requires them.
 
 ## Permissions
 
@@ -26,14 +28,14 @@ Use these principles as defaults. Translate them into the local stack instead of
 - Do not log private user content, secrets, full prompts, full email bodies, or tokens by default.
 - Enforce CORS/CSRF/session policies explicitly rather than inheriting framework defaults by accident.
 
-## Feature Flags
+## Feature Flags — only when rollout control is a selected need
 
 - Keep flag evaluation deterministic across requests. A simple default is `hash(subject:key) % 100 < rolloutPercentage`.
 - Store flags locally when the app must operate independently; design the interface so it can later swap to PostHog or another flag backend.
 - Capture flag exposure and admin changes in analytics/audit logs.
 - Surface flag status in admin UI and optionally public diagnostic docs when safe.
 
-## API-First Product Actions
+## Programmatic APIs — only for named non-UI callers
 
 - Keep browser local sync and programmatic APIs separate. Local-first sync is for UI reads and optimistic UX; external agents want stateless request/response APIs backed by the server database.
 - Add a framework-agnostic action layer for core mutations. REST, tRPC/internal RPC, command palette, jobs, and webhooks should call the same action functions where practical.
@@ -42,16 +44,16 @@ Use these principles as defaults. Translate them into the local stack instead of
 - Provide filtering, pagination, and bulk operations so agents do not need N+1 calls for common workflows.
 - Add idempotency keys for retried mutations, especially send/create/pay/provider actions.
 - Generate OpenAPI or equivalent machine-readable docs from shared schemas/contracts.
-- Provide a public unauthenticated `skill.md` or agent guide that explains auth, common workflows, idempotency, rate limits, and safety conventions.
+- Provide public agent documentation only when named external agents are supported consumers.
 
-## Observability And AI
+## Observability And AI — only for named operational or AI-product questions
 
 - Use PostHog or the local equivalent for product analytics, feature exposure, admin actions, AI events, evaluations, latency/error dashboards, and funnels.
 - For AI/LLM features, capture metadata by default: task, model, provider, latency, success/error, error class, confidence, input/output schema status, user apply/ignore. Do not capture raw content unless explicitly enabled.
 - Add cost/latency guardrails: timeout, max candidate counts, bounded prompt/input sizes, provider fallback, and per-user/team rate limits.
 - Expose useful AI state to users: disabled/configured states, progress/elapsed time, retry, cached results, confidence, and clear apply/ignore actions.
 
-## Product Management Surfaces
+## Product Management Surfaces — only for operations someone must perform
 
 - Add admin UI for API key creation/revocation, webhook delivery status, feature flags, audit logs, AI/provider status, and health/readiness where appropriate.
 - Add public docs for API/agent usage that do not require login and do not leak secrets.

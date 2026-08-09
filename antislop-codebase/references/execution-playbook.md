@@ -2,7 +2,8 @@
 
 ## Slice Order
 
-Prefer this order unless repo facts argue otherwise:
+Use only the slices needed for the demonstrated problem; do not execute this as
+a maturity ladder. Prefer this order when several slices are genuinely needed:
 
 1. Baseline tests, build, typecheck, and smoke.
 2. Minimal diagnostics/error handling needed to safely refactor hard-to-debug workflows.
@@ -12,11 +13,11 @@ Prefer this order unless repo facts argue otherwise:
 6. Server/API/provider consolidation with behavior-pinning tests.
 7. Styling migration by surface with visual checks.
 8. Test/e2e dedupe and quality pass.
-9. Final audit microsite.
+9. Optional audit artifact when explicitly requested.
 
 ## Refactor Rules Of Thumb
 
-- Keep public imports stable with compatibility barrels while moving internals.
+- Keep public imports stable only for named live consumers; otherwise update callers directly.
 - Extract pure logic before extracting stateful UI.
 - Name files by feature and behavior, not vague utilities.
 - Avoid pass-through prop blobs except stable domain objects.
@@ -63,7 +64,7 @@ Commit when:
 - broader typecheck/build/unit pass when practical
 - unrelated dirty work is excluded
 
-Deploy when:
+Deploy only when the active request includes deployment and:
 
 - production-shaped build/smoke passes
 - e2e/visual smoke passes for touched UI

@@ -1,12 +1,24 @@
 # Observability Hardening Checklist
 
+Use only signals needed to answer named operational questions. `Not
+applicable` is valid. Prefer provider-native or existing signals and delete
+noise before adding a telemetry type, pipeline, dashboard, or alert.
+
+## Counterweight
+
+- Every signal has a named consumer, question, and decision.
+- The cheapest sufficient signal is used; logs, metrics, traces, and analytics are not a required bundle.
+- Cardinality, volume, retention, privacy, latency, and on-call cost are bounded.
+- Alerts have an owner and concrete response.
+- External services, retention changes, dashboards, and deployment require explicit authorization.
+
 ## Signals
 
 - Structured logs with event name, route/action, status, duration, request/operation id.
 - Error classes and safe user/developer messages.
-- Metrics: latency, error rate, throughput, retry count, queue time, cost.
-- Traces/spans for multi-step operations and provider calls.
-- Product analytics for funnels and feature usage when appropriate.
+- Metrics selected for named reliability or cost questions.
+- Traces or spans only where multi-step ownership cannot be reconstructed more cheaply.
+- Product analytics only when product behavior, rather than engineering diagnosis, is in scope.
 
 ## Redaction
 

@@ -1,9 +1,22 @@
 # Vercel Cost Review Checklist
 
+Use only checks needed to answer the defined cost question. `Not applicable` is
+valid. Establish financial materiality first, scope the smallest explanatory
+surface, and do not mutate code, telemetry, firewall, configuration, or
+deployments without explicit authorization.
+
+## Counterweight
+
+- Provider billing and usage facts take precedence over proxies.
+- Investigate the few drivers that explain most material cost.
+- Do not optimize expected or trivial spend.
+- Prefer configuration or deletion over new machinery.
+- Treat code changes, WAF publication, deployments, and follow-up monitoring as separate authorized actions.
+
 ## Access and scope
 
 - [ ] Confirm `vercel whoami` and team scope.
-- [ ] List production projects and domains.
+- [ ] List only production projects and domains relevant to the question.
 - [ ] Inspect `.vercel/project.json` or `.vercel/repo.json`.
 - [ ] Confirm each monorepo project's Vercel Root Directory.
 - [ ] Record review period and comparison period.
@@ -76,7 +89,7 @@ Evaluate these independently:
 9. Are archived projects still using active-event TTLs?
 10. Is a Vercel project linked to the wrong Root Directory?
 
-Add temporary logs only for evidence still missing. Prefer:
+When instrumentation is explicitly authorized and cheaper evidence is insufficient, prefer:
 
 ```text
 route, method, action/tool, status, response_bytes,
@@ -100,8 +113,8 @@ Do not log request bodies, prompts, credentials, or raw personal data.
 
 ## Verification
 
-- [ ] Production build passes.
-- [ ] Deploy reaches `READY` and the intended domain/alias.
+- [ ] Production build passes when code or configuration changed.
+- [ ] An explicitly authorized deploy reaches `READY` and the intended domain or alias.
 - [ ] Critical route and metadata smoke tests pass.
 - [ ] API/MCP initialization and representative calls pass.
 - [ ] Firewall rejects or throttles the intended excess traffic.

@@ -38,7 +38,11 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 
 #### Kakuna Codebase Hardening Suite
 
-Use these skills for explicit hardening work: improve an existing codebase, add product services, then tighten safety, operability, and quality gates as needed.
+Use these opt-in skills only when the named hardening problem is the primary
+task. They are diagnostic tools, not a maturity ladder: select the smallest
+relevant skill, reuse existing controls, prefer deletion, and stop when the
+explicit problem is resolved. Ordinary implementation work should not trigger
+the suite merely because it will ship or could be made more robust.
 
 <table>
   <tr>
@@ -48,25 +52,25 @@ Use these skills for explicit hardening work: improve an existing codebase, add 
     <td valign="middle">
       <p><strong>Foundation</strong></p>
       <ul>
-        <li><a href="./antislop-codebase">antislop-codebase</a> — <strong>Structural cleanup/migration.</strong> Staged refactors for messy or prototype repos as they already are, with concurrent workers, better tests, smaller files, clearer module boundaries, and a final migration audit microsite.</li>
+        <li><a href="./antislop-codebase">antislop-codebase</a> — <strong>Structural cleanup/migration.</strong> Reduces demonstrated repository maintenance cost without imposing folder, file-size, compatibility, testing, or audit-artifact targets.</li>
       </ul>
       <p><strong>Productization</strong></p>
       <ul>
-        <li><a href="./productionize-app-with-services">productionize-app-with-services</a> — <strong>Operational/product hardening.</strong> Adds product services after the codebase is coherent enough to operate: audit trails, role-aware permissions, API keys, REST/OpenAPI/agent docs, PostHog instrumentation, feature flags, admin UX, deploy smokes, and a final audit microsite.</li>
+        <li><a href="./productionize-app-with-services">productionize-app-with-services</a> — <strong>Bounded productization.</strong> Adds only explicitly needed product services for named users and operators; it does not install a default SaaS maturity stack.</li>
       </ul>
       <p><strong>Safety</strong></p>
       <ul>
-        <li><a href="./security-hardening">security-hardening</a> — <strong>Practical appsec pass.</strong> Reviews auth/session risk, secrets, dependency exposure, SSRF/uploads, CORS/CSRF, rate limits, input validation, unsafe logging, permission bypasses, and security headers.</li>
+        <li><a href="./security-hardening">security-hardening</a> — <strong>Threat-scoped appsec.</strong> Fixes concrete reachable risks in an explicitly reviewed threat surface and reuses existing framework/provider defenses.</li>
       </ul>
       <p><strong>Operability</strong></p>
       <ul>
-        <li><a href="./observability-hardening">observability-hardening</a> — <strong>Production visibility.</strong> Adds privacy-safe structured logs, error classes, request IDs, traces, metrics, dashboards, alert thresholds, user-visible operation status, and debug paths.</li>
-        <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Safe ship gates.</strong> Defines env validation, deploy checklist, smoke tests, rollback path, feature flags, migration checks, production verification, and post-deploy monitoring.</li>
-        <li><a href="./vercel-production-cost-review">vercel-production-cost-review</a> — <strong>Recurring platform cost control.</strong> Audits Vercel spend across projects and zones, ranks Fast Data Transfer drivers, diagnoses caching, payload, asset, and abusive-traffic causes, and verifies safe remediations.</li>
+        <li><a href="./observability-hardening">observability-hardening</a> — <strong>Question-driven visibility.</strong> Uses the cheapest existing or new privacy-safe signal to answer named production questions without requiring every telemetry type.</li>
+        <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Minimal ship proof.</strong> Audits the smallest sufficient release controls, prefers authoritative provider facts, and removes redundant ceremony.</li>
+        <li><a href="./vercel-production-cost-review">vercel-production-cost-review</a> — <strong>Material cost diagnosis.</strong> Answers a defined Vercel billing question by investigating the few dominant drivers before authorizing any remediation.</li>
       </ul>
       <p><strong>Quality</strong></p>
       <ul>
-        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Test-system hardening.</strong> Used explicitly for test architecture, flaky tests, fixture cost, duplicated coverage, and suite selection—not ordinary regression-test work.</li>
+        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Confidence-per-minute.</strong> Solves explicit test-system problems through faithful boundaries, deterministic fixes, and deletion or consolidation—not test-layer growth.</li>
       </ul>
     </td>
   </tr>
