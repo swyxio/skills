@@ -1,4 +1,4 @@
 interface:
   display_name: "Design Apps with ImageGen"
-  short_description: "Prototype and visually match app designs"
-  default_prompt: "Use $design-apps-with-imagegen to explore, prototype, compare, and integrate this interface."
+  short_description: "Choose, implement, and visually match UI directions"
+  default_prompt: "Use $design-apps-with-imagegen to generate multiple UI directions, ask me to choose one, implement it, and critique the result against the selected design."
