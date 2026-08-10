@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cassandra"
+  short_description: "Evidence-backed independent organizational dissent"
+  default_prompt: "Use $cassandra to independently test the apparent consensus and surface only high-value dissent."
