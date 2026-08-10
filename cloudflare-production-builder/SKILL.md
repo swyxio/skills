@@ -55,6 +55,38 @@ Pause when the exact production target, current state, retry safety, or rollback
 target cannot be resolved. A blocker in an unrelated surface is not permission
 to broaden the operation.
 
+## Integrate preview and newly launched capabilities safely
+
+When a preview or newly launched Cloudflare capability materially improves the
+design, use it deliberately rather than trusting remembered APIs:
+
+1. Retrieve current first-party docs and changelog entries at action time. Note
+   the capability's maturity, launch date, documented limits, and production
+   support status.
+2. Inspect the installed package's `package.json`, README/examples, exports, and
+   `.d.ts` files. Installed types are the compilation contract; marketing docs
+   are not.
+3. Put the preview surface behind a narrow adapter so churn does not spread
+   through domain code. Keep a supported fallback or an explicit failure mode
+   when the capability is not production-suitable.
+4. Pin the exact package version during the proving release. Compile and build
+   immediately after wiring each preview primitive; do not defer integration
+   feedback until the full system exists.
+5. Inspect generated artifacts, not just source: Worker entrypoint, generated
+   Wrangler config, asset directories, binding names, Durable Object migrations,
+   and the path the release system will actually upload.
+6. Scan the final bundle for `.dev.vars*`, `.env*`, credentials, and unexpected
+   local files. Fail or scrub the build before packaging; a clean Git ignore is
+   not evidence that build output is clean.
+7. Record the exact version and local evidence separately from live evidence.
+   Do not claim production behavior until the exact uploaded artifact, bindings,
+   routes, migrations, and owning live path have passed smoke verification.
+
+Treat type casts between preview packages as an adapter concern and test the
+runtime seam. Structurally similar workspace, loader, or RPC types from different
+package versions can compile only after a cast while still disagreeing at
+runtime.
+
 ## Load references selectively
 
 - [primitive-selection.md](references/primitive-selection.md): use when the

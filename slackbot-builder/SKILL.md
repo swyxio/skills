@@ -64,6 +64,13 @@ Slack pagination/cutoffs, shared thread sessions, per-thread serialization,
 stateful routing, owned-resource catalogs, independently grounded writes,
 remaining-draft bulk approvals, and ephemeral-result publication.
 
+**Cloudflare implementation reference:** when the bot runs on Workers with D1,
+Durable Objects, Workflows, Queues, or managed fibers, read
+[cloudflare-durable-ingress.md](cloudflare-durable-ingress.md). It gives the
+concrete signed-ingress → durable-acceptance → fast-ack state machine, including
+the important distinction between an event being seen and its work being
+durably dispatched.
+
 ## Strong opinions
 
 **Universal invariants — true at every level** (the level-specific opinions live in
@@ -108,8 +115,10 @@ image-gen specifics → [image-generation.md](image-generation.md).
 2. Open the reference file for that level (and skim the one below it).
 3. If the bot is multi-turn or mutates external systems, read
    [stateful-agent-workflows.md](stateful-agent-workflows.md).
-4. Build the checklist for each level bottom-up; don't skip L0/L1 hardening to chase L3 features.
-5. Use the "Graduate when…" gate at the end of each file before moving up.
+4. If it runs on Cloudflare, read
+   [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md).
+5. Build the checklist for each level bottom-up; don't skip L0/L1 hardening to chase L3 features.
+6. Use the "Graduate when…" gate at the end of each file before moving up.
 
 ## Implementation bias: start boring
 
