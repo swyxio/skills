@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Playtest"
+  short_description: "Quick browser QA for visual products"
+  default_prompt: "Use $visual-playtest to run a concise browser playtest and report actionable UI bugs."
