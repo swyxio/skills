@@ -1,0 +1,4 @@
+interface:
+  display_name: "CEO Creator"
+  short_description: "Create an autonomous project CEO agent"
+  default_prompt: "Use $ceo-creator to create and align a CEO agent for this project."
