@@ -20,6 +20,7 @@ Read this before coding and before declaring visual completion. These are recurr
 | Empty demo data hides density problems | Does the layout survive realistic counts, long lists, comments, and status rows? | Use representative minimum, typical, and maximum fixtures. |
 | Positive mock data masks empty states | Is the real product blank, signed out, unsynced, or erroring? | Inspect both the aspirational populated state and truthful production states. |
 | Artwork or material treatment is silently omitted | Is the implementation perceptually flatter or less distinctive than the selected design? | Label asset-dependent traits during selection and explicitly build, adapt, or defer each one. |
+| Code-native bias flattens the design | Was a textured, tiled, illustrated, or organic treatment replaced with generic CSS gradients or SVG geometry? | Use ImageGen after direction selection to produce and test real assets when raster material is the faithful implementation. |
 | Generated artwork is impractical | Does an asset contain tiny text, UI chrome, or frequently changing state? | Prove one asset at real display size before committing to an asset-heavy direction. |
 | Typography is approximated | Do line breaks, hierarchy, and content density differ despite similar boxes? | Compare font family, size, weight, leading, measure, and actual wrapping. |
 | Sticky and scroll regions are untested | Do rails become enormous preambles or cover content? | Measure scroll containers and sticky offsets at every target viewport. |
@@ -34,7 +35,7 @@ Read this before coding and before declaring visual completion. These are recurr
 
 ## Adding a lesson
 
-Append only failures observed in a real run that generalize beyond one project. Use this form:
+Do not append while running this design skill. Propose generalized candidates in the handoff; update the ledger only in a separately authorized skill-editing task. Use this form when an update is approved:
 
 ```text
 | <general failure mode> | <fast observable check> | <specific prevention rule> |

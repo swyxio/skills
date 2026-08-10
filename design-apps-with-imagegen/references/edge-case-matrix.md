@@ -11,7 +11,8 @@ Use this matrix to choose representative states before integration. Add product-
 | Access | signed out, expired session, insufficient permission, read-only, feature unavailable |
 | Inputs | pristine, focused, valid, invalid, disabled, submitting, submitted, interrupted |
 | Overlays | menu, tooltip, popover, drawer, modal, nested confirmation, escape or outside-click dismissal |
-| Accessibility | keyboard-only, visible focus, zoomed text, reduced motion, high contrast, screen-reader naming |
+| Minimum quality bar | visible and reachable focus, zoomed text, contrast, overflow, asset weight, layout stability |
+| Proportional accessibility | keyboard-only, reduced motion, high contrast, screen-reader naming, coarse pointers |
 
 ## Display sizes
 

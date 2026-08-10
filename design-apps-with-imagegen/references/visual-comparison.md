@@ -22,6 +22,8 @@ Capture at minimum:
 
 Use product-specific breakpoints when they reveal more meaningful transitions.
 
+Do not complete the critique from a desktop screenshot alone. Inspect mobile and iPad compositions visually in every correction round; responsive assertions or resized DOM geometry are supporting evidence, not substitutes.
+
 ## Compare in this order
 
 1. Information hierarchy and primary action
@@ -32,7 +34,8 @@ Use product-specific breakpoints when they reveal more meaningful transitions.
 6. Surfaces, borders, shadows, and depth
 7. Iconography, imagery, and material details
 8. Expanded menus, settings, and state transitions
-9. Keyboard, touch, and accessibility affordances
+9. Focus visibility and reachability, zoom, contrast, overflow, and touch affordances
+10. Asset weight, layout stability, and obvious rendering-performance risks
 
 ## Delta ledger
 

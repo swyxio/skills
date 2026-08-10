@@ -12,8 +12,9 @@ Input images: <label each as style reference, geometry reference, or current imp
 Style/medium: shippable product UI, not concept art
 Composition: <named viewports and expanded states>
 Shared invariants: <exact counts, rules, controls, and behavior that must not change>
-Variants: <two to four materially different interaction models>
-Constraints: practical touch targets; readable copy; no invented features; no watermark
+Open product questions: <behavior, navigation, defaults, workflow, or capability proposals invited>
+Variants: conservative refinement; structural rethink; bold product direction; purposeful wildcard
+Constraints: practical touch targets; readable copy; distinguish proposals from invariants; no watermark
 ```
 
 ## Rules
@@ -24,17 +25,20 @@ Constraints: practical touch targets; readable copy; no invented features; no wa
 - Generate separate calls for distinct assets or surfaces. Do not rely on one giant contact sheet for final asset production.
 - Keep preview-only studies under the generated-image path. Copy selected project-bound assets into the project or skill before referencing them.
 - Inspect every result for factual drift. Common failures include invented menu items, missing controls, impossible navigation, contradictory toggle states, misleading text, and inconsistent counts.
+- Treat plausible new controls or behaviors as proposals to include in the numbered confirmation gate, not as errors to implement silently.
 - Correct one factual or visual issue per edit where practical; restate every invariant that must remain unchanged.
 
 ## Asset-feasibility study
 
-When a visual direction depends on raster assets:
+When a visual direction depends on raster assets, or when code-native approximations would flatten its material character:
 
 1. Generate one representative asset at its real usage scale.
 2. Test it on light/dark states and at mobile/desktop density.
 3. Check whether the look can be repeated consistently for the full required set.
-4. Prefer code-native rendering if the generated asset would contain small text, UI chrome, simple geometry, or a frequently changing state.
-5. Save only the selected project-bound version; keep discarded explorations outside the repository.
+4. Test seamless tiles for visible edges and illustrations for cropping at every target aspect ratio.
+5. Check resolution, high-density rendering, compression, theme compatibility, and asset weight.
+6. Prefer code-native rendering if the generated asset would contain small text, UI chrome, simple geometry, or a frequently changing state. Prefer raster assets for texture, organic variation, illustration, and decorative material detail.
+7. Save selected project-bound assets in the project's established asset location; keep discarded explorations outside the repository.
 
 ## Direction-selection checklist
 
