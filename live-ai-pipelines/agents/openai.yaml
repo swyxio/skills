@@ -1,0 +1,4 @@
+interface:
+  display_name: "Live AI Pipelines"
+  short_description: "Build resilient live-updating AI workflows"
+  default_prompt: "Use $live-ai-pipelines to design or implement a resumable structured workflow with live progress, partial previews, and atomic final artifacts."
