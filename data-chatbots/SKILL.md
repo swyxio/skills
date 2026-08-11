@@ -66,17 +66,30 @@ The operation applied must have the same scope as the operation reviewed.
 Web, Slack, and email are adapters over the same orchestration core. Load only
 the resource needed by the requested surface or failure mode:
 
+- [production-incidents.md](production-incidents.md) for the production failure
+  narratives behind the write, dedupe, outcome, indexing, bulk, and classifier
+  safeguards;
+- [validation-and-release-checklist.md](validation-and-release-checklist.md)
+  when adding operations or fields, changing validation/apply, or preparing a
+  mutation release;
 - [test-cases.md](test-cases.md) for acceptance scenarios and regressions;
+- [proposal-review-ux.md](proposal-review-ux.md) for per-turn proposal cards,
+  bulk review, edited drafts, statuses, and cross-turn persistence;
 - [audit-log.md](audit-log.md) for opt-in history and long-running audit work;
 - [email-surface.md](email-surface.md) for inbound email authentication,
   idempotency, threading, and durable handoff;
+- [slack-surface.md](slack-surface.md) only when Slack needs inline help, model,
+  advanced, or audit controls over the shared orchestration core;
 - [observability.md](observability.md) for tracing and human feedback;
 - [surface-ux.md](surface-ux.md) for a floating/dockable copilot panel; and
-- [tiered-operation-harness.md](tiered-operation-harness.md) only after an MVP
-  demonstrates that operation-surface duplication is the actual problem.
+- [tiered-operation-harness.md](tiered-operation-harness.md) for the maturity
+  progression from bespoke hot paths to gated composable primitives and
+  read-only audit, only after an MVP demonstrates that operation-surface
+  duplication is the actual problem.
 
-The samples are illustrative patterns, not a project contract. Inspect their
-callers before copying them and adapt them to the product's existing authority.
+The copyable patterns are indexed in [samples/README.md](samples/README.md).
+They are illustrative, not a project contract: inspect their callers before
+copying them and adapt them to the product's existing authority.
 
 ## Focused test minimum
 

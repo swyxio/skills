@@ -40,6 +40,14 @@ Use as acceptance criteria when building or reviewing a copilot. Each case shoul
 - **Setup:** Draft pending; user says "no don't use sponsor hold slot."
 - **Expect:** New plan respects rejection even if Ignore wasn't clicked (best-effort via message; Ignore is still the source of truth for status).
 
+### 1.6 Apply failed — follow-up must diagnose, not repeat
+
+- **Setup:** User clicks Apply; the write fails a version, validation, or database constraint.
+- **State:** Canonical data unchanged; attempt outcome recorded as `FAILED` with a bounded reason before the error returns.
+- **UI:** The originating proposal card remains visible with an Apply failed status and useful error.
+- **Session:** `[Apply FAILED …]` is authoritative, even if earlier assistant prose was optimistic.
+- **Bot must:** diagnose, look up current state, or propose a corrected operation; it must not emit the identical rejected draft as if it were merely pending.
+
 ---
 
 ## 2. Voice & copy

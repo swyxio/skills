@@ -1,6 +1,8 @@
 # Copilot surface UX (panel sizing, hotkeys, ergonomics)
 
-How the copilot *presents itself* — distinct from the draft→apply data-flow UX in `SKILL.md` (queuing, cards, versioning). This is the floating/dockable panel, its summon hotkey, and how it shares screen space with the app it edits.
+How the copilot *presents itself*—distinct from the draft→apply review flow in
+[proposal-review-ux.md](proposal-review-ux.md). This is the floating/dockable
+panel, its summon hotkey, and how it shares screen space with the app it edits.
 
 ## Floating + dockable, not a fixed sidebar
 
