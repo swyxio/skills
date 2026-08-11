@@ -1,442 +1,156 @@
 # Deployments and migrations
 
-## Release identity
+Use this reference for Cloudflare-specific deployment, binding, D1, and Durable
+Object behavior. Apply only the sections relevant to the requested change. This
+is not a prescribed release architecture or mandatory checklist.
 
-A production outcome should be attributable to an execution tuple, not merely a
-source commit:
+Cloudflare behavior changes over time. Retrieve current first-party docs and
+inspect the installed Wrangler schema before relying on command syntax,
+lifecycle rules, limits, or retention.
 
-- exact source SHA;
-- manifest/configuration digest;
-- build image and toolchain digest;
-- compiler, policy, and compatibility versions;
-- Worker script/version ID;
-- Durable Object class lifecycle state;
-- binding manifest;
-- migration ledger/schema version;
-- R2 artifact/manifest digest;
-- route, domain, service, namespace, and provider identities.
+## Worker configuration and deployment
 
-Exact-source execution is necessary but insufficient if an old Worker, image,
-binding set, or compatibility date actually ran.
+Resolve the account, Worker name, Wrangler environment, routes or domains, and
+resources affected by the change. A Wrangler Worker configuration minimally
+needs a name, entry point, and compatibility date.
 
-## Preflight
+Check each target environment directly. Bindings, variables, and secrets are
+non-inheritable Wrangler fields and are not automatically copied from the
+top-level configuration into an environment.
 
-Before a production change:
+For affected configuration, verify:
 
-1. Resolve the exact account, environment, script, database, bucket, namespace,
-   domain, and route.
-2. Verify authentication and least-privilege permissions.
-3. Start from a clean checkout of the intended commit and rebuild generated
-   assets. Never deploy ignored/stale build output.
-4. Inspect current deployed versions and bindings.
-5. Compare actual bindings and variables against a checked-in required-binding
-   contract.
-6. Inspect compatibility date/flags and current product support.
-7. Run unit, type, migration, build, and staging/remote integration checks
-   appropriate to risk.
-8. Capture the rollback target and database recovery evidence.
+- required binding names and resource kinds;
+- referenced resources in the target account;
+- compatibility date and flags; and
+- intentional repository- versus dashboard-managed values.
 
-## Binding contract
+Do not put secret values in checked-in variables or diagnostic output.
 
-Bindings are not incidental environment plumbing. They are part of the program.
+Workers Versions and Deployments can separate uploading a version from
+assigning traffic. Use that separation when useful, but do not assume every
+topology provides a pre-traffic runtime probe. A successful upload proves only
+that Cloudflare accepted a version.
 
-- Validate required binding names and kinds before traffic switches.
-- Feature-enabled plus missing binding is an outage: fail closed and make it
-  observable.
-- Wrangler environments do not necessarily inherit bindings. Inspect each target
-  environment explicitly.
-- Verify service bindings and runtime dispatch paths, not only declarations.
-- Health checks should report release identity and missing binding names without
-  exposing secrets.
-- Keep deployment configuration canonical; avoid divergent manual dashboard and
-  repository sources of truth.
+When diagnosing a release, distinguish `version uploaded`, `traffic assigned`,
+`expected version active`, and `live route works`. Source SHAs, build digests,
+receipts, generations, and external release state machines are optional
+application concerns rather than Cloudflare requirements.
+
+## Bindings
+
+Bindings are part of a Worker's runtime contract, but Cloudflare does not know
+which ones the application requires. Validate application-required names and
+inspect each environment independently. For service bindings and Durable
+Objects, check the target Worker or class as well as the local binding name.
+
+A declaration does not prove the application path works. Exercise an affected
+binding through its owning path after deployment. Diagnostics may report
+missing binding names, but must not expose secrets.
 
 ## D1 migrations
 
-Use a forward-only, inspectable migration discipline:
+Wrangler orders D1 migration files and records applied migrations in D1's
+migration table. Keep them under version control and inspect the pending list
+before applying migrations remotely.
 
-- one canonical numbered migration directory;
-- reject duplicate numbers and divergent histories;
-- test a clean database and realistic populated upgrade fixtures under D1
-  transaction semantics;
-- prefer additive columns/tables/indexes and compatibility windows;
-- precheck exact expected schema before apply;
-- stop on partial or unexpected state;
-- capture a Time Travel bookmark or independently retained export before writes;
-- apply using the resolved production database ID/account;
-- verify the migration ledger and exact schema afterward;
-- keep every currently live Worker, runner, Workflow, and service-binding
-  consumer compatible with each intermediate schema;
-- prefer a forward repair to routine destructive rollback.
+D1 uses SQLite semantics with foreign-key enforcement during migrations.
+`PRAGMA foreign_keys = OFF` is not a general escape inside the migration
+transaction. Use `PRAGMA defer_foreign_keys = ON` when documented ordering
+requires deferred checks; it does not disable cascade actions.
 
-### D1 execution and test fidelity
+Test in proportion to risk. Additive changes usually need representative data
+and application queries. Rebuilds, renames, drops, or constraint changes should
+also cover populated relationships, indexes, triggers, and views. Verify the
+resulting schema and affected live query path.
 
-D1 runs every query and migration inside an implicit transaction with foreign
-keys enabled. `PRAGMA foreign_keys = OFF` cannot disable enforcement inside that
-transaction. Use `PRAGMA defer_foreign_keys = ON` only to defer checks until the
-transaction ends; it does not suppress `ON DELETE CASCADE` actions.
+Old and new Worker versions can overlap during rollout. Keep both compatible
+with the intermediate schema when that overlap matters. Expand/contract is a
+useful technique for such changes, not a Cloudflare requirement for every
+migration.
 
-Before applying a migration:
+### Recovery and ambiguous results
 
-1. Run the migration as one transaction with foreign keys enabled.
-2. Seed a production-shaped fixture with populated parent/child relationships,
-   triggers, implicit `UNIQUE` indexes, views, and non-null historical variants.
-3. Inspect `pragma_foreign_key_list`, `pragma_index_list`, `sqlite_master`, and
-   live query dependencies before dropping or renaming schema.
-4. Prove atomic rollback by forcing a late statement to fail and confirming no
-   earlier statement persisted.
-5. Run `PRAGMA foreign_key_check`, exact schema comparison, and ledger checks
-   after success.
-6. For high-risk contraction, execute the same migration against a disposable
-   remote D1 canary before production.
+D1 Time Travel is enabled automatically on supported production-backend
+databases, with retention depending on the plan. Record a suitable bookmark or
+other recovery point before a destructive or difficult-to-repair migration.
+Restoring production data is a separate destructive operation requiring clear
+authorization.
 
-Do not use SQLite CLI success as D1 proof unless the harness reproduces those
-semantics. Do not use D1's `meta.changes` as an exact compare-and-swap result:
-it is a total-change indication and can include trigger writes. Read and verify
-the authoritative target row, generation, or ref after mutation.
+A timeout does not prove a write failed. Inspect the migration list, schema, or
+affected application state before retrying. The exact idempotency design belongs
+to the application.
 
-### Runtime/schema compatibility and self-hosting cutovers
+`wrangler d1 export` has important limits:
 
-Removing obsolete compatibility code from the target architecture does not make
-its database schema safe to remove while an older runtime is still live. Use a
-bounded expand/activate/contract sequence:
+- it blocks other database requests while running;
+- full export does not support virtual tables such as FTS5; and
+- numeric values are subject to documented JavaScript precision limitations.
 
-1. Inventory every deployed API, runner, Workflow, cron, service binding, and
-   rollback version that reads or writes the affected schema.
-2. Expand additively and backfill with fenced, idempotent writes.
-3. Release a version that works with the expanded schema and no longer depends
-   on the object scheduled for removal.
-4. Exercise the owning live path, including service bindings and asynchronous
-   work, and verify the exact version and data state.
-5. Remove or disable rollback targets that still require the old schema, or
-   retain the schema until their compatibility window closes.
-6. Contract the obsolete schema in a later migration and prove its absence.
-
-For a self-hosting control plane, add a bootstrap acceptance test: the currently
-live version must be able to apply the expand migration and successfully release
-its successor. Never apply a contraction that disables the only allowed release
-path before that successor is active.
-
-Permanent backward compatibility is not required. Temporal compatibility with
-currently live and approved rollback versions is required. An empty read-only
-compatibility view may be used only as an explicitly approved incident bridge
-when its columns and zero-row behavior are proven sufficient, all writes fail,
-and it has an owner, expiry, rollback command, and verified removal gate. Do not
-design a normal release around such a view.
-
-#### D1 contraction gate
-
-Before removing or renaming any D1 object, write a compatibility matrix for
-every active and retained rollback binary. Include API Workers, runners,
-Workflows, cron jobs, service bindings, and maintenance tools:
-
-| Binary | Reads | Writes | Candidate schema | Allowed to contract? |
-| --- | --- | --- | --- | --- |
-| live API `v41` | `deploy_releases` | `deploy_outbox` | passes | yes |
-| rollback runner `v39` | `site_deployments` | lock UPSERT | fails | no |
-
-The contraction gate passes only when every listed binary works against the
-candidate schema or has been removed from the live and rollback sets. Record a
-schema epoch range such as `min_schema=71, max_schema=73` in each release
-contract so activation and rollback can reject incompatible combinations.
-
-Compile or prepare every SQL statement from each exact deployed bundle against
-a disposable database with the candidate schema. Exercise uncommon and
-apparently unreachable branches: SQLite resolves missing tables and columns in
-`COALESCE`, subqueries, triggers, and views before runtime branch selection.
-Inspect generated columns and hidden columns with `PRAGMA table_xinfo`, not only
-`table_info`.
-
-Treat writable bridges as schema dependencies, not harmless compatibility:
-
-```sql
--- Unsafe bridge: reads may work, but the old writer still cannot UPSERT it.
-CREATE VIEW site_deployments AS SELECT * FROM deploy_releases WHERE 0;
-INSERT INTO site_deployments(id) VALUES (?) ON CONFLICT(id) DO UPDATE SET id=id;
-```
-
-SQLite cannot use a normal view as an UPSERT target. Do not add triggers or
-dual-write shims to prolong an obsolete writer. Keep the old table through the
-activation window, replace the writer, verify the exact new binaries remotely,
-then remove the table in a separate contraction migration and release.
-
-Minimum contraction canary:
-
-1. Start from a production-shaped pre-expand fixture.
-2. Apply the expand migration and run both old and new binaries.
-3. Activate the new binaries; run the real outbox/Workflow/runner path.
-4. Apply contraction; prove only the new binaries remain eligible.
-5. Exercise release, reconciliation, activation, and compensation through the
-   public or service-bound path using exact version IDs.
-
-Do not combine expand and contract in one migration or release. A source build
-or local harness is insufficient when a retained live binary executes different
-generated SQL, bindings, or asynchronous paths.
-
-If production schema exists but the migration ledger does not, never blindly
-replay migrations. Adoption requires:
-
-1. pinned account/database identity;
-2. independently retained recovery evidence;
-3. exact comparison against the canonical schema;
-4. dry-run output;
-5. an idempotent ledger-only change;
-6. post-read verification.
-
-Any mismatch is an incident, not an invitation to force the ledger.
-
-### D1 command identity and ambiguous outcomes
-
-`wrangler whoami`, database listing, and token scope output do not prove that the
-exact target operation will succeed. Before writes, pin the account and database
-ID, inspect `d1 info`, and run a harmless query against that database. Treat a
-failure of the exact query path as unresolved even if account-level commands
-succeed.
-
-Retry read-only probes only with a small bound and preserve the first provider
-error. Do not blindly retry a write after a timeout, transport failure, 5xx, or
-unexpected response envelope: the write may have committed. Reconcile the
-authoritative row, migration ledger, ref, idempotency receipt, and relevant
-provider state first. Retry only the same fenced logical operation when that
-readback proves it is still pending.
-
-For application mutations that must commit together, use a D1 batch or one
-database transaction boundary and test rollback on a failing final statement.
-Migration tooling must parse successful result arrays and provider error objects
-without converting provider failures into JSON-shape or authentication guesses.
-
-### D1 recovery evidence and the export trap
-
-Prefer a Time Travel bookmark for routine pre-migration recovery evidence. Time
-Travel is always enabled on supported production-backend databases, retrieving
-a bookmark is non-blocking, and a restore can return the database to the
-recorded point if explicitly authorized.
-
-Store a recovery receipt containing the exact account ID, database ID,
-bookmark, retrieval time, Wrangler version, and, for timestamp-derived
-bookmarks, the exact timestamp string used. Re-query the same timestamp and
-require the same bookmark before mutation; do not reconstruct or round the
-timestamp later. Treat restore as a separate destructive action requiring
-explicit approval and an undo bookmark.
-
-Do not treat `wrangler d1 export` as a harmless backup command:
-
-- a running export blocks other requests to that database;
-- full export is unsupported when the database contains virtual tables,
-  including FTS5;
-- an export may begin blocking queries before the provider reports that a
-  virtual table makes it unsupported;
-- Wrangler or the API may return an error while the backend export job is still
-  cancelling, so require both direct D1 reads and application health to recover
-  before continuing.
-
-Before any production export, query `sqlite_master` for virtual tables. If any
-exist, prohibit a full export. If an offline archive is truly required, use a
-planned maintenance window, export ordinary authoritative tables individually,
-and treat FTS indexes as rebuildable derived data. Consider isolating
-rebuildable search indexes in a separate D1 database.
-
-Migration automation must parse both successful Wrangler result arrays and
-provider error objects. It should stop before writes, report the provider error
-directly, and poll bounded health/read checks rather than misreporting a JSON
-shape error. Never retry writes merely because an export-related query failed.
+Prefer Time Travel for routine short-term recovery. Use export only when its
+limitations fit the database and operational window.
 
 ## Durable Object lifecycle
 
-Treat Durable Object deployment as a distinct surface:
+Durable Object lifecycle configuration is distinct from ordinary Worker code
+upload. Check current documentation before changing class names, storage
+backends, ownership, or lifecycle declarations.
 
-- class/export declaration;
-- storage backend;
-- binding name and class name;
-- environment-specific binding;
-- namespace identity;
-- lifecycle migration/export reconciliation;
-- referencing scripts;
-- endpoint that actually touches the object;
-- tail-log evidence.
+Under the current `exports` model:
 
-Check current Cloudflare semantics before editing. Durable Object class lifecycle
-configuration has changed over time. Current docs distinguish the newer
-`exports` model from legacy migration arrays, constrain version uploads and
-gradual deployments around lifecycle changes, and may prevent rollbacks across
-those changes.
+- `exports` and the legacy `migrations` array are mutually exclusive;
+- after adopting `exports`, a Worker cannot return to legacy migrations;
+- `wrangler versions upload` cannot apply lifecycle changes;
+- lifecycle changes require `wrangler deploy`;
+- gradual deployments do not support `exports` lifecycle changes;
+- rollback cannot cross a Durable Object lifecycle change; and
+- an existing namespace's storage backend cannot change in place.
 
-Deploying new Durable Object or container code can reset active instances.
-Classify reset errors, drain or gate new admissions, verify the exact image and
-toolchain, and only declare readiness after a deep probe.
+Existing legacy configurations should follow the current Cloudflare migration
+guide rather than mechanically replacing their lifecycle declarations.
 
-## Multi-surface rollout and service-binding handoffs
-
-Treat a Cloudflare application release as a state machine across independently
-converging surfaces. A Worker version becoming active does not prove that its
-container image, toolchain, service-binding target, schema, route, or stateful
-instance is ready. Provider traffic percentages and an HTTP 200 are evidence
-about only the surface they directly observe.
-
-For every release-sensitive service-binding handoff:
-
-1. Persist expensive or non-replayable input before calling the bound service.
-   Prefer immutable R2 objects or a durable operation record over request-local
-   memory.
-2. Give the logical operation a stable idempotency key derived from its exact
-   input generation. Make duplicate execution converge on the same result.
-3. Classify transport failures, throttling, and 5xx responses as potentially
-   transient. Honor a bounded `Retry-After` when supplied. Treat validated 4xx
-   contract or authorization failures as terminal.
-4. Retain staged input during transient retries. Delete it only after a receipt
-   proves the expected identity, digest, byte count, or generation; after a
-   terminal error; or after the explicit recovery window is exhausted.
-5. Reconcile before retrying any mutation with an ambiguous outcome. A timeout
-   does not prove the callee failed before committing.
-6. Mutate authoritative pointers or user-visible state only after the receipt
-   validates. Never convert a normal rollout transition into a corruption or
-   validation diagnostic.
-
-Do not use one global readiness boolean for every workload. Define admission
-classes explicitly, for example:
-
-| Control state | Long-running jobs | Short idempotent ingest | Deep verification |
-| --- | --- | --- | --- |
-| `ready` with exact identity | admit | admit | available |
-| `draining` with exact old identity | reject | admit when safe | available |
-| `verifying` successor | reject | caller retains and retries | in progress |
-| identity mismatch or `failed` | reject | reject/reconcile | failed |
-
-The exact classes depend on the application, but the distinction must be
-deliberate. Draining exists to stop work that would prevent or outlive a safe
-cutover; it should not create an unrelated availability outage.
-
-Test the rollout matrix, not only steady state. Include the old exact version
-draining, the new version verifying, container/image lag after Worker traffic
-activation, transient service-binding 429/5xx/transport failure, retry after an
-ambiguous response, rollback, and exact-identity mismatch. Assert that staged
-input survives transient attempts and that authoritative state changes once.
-
-Correlate deployment generation, caller request ID, operation/idempotency ID,
-target Worker version, observed container/toolchain identity, attempt number,
-delay, and sanitized reason. A routine deployment should recover transparently
-or return an explicit maintenance diagnostic; it must not masquerade as data
-corruption.
-
-### Write-once build artifacts are not another release controller
-
-Do not automatically model every independently created provider resource as a
-durable release state machine. For a SHA-derived image, private host Worker,
-Durable Object namespace, container application, or zero-traffic Worker
-version, use bounded build-time preparation when all of the following hold:
-
-- its name or tag is deterministically derived from the exact source/build
-  identity;
-- the artifact is write-once after successful creation;
-- no user-visible traffic or authoritative application pointer selects it yet;
-- provider readback can prove its complete immutable configuration; and
-- one later immutable pointer change selects or restores the complete runtime.
-
-For these artifacts, reconciliation means:
-
-1. Attempt creation once.
-2. Read authoritative provider state after success or ambiguity.
-3. Adopt only an exact match.
-4. Fail closed on absence, partial creation, ambiguity that readback cannot
-   resolve, or any identity/configuration mismatch.
-5. Never modify the conflicting artifact in place or resume it through a new
-   controller, current-version pointer, fence exchange, or manual lane-clear
-   ceremony.
-
-Keep build-time receipts as evidence attached to the deployable version. They
-do not become active-version authority. Publication code should not build an
-image, deploy or roll a container application, create a namespace, or repair a
-host. It validates the ready immutable target, conditionally changes the one
-traffic-owning pointer, runs topology-appropriate generic health, and records
-success or restores the recorded prior pointer.
-
-For example, a stable Worker version may bind a Durable Object class to a
-private, generation-specific host Worker whose container application is pinned
-to an image digest. The private host has no route, workers.dev exposure,
-preview URL, or scheduled trigger and is prepared while unreferenced. The
-stable Worker deployment is the publication authority. Restoring its prior
-version restores the prior binding target; publication and rollback must not
-separately mutate the host application or image.
-
-If provider topology cannot exercise a private artifact before publication,
-do not expose it publicly merely to manufacture a readiness probe. Prove the
-built image/toolchain locally, verify the complete unreferenced provider
-configuration, and make the first owning live-path deep probe a post-pointer
-health gate with exact rollback on failure. State that evidence boundary
-explicitly; application status or CLI success alone is not a live runtime
-probe.
-
-## Staged release
-
-When supported:
-
-1. upload without switching traffic;
-2. inspect version metadata, bindings, and health;
-3. run direct/service staging probes;
-4. verify required external resources;
-5. switch controlled traffic;
-6. run live hostname smoke;
-7. observe logs and metrics;
-8. expand only after conformance fixtures pass.
-
-Keep permanent fixtures that exercise static serving, dynamic HTTP, state,
-realtime, authorization, rollback, and failure paths. Run them after every
-control-plane, runtime, edge, image, or provider rollout.
+Durable Objects can restart during deployments and ordinary runtime operation.
+A new calling Worker may also temporarily reach an older Durable Object
+instance. Code should tolerate documented restarts and mixed-version behavior.
+Exercise the object when a release changes its interface, storage behavior, or
+binding.
 
 ## Rollback
 
-Separate:
+A Worker rollback sends traffic to a previously published Worker version. It
+does not rewind D1, KV, R2, Queues, Durable Object data, or other resources.
 
-- code/version rollback;
-- route or active-pointer rollback;
-- artifact rollback;
-- Durable Object lifecycle rollback;
-- schema/data recovery;
-- state compatibility;
-- cache purge;
-- access/suspension propagation.
+Cloudflare may reject rollback across a Durable Object lifecycle change or when
+an older version's required resource no longer exists. Published rollback
+history is finite, so check current limits and target availability.
 
-Pointer rollback to an immutable artifact should not rebuild. Mutable state
-usually persists across code rollback; never imply otherwise. A stateful release
-needs an explicit compatibility contract.
+For stateful changes, determine whether the older Worker can use the current
+schema and resources, whether lifecycle changes prohibit rollback, and whether
+separate data recovery would be required. Retain old resources only when an
+explicit rollback plan depends on them.
 
-During a bootstrap or topology cutover, preserve the exact old Worker version,
-binding target, Durable Object namespace, container application, and image when
-that combination is the recorded rollback target. Do not update the old
-application to resemble the successor: doing so destroys the rollback evidence
-even if the old Worker version still exists. This preservation is a bounded
-compatibility window, not a permanent dual-running design. After the successor
-has passed live verification and the agreed rollback proofs, remove obsolete
-artifacts in a separate, explicit cleanup that first proves no current, ready,
-in-flight, retained rollback, or recovery record references them.
+## Proportional verification
 
-If a schema change breaks deployment, restore the previous compatible Worker
-first when safe. Use the recorded database recovery point only when a true data
-restore is required and authorized.
+After a production mutation, verify:
 
-## Live proof
+1. the intended Worker and environment changed;
+2. the expected deployment or version is active;
+3. the affected live route behaves correctly; and
+4. any binding, schema, or Durable Object path changed by the release works.
 
-After release, verify:
-
-- expected version metadata;
-- health response and required binding set;
-- real custom hostname headers and body;
-- DNS, TLS, routing, redirects, and service bindings;
-- actual database/R2/DO/Workflow/Queue access through the live path;
-- expected immutable artifact/source identity;
-- access revocation, suspension, preview, promotion, and rollback where relevant;
-- no new provider, migration, binding, or 5xx errors.
-
-A CI green check, Wrangler success, and live smoke are separate evidence.
+Add DNS, TLS, redirects, authorization, asynchronous-consumer, log, or rollback
+checks only when the operation touches those surfaces or the risk justifies
+them. Report only what was actually verified.
 
 ## Current first-party sources
 
-- [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
+- [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/)
+- [Wrangler environments](https://developers.cloudflare.com/workers/wrangler/environments/)
+- [Workers Versions and Deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
+- [Worker rollbacks](https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/)
+- [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)
 - [D1 foreign keys](https://developers.cloudflare.com/d1/sql-api/foreign-keys/)
-- [D1 database batch API](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch)
+- [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
 - [D1 import and export limitations](https://developers.cloudflare.com/d1/best-practices/import-export-data/)
-- [D1 export API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/)
-- [D1 limits](https://developers.cloudflare.com/d1/platform/limits/)
-- [Durable Object environments](https://developers.cloudflare.com/durable-objects/reference/environments/)
 - [Durable Object class lifecycle](https://developers.cloudflare.com/durable-objects/reference/durable-objects-migrations/)
-- [Durable Objects getting started](https://developers.cloudflare.com/durable-objects/get-started/)
+- [Durable Object runtime lifecycle](https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/)
