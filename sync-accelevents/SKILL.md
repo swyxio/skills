@@ -1,84 +1,47 @@
 ---
 name: sync-accelevents
-description: Use when pulling Accelevents speaker headshots, social data, bios, and schedule metadata into the AI Engineer Europe source data and photo assets.
+description: Pull Accelevents speaker headshots, social data, bios, and schedule metadata into this project's Europe source data and photo assets. Load for an explicit Accelevents-to-website sync; not for generic image or schedule edits.
 ---
 
-# Sync Accelevents Speaker Data (Europe)
+# Sync Accelevents speaker data
 
-Pulls speaker headshots and social data from the Accelevents API into the Europe conference schedule.
+This is a repository-specific data sync. Inspect the current script help and
+working tree before running it. The API credential must come from the approved
+secret store as `ACCELEVENTS_API_KEY`; never put it in source, command output,
+logs, or chat.
 
-## Prerequisites
+## Safe sync sequence
 
-- `ACCELEVENTS_API_KEY` environment variable must be set (stored as a Devin secret)
-- Python 3 with Pillow installed (`pip install Pillow`) for image optimization
+1. Confirm the current branch, clean/dirty state, source-of-truth files, and
+   intended scope. Do not silently discard existing work or create a branch
+   with a hard-coded name/path.
+2. Run the repository's current `sync_accelevents.py --help`. Prefer
+   `--dry-run` first, then use the smallest applicable scope (`--headshots-only`
+   or `--data-only`) and `--save-snapshot` only when a raw snapshot is desired.
+3. The sync may fetch speakers, download/replace headshots, optimize large
+   images, fill blank social/bio fields, and write an API snapshot. Review the
+   diff and verify that existing nonblank editorial data was not overwritten.
+4. Re-export derived schedule data only if the repository workflow requires it.
+   Run the current typecheck/build and relevant image or schedule checks.
+5. Inspect the final diff for secret leakage, unexpected deletions, broken image
+   references, and changes outside the intended Europe source/assets. Commit,
+   push, or open a PR only when the user asks or the repository's active
+   workflow calls for that handoff.
 
-## Steps
+## Expected data boundaries
 
-1. **Checkout a new branch**
-   ```bash
-   cd /home/ubuntu/repos/aiecode2025
-   git checkout main && git pull origin main
-   git checkout -b devin/$(date +%s)-sync-accelevents
-   ```
+Use the repository's current paths for the Europe schedule, public speaker
+photos, large/original photos, snapshots, and exports. The script's matching
+priority and overwrite behavior are the source of truth; verify them from the
+current implementation rather than relying on a historical count or a copied
+path. Keep API snapshots and generated exports out of commits when the project
+marks them as ignored or ephemeral.
 
-2. **Run the sync script**
-   ```bash
-   cd /home/ubuntu/repos/aiecode2025/src/pages/europe/source/_scripts
-   python3 sync_accelevents.py --save-snapshot
-   ```
-   This will:
-   - Fetch all speakers from the Accelevents API
-   - Download/replace headshots that speakers uploaded to the portal
-   - Optimize oversized images (>200KB) for the grid view, keeping originals in `large/`
-   - Update `schedule.json` with social/bio data (only fills blanks, doesn't overwrite)
-   - Save an API snapshot to `_accelevents/accelevents_speakers_latest.json`
+## Focused checks
 
-   **Flags:**
-   - `--dry-run` — show what would change without writing anything
-   - `--headshots-only` — skip social/bio updates
-   - `--data-only` — skip headshot downloads
-   - `--save-snapshot` — save raw API response
-   - `--optimize-existing --data-only` — optimize oversized existing photos
-
-3. **Re-export the CSV**
-   ```bash
-   cd /home/ubuntu/repos/aiecode2025/src/pages/europe/source
-   python3 _scripts/export_csv.py
-   ```
-
-4. **Run typecheck**
-   ```bash
-   cd /home/ubuntu/repos/aiecode2025
-   SKIP_ENV_VALIDATION=1 npx tsc --noEmit
-   ```
-
-5. **Commit all changes**
-   ```bash
-   cd /home/ubuntu/repos/aiecode2025
-   git add public/speakers/europe/ src/pages/europe/source/schedule.json src/pages/europe/source/_accelevents/ src/pages/europe/source/schedule_export.csv
-   git commit -m "sync: pull speaker headshots + social data from Accelevents API"
-   git push origin HEAD
-   ```
-
-6. **Create PR and verify**
-   - Create PR into `main`
-   - Start the dev server: `SKIP_ENV_VALIDATION=1 pnpm dev`
-   - Navigate to `http://localhost:3000/europe#speakers`
-   - Verify the speaker globe renders with updated headshots, no broken images
-   - Take a screenshot and share with the user
-
-## Key Paths
-
-- Script: `src/pages/europe/source/_scripts/sync_accelevents.py`
-- Schedule source of truth: `src/pages/europe/source/schedule.json`
-- Photos (optimized for grid): `public/speakers/europe/`
-- Photos (full-size for lightbox): `public/speakers/europe/large/`
-- API snapshot: `src/pages/europe/source/_accelevents/accelevents_speakers_latest.json`
-- CSV export: `src/pages/europe/source/schedule_export.csv`
-
-## Notes
-
-- The script matches API speakers to schedule speakers by: `acceleventsSpeakerId` > email > name
-- Only 8 of 109 speakers had uploaded headshots as of the first run — this number will grow over time
-- `pnpm lint` does not work on Next.js 16; use `npx tsc --noEmit` for type checking instead
-- The `europe:source:sync-public` script referenced in some docs does not exist; the sync script writes directly to `public/speakers/europe/`
+- Credential is supplied through the secret environment only.
+- Dry-run output and the reviewed diff match the requested scope.
+- Speaker matching does not silently merge distinct people.
+- Existing bio/social/editorial values are preserved unless explicitly changed.
+- Image files are readable and references resolve.
+- Typecheck/build and the project's relevant preview pass.

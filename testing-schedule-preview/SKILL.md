@@ -1,29 +1,23 @@
 ---
 name: testing-schedule-preview
-description: Use when testing the AI Engineer Europe internal Bun schedule preview or public schedule page, including tooltip, modal, CFP metadata, and local preview workflows.
+description: Use when testing the AI Engineer Europe internal Bun schedule preview or public schedule page, including tooltip, modal, CFP metadata, and local preview workflows. Load for schedule-preview verification; not for general conference UI testing.
 ---
 
 # Testing the Europe Schedule
 
 ## Overview
 There are two schedule views to test:
-1. **Bun preview** at `http://127.0.0.1:1234/_deploy/` — internal tool with CFP data, session IDs, contact info
+1. **Bun preview** at the repository's configured preview URL — internal tool with CFP data and organizer-only fields
 2. **Public schedule page** at `/europe/schedule` — public-facing with grid overview and session list
 
 ## Bun Preview (Internal)
 
 ### Starting the Server
-```bash
-cd /path/to/aiecode2025
-pnpm europe:source:preview
-```
+Run the repository's current Europe source preview command from the project root.
 This runs `bun run bun-preview.mjs` inside `src/pages/europe/source/`.
 
-If port 1234 is already in use, kill the existing process first:
-```bash
-fuser -k 1234/tcp
-```
-Note: `lsof` may not be available; use `fuser` instead.
+If the configured preview port is occupied, identify the owning process and stop
+it only after confirming it is the preview process.
 
 ### Key Files
 - `src/pages/europe/source/_deploy/index.html` — the preview HTML
@@ -40,8 +34,8 @@ Note: `lsof` may not be available; use `fuser` instead.
 ## Public Schedule Page
 
 ### Accessing
-- Local: `http://localhost:3000/europe/schedule` (requires Next.js dev server)
-- Vercel preview: PRs get deployments at `https://aiecode2025-git-{branch}-aieng.vercel.app/europe/schedule`
+- Local: the repository's configured Europe schedule route.
+- Preview: use the URL supplied by the active deployment.
 
 ### Key File
 - `src/pages/europe/schedule.tsx` — React component with grid overview, session cards, modal, filters
@@ -76,5 +70,5 @@ Note: `lsof` may not be available; use `fuser` instead.
 - **Workshops**: all April 8, someetimes multi-speaker, longer blocks
 - **Track Keynotes**: Per-track opening talks
 
-## Devin Secrets Needed
-No secrets needed — both the Bun preview and public schedule are unauthenticated.
+Both views are expected to be unauthenticated; do not add secrets or bypass
+authentication to test them.

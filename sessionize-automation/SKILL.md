@@ -1,7 +1,7 @@
 ---
 name: sessionize-automation
 description: |
-  Use when inspecting or automating authenticated Sessionize organizer workflows, especially bulk session status changes, proposal accept/decline staging, speaker/session invite flows, hidden form submit paths, anti-forgery tokens, nested NewSpeakers fields, and verification after private organizer UI writes.
+  Use when inspecting or automating authenticated Sessionize organizer workflows: bulk session status changes, proposal staging, speaker/session invites, hidden form paths, anti-forgery fields, and verification after private organizer UI writes. Do not load for public schedule browsing or unauthenticated scraping.
 ---
 
 # Sessionize Automation
@@ -28,8 +28,8 @@ current official API surface for the exact operation.
 - Use Browser only as a fallback for non-authenticated inspection or screenshots.
 - Identify the event ID and the authoritative local source of truth before any
   write.
-- Map local records to Sessionize IDs. For
-  `/Users/swyx/Work/aiewf2026speakerenrichment`, use `External Session ID`.
+- Map local records to the authoritative Sessionize IDs using the project's
+  explicitly designated source-of-truth field.
 
 ## Browser Automation Constraints
 
@@ -76,7 +76,7 @@ Useful DOM reads for session status pages:
 On the organizer sessions page, status controls were observed as hidden
 `select[data-id="<Sessionize session id>"]` elements wrapped by Selectize UI.
 
-For event `24196`, individual row status changes posted:
+An observed organizer implementation used:
 
 ```text
 POST /app/organizer/session/setStatus
@@ -94,8 +94,10 @@ Observed status codes:
 | `15` | Decline Queue |
 | `20` | Declined |
 
-For rejection staging, prefer `15` (`Decline Queue`) unless the user explicitly
-asks for final `20` (`Declined`).
+Status codes and endpoint names are private implementation details. Inspect the
+current page scripts and controls before using an observed value. When a queue
+state exists, prefer staging over a final decision unless the user explicitly
+asks for the final state.
 
 ## Bulk Status Workflow
 
@@ -109,19 +111,8 @@ asks for final `20` (`Declined`).
 8. Keep a short run log: start offset, limit, successes, failures, before/after
    counters.
 
-In `/Users/swyx/Work/aiewf2026speakerenrichment`, generate Sessionize denial
-targets from `overrides.json` plus source decisions:
-
-```bash
-python3 scripts/sessionize_rejection_targets.py
-```
-
-This writes ignored artifacts:
-
-- `sessionize-deny-targets.json`
-- `sessionize-bulk-status-runner.js`
-
-The generated runner defaults to `15` (`Decline Queue`).
+Generate target artifacts from the project's current source-of-truth and keep
+per-run artifacts outside commits unless the user explicitly requests them.
 
 ## Visible UI Control Path
 
@@ -136,13 +127,13 @@ select[data-id="<id>"] + .selectize-control .selectize-input
 then click:
 
 ```text
-select[data-id="<id>"] + .selectize-control .selectize-dropdown .option[data-value="15"]
+select[data-id="<id>"] + .selectize-control .selectize-dropdown .option[data-value="<status>"]
 ```
 
 After each click, verify:
 
 ```js
-document.querySelector('select[data-id="<id>"]')?.value === '15'
+document.querySelector('select[data-id="<id>"]')?.value === '<status>'
 ```
 
 For sparse target rows, use Sessionize's own URL hash search with the exact

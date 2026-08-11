@@ -1,14 +1,14 @@
 ---
 name: claude-session-introspect
 description: |
-  Inspect Claude Code session JSONL files at ~/.claude/projects/ to extract real conversation telemetry: token counts (input/output/cache reads/cache writes), assistant turn counts, human prompt counts, tool-use counts, compaction boundaries, and the contents of compaction summaries. Use this skill when the user asks "how many tokens did this session use", "how many prompts have I sent", "show me the stats for this conversation", "what got compacted", "where are the compaction boundaries", "introspect the session", "do brain surgery on the JSONL", or wants any data point that lives inside the on-disk session log rather than the live context window. Inspired by Tal Raviv's "I wanted to know how compaction works" article.
+  Inspect Claude Code session JSONL files under the configured Claude projects directory to extract token, turn, prompt, tool-use, and compaction telemetry. Load when the user asks for on-disk session statistics or compaction inspection; not for live-context estimates or general JSONL parsing.
 license: MIT
 compatibility: |
   Requires `jq`. Sessions live at `~/.claude/projects/<encoded-cwd>/<session-uuid>.jsonl`. The encoded-cwd is the absolute working directory with `/` replaced by `-` and a leading `-`. Each line is a JSON object with `type`, `message`, `toolUseResult`, etc.
 metadata:
   author: swyxio
   version: "1.0"
-  last-updated: "2026-04-08"
+  last-updated: "2026-08-11"
   primary-tools: jq, bash
 ---
 

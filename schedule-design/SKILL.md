@@ -9,8 +9,11 @@ Lessons extracted from building the `/europe/schedule` page — a single-file (~
 
 ## Architecture
 
-### Single-file component is fine for schedule pages
-The entire page lives in one `.tsx` file. Sub-components (`TypeBadge`, `SpeakerPhoto`, `SessionModal`, `GridOverview`, `SessionCard`, `FilterPill`, `StarButton`) are defined in the same file. This avoids prop-drilling across module boundaries and keeps the schedule self-contained. Extract to separate files only when reuse is needed elsewhere.
+### Keep the schedule component cohesive
+Schedule views can keep closely related sub-components together when that makes
+the data flow and interaction state easy to follow. Extract components when
+reuse, testability, or file size clearly benefits; a single-file layout is not a
+universal requirement.
 
 ### Build-time data extraction with `getStaticProps`
 Raw JSON (with nullable/optional fields) is normalized at build time into clean `ScheduleSession` objects with guaranteed string fields (empty string, not null). This eliminates null checks throughout the render logic.

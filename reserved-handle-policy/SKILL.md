@@ -1,6 +1,6 @@
 ---
 name: reserved-handle-policy
-description: Design, implement, audit, or refresh protected username and handle namespaces for public products. Use whenever a product has open signup, mutable handles, profile URLs, impersonation or squatting risk, reserved route names, short usernames, common-word or common-name claims, developer/AI terminology, notable social identities, or administrator-approved handle assignment—even if the user only asks for a username denylist.
+description: Design, implement, audit, or refresh a public product's protected username/handle namespace, including reservation tiers, normalization/confusables, historical handles, manual claims, or an explicit denylist. Load for handle-policy work; not for ordinary profile or routing changes.
 ---
 
 # Reserved Handle Policy

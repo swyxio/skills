@@ -1,4 +1,4 @@
 interface:
   display_name: "YouTube Studio Batch Upload"
   short_description: "Batch YouTube uploads with metadata"
-  default_prompt: "Use $youtube-studio-batch-upload to batch upload videos to YouTube Studio as unlisted videos with clean metadata and playlist tagging."
+  default_prompt: "Use $youtube-studio-batch-upload to batch upload videos to YouTube Studio with clean metadata, playlist tagging, per-item save/verification, and an explicitly approved visibility."

@@ -1,17 +1,17 @@
 ---
 name: youtube-publish
 description: >
-  This skill should be used when the user asks to "upload videos to YouTube",
-  "publish videos on YouTube", "set YouTube titles and descriptions",
-  "add timestamps to YouTube videos", or needs to edit video metadata,
-  assign playlists, and publish in YouTube Studio.
+  Use when the user explicitly asks to upload, publish, or edit YouTube video
+  metadata in Studio, including titles, descriptions, timestamps, playlists, or
+  visibility. Do not infer publication from a request to prepare an upload.
 version: 0.1.0
 ---
 
 # YouTube Video Publishing & Metadata
 
 ## Overview
-Upload video files to YouTube Studio, set titles, descriptions, timestamps, playlists, and publish.
+Upload or edit video metadata in YouTube Studio. Treat publication and
+visibility as explicit user choices.
 
 ## Step-by-Step Workflow
 
@@ -77,8 +77,9 @@ How to tell them apart:
 
 ### 5. Other Settings
 - **Audience**: "No, it's not made for kids" (usually already default)
-- **Visibility**: **Unlisted**
-- **Publish immediately** — do NOT leave as Draft
+- **Visibility**: use the visibility requested by the user; default to a saved
+  draft or unlisted staging state when the request does not authorize release.
+- Do not publish immediately merely because processing completed.
 
 ### 6. YouTube Studio Navigation Flow
 For each video:
@@ -89,7 +90,7 @@ Checks → (wait for checks to pass) → Next →
 Visibility → (select Unlisted) → Save/Publish
 ```
 
-Repeat for each video. Always publish right away.
+Repeat for each video, saving and verifying one item before moving to the next.
 
 ### 7. Verify
 After publishing, confirm:
@@ -99,6 +100,7 @@ After publishing, confirm:
 
 ## Troubleshooting
 - **"Processing…" stuck**: YouTube processing can take 5-30 minutes for long videos. Wait and refresh.
-- **Checks show warnings**: Copyright or other warnings may appear. For original Zoom recordings these are usually false positives — proceed unless it's a hard block.
+- **Checks show warnings**: surface the warning and ask for the user's decision;
+  do not dismiss copyright or policy warnings automatically.
 - **Wrong channel**: If you see unfamiliar videos in Content, you're on the wrong channel. Switch accounts via the avatar menu.
 - **Duplicate uploads**: Check the Content list for videos with the same duration/date before uploading. The `_gvo_` filename suffix indicates a gallery-view-only duplicate that should not be uploaded.
