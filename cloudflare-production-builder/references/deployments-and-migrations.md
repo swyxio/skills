@@ -318,6 +318,54 @@ delay, and sanitized reason. A routine deployment should recover transparently
 or return an explicit maintenance diagnostic; it must not masquerade as data
 corruption.
 
+### Write-once build artifacts are not another release controller
+
+Do not automatically model every independently created provider resource as a
+durable release state machine. For a SHA-derived image, private host Worker,
+Durable Object namespace, container application, or zero-traffic Worker
+version, use bounded build-time preparation when all of the following hold:
+
+- its name or tag is deterministically derived from the exact source/build
+  identity;
+- the artifact is write-once after successful creation;
+- no user-visible traffic or authoritative application pointer selects it yet;
+- provider readback can prove its complete immutable configuration; and
+- one later immutable pointer change selects or restores the complete runtime.
+
+For these artifacts, reconciliation means:
+
+1. Attempt creation once.
+2. Read authoritative provider state after success or ambiguity.
+3. Adopt only an exact match.
+4. Fail closed on absence, partial creation, ambiguity that readback cannot
+   resolve, or any identity/configuration mismatch.
+5. Never modify the conflicting artifact in place or resume it through a new
+   controller, current-version pointer, fence exchange, or manual lane-clear
+   ceremony.
+
+Keep build-time receipts as evidence attached to the deployable version. They
+do not become active-version authority. Publication code should not build an
+image, deploy or roll a container application, create a namespace, or repair a
+host. It validates the ready immutable target, conditionally changes the one
+traffic-owning pointer, runs topology-appropriate generic health, and records
+success or restores the recorded prior pointer.
+
+For example, a stable Worker version may bind a Durable Object class to a
+private, generation-specific host Worker whose container application is pinned
+to an image digest. The private host has no route, workers.dev exposure,
+preview URL, or scheduled trigger and is prepared while unreferenced. The
+stable Worker deployment is the publication authority. Restoring its prior
+version restores the prior binding target; publication and rollback must not
+separately mutate the host application or image.
+
+If provider topology cannot exercise a private artifact before publication,
+do not expose it publicly merely to manufacture a readiness probe. Prove the
+built image/toolchain locally, verify the complete unreferenced provider
+configuration, and make the first owning live-path deep probe a post-pointer
+health gate with exact rollback on failure. State that evidence boundary
+explicitly; application status or CLI success alone is not a live runtime
+probe.
+
 ## Staged release
 
 When supported:
@@ -351,6 +399,16 @@ Separate:
 Pointer rollback to an immutable artifact should not rebuild. Mutable state
 usually persists across code rollback; never imply otherwise. A stateful release
 needs an explicit compatibility contract.
+
+During a bootstrap or topology cutover, preserve the exact old Worker version,
+binding target, Durable Object namespace, container application, and image when
+that combination is the recorded rollback target. Do not update the old
+application to resemble the successor: doing so destroys the rollback evidence
+even if the old Worker version still exists. This preservation is a bounded
+compatibility window, not a permanent dual-running design. After the successor
+has passed live verification and the agreed rollback proofs, remove obsolete
+artifacts in a separate, explicit cleanup that first proves no current, ready,
+in-flight, retained rollback, or recovery record references them.
 
 If a schema change breaks deployment, restore the previous compatible Worker
 first when safe. Use the recorded database recovery point only when a true data

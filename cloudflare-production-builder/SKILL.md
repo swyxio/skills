@@ -30,12 +30,23 @@ Do not mix recovery and refactoring in one production operation.
 3. Prefer immutable artifacts and conditional pointer changes. Make external
    mutations idempotent, fenced, conditional, or compensatable.
 4. Classify errors before retrying. Persist terminal domain failures; bound
-   transient retries; reconcile ambiguous mutations before replay.
+   transient retries; read authoritative provider state after an ambiguous
+   mutation before replay. Do not turn artifact verification into a resumable
+   controller unless the product operation itself requires durable execution.
 5. Preserve accepted work across handoff failures. Use a durable record and a
    repair path when an initiating request can disappear.
 6. Verify the owning live path and exact identity after a production mutation.
    Use precise language such as `version uploaded`, `traffic switched`, and
    `live smoke passed`.
+
+For SHA-derived, write-once release artifacts, `reconcile` means bounded
+provider readback and a fail-closed decision. Adopt an existing artifact only
+when every immutable property matches. Never repair a mismatch in place, add a
+durable current-artifact pointer, or create another publication authority merely
+to make image, host, application, namespace, or version creation retryable.
+Traffic publication and rollback should switch one recorded immutable pointer
+when the topology supports it; build-time artifact preparation stays outside
+that publication path.
 
 ## Proportional workflow
 
@@ -50,6 +61,14 @@ Do not mix recovery and refactoring in one production operation.
    provider supports it. Use a verification path supported by the topology.
 5. After mutation, verify only the affected rollout axes plus the user-visible
    capability. Record exact identities and rollback evidence.
+
+When a cutover temporarily retains an old Worker, Durable Object namespace, or
+container application as the exact rollback target, leave it byte-for-byte and
+configuration-for-configuration unchanged through the rollback-compatibility
+window. Retention is temporary compatibility, not permanent dual-running.
+Remove the old artifact only in a separate bounded cleanup after live and
+rollback compatibility have been proven; do not hide that deletion inside the
+cutover or ordinary artifact garbage collection.
 
 Pause when the exact production target, current state, retry safety, or rollback
 target cannot be resolved. A blocker in an unrelated surface is not permission
