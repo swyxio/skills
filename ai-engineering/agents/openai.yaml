@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Engineering"
+  short_description: "Build failure-aware AI systems"
+  default_prompt: "Use $ai-engineering to make this AI integration observable, rate-aware, and resilient to structured-output failures."
