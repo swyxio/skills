@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pulp Fiction Writing"
+  short_description: "Write fast, vivid, bingeable pulp fiction"
+  default_prompt: "Use $pulp-fiction-writing to turn this premise into a fast-moving, character-driven pulp story."
