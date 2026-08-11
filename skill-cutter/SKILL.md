@@ -16,6 +16,14 @@ skill exists to provide. Treat line count as evidence, not the objective.
   skill authorizes local edits within that skill. It does not authorize commit,
   push, publication, or changes to consumers outside the requested scope.
 
+## Respect explicit exemptions
+
+If a skill's frontmatter contains `metadata.skill-cutter: ignore`, do not audit
+or cut that skill. Report that it is deliberately exempt and continue with the
+remaining scope. Only proceed when the user's current request explicitly
+overrides or removes that exemption; a broad request to audit all skills does
+not override it.
+
 ## Find the behavioral core
 
 Read the complete `SKILL.md`, its UI metadata, and only the directly relevant
