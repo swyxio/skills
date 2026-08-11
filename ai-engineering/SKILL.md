@@ -10,7 +10,7 @@ turning every prototype into an operations project. This skill owns request
 validation, retry/cache behavior, rate-aware fan-out, and measurement. Pair it
 with `live-ai-pipelines` only when a run needs live progress or durable resume.
 
-For provider-specific API behavior, read [provider operation notes](references/provider-operation-notes.md) when the adapter is OpenAI, Anthropic, or OpenRouter, then verify volatile details in current provider docs.
+For provider-specific API behavior, read [provider operation notes](references/provider-operation-notes.md) when the adapter is OpenAI, Anthropic, or OpenRouter, then verify volatile details in current provider docs. For image/video generation or FAL model fan-outs, read [image, video, and FAL operation notes](references/image-video-fal.md).
 
 ## Useful defaults
 
@@ -18,6 +18,7 @@ For provider-specific API behavior, read [provider operation notes](references/p
 - Keep observed source data, generated prose, inferred claims, and repair output distinct when downstream consumers need that distinction.
 - Treat workers as an in-flight limit, not as a request-rate setting.
 - When a fallback changes coverage or semantics, record that difference rather than silently treating it as the richer result.
+- Keep provider delivery separate from domain or human acceptance; a valid artifact URL does not establish that an image, video, or other subjective output is usable.
 - Keep enough redacted telemetry to answer what happened, what it cost, and what may safely resume.
 
 ## Workflow
@@ -31,6 +32,8 @@ Find the client wrapper, parser/schema, fan-out helper, cache, retry loop, and t
 Bound arrays, quotes, prose sections, and nesting to a response size the model can finish. Validate syntax, schema, source references, and any domain invariants that make the result usable.
 
 For an expensive or broad fan-out, run a small sparse/typical/dense sample first. Use the result to tune per-class input and output budgets. Long-form requests benefit from a bounded evidence packet: deduplicate, rank representative support, preserve conflicts, and keep stable locators. Global synthesis should receive normalized IDs and compact summaries rather than the raw corpus plus every intermediate artifact.
+
+For heterogeneous model fan-outs, define endpoint-specific capability and payload profiles. Include reference topology and ordering, supported parameters, safety-control fields, output schema, and fallback policy in the effective request. Do not send a universal parameter bundle or guessed provider controls.
 
 ### 3. Scale deliberately
 
@@ -46,6 +49,8 @@ See [failure matrix](references/failure-matrix.md) for practical actions and lig
 
 For a significant run, write complete artifacts atomically and maintain a status snapshot plus attempt history. A success cache can resume results but cannot explain failed attempts, waits, headers, or interruption. Record the logical item, effective request, outcome, latency, usage/cost when available, and redacted provider identifiers.
 
+For subjective artifacts, persist provider completion and human adjudication independently. Support blind evaluation when requested: store artifact references and operational metadata without fetching, opening, classifying, or scoring the artifact, and leave acceptance to the named reviewer.
+
 If workers can outlive their caller or another runner may resume work, add explicit ownership, heartbeats, and cancellation behavior. A simple in-process job does not need a lease protocol.
 
 ### 6. Verify the relevant unhappy paths
@@ -56,3 +61,4 @@ Exercise the failures that the chosen provider and artifact contract make materi
 
 - [Failure matrix and attempt record](references/failure-matrix.md) — choose a failure response, cache identity, and minimal telemetry.
 - [Provider operation notes](references/provider-operation-notes.md) — conditional OpenAI, Anthropic, and OpenRouter quirks.
+- [Image, video, and FAL operation notes](references/image-video-fal.md) — artifact-generation contracts, blind evaluation, reference topology, asynchronous queues, and exact-model comparisons.
