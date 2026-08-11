@@ -39,6 +39,18 @@ Keep these rules:
 
 See [references/architecture.md](references/architecture.md) for the full layout and stage patterns. See [references/event-schema.md](references/event-schema.md) for the event and artifact contract.
 
+## Related skills and handoffs
+
+This skill owns the logical run contract: stages, item identity, structured artifacts, progress events, previews, recovery, and atomic publication. It does not replace a runtime, provider, CLI, observability, testing, deployment, or domain skill. Load the narrowest companion skill for those concerns and keep one owner for job lifecycle/state. See [references/skill-routing.md](references/skill-routing.md) for the routing matrix and composition examples.
+
+The most common pairings are:
+
+- `openai-docs` for current OpenAI API behavior; `agents-sdk` for Cloudflare Agents SDK runtime behavior;
+- `cloudflare-production-builder` for Workflows, Queues, Durable Objects, R2, deployment, and live verification;
+- `observability-hardening` when telemetry is the primary work, and `cli-ux` when the command-line contract is primary;
+- `summarize-anything`, `smart-entity-resolution`, or `data-chatbots` when summarization, entity resolution, or human-approved proposals are the domain problem;
+- `test-strategy-hardening` and `release-readiness-hardening` when test architecture or release gates—not merely pipeline implementation—are the task.
+
 ## Workflow
 
 ### 1. Inspect before changing
