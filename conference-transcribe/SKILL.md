@@ -8,7 +8,7 @@ compatibility: Requires ffmpeg, a downloader for remote sources, one transcripti
 metadata:
   author: swyxio
   version: "1.0"
-  last-updated: "2026-04-10"
+  last-updated: "2026-08-11"
   primary-tools: yt-dlp, ffmpeg, captions or an ASR backend
 ---
 
@@ -64,3 +64,24 @@ notes. Do not assign named speakers from anonymous diarization without evidence.
 
 Do not rely on this file for current provider models, size limits, concurrency
 limits, or CLI flags; retrieve them at action time.
+
+## Selective references
+
+Load only the supporting material needed for the current source or failure:
+
+- [references/aie-europe-2026.md](references/aie-europe-2026.md) for the event
+  narrative, what worked, what failed, and why the caption-first strategy won;
+- [references/backends-and-setup.md](references/backends-and-setup.md) when
+  selecting or configuring captions, hosted ASR, or local Whisper, including
+  dated provider/model/limit observations and installation recipes;
+- [references/command-recipes.md](references/command-recipes.md) for copyable
+  metadata, caption, audio, segment, compression, and clip commands;
+- [references/manifest-vtt-and-batching.md](references/manifest-vtt-and-batching.md)
+  when implementing chapter parsing, VTT overlap removal, timestamp offsets,
+  manifests, or bounded concurrency; and
+- [references/output-templates-and-cleanup.md](references/output-templates-and-cleanup.md)
+  for raw/cleaned Markdown templates and the transcript-cleanup prompt.
+
+Do not load every reference for a routine caption split. Historical provider
+limits, model names, package versions, and observed concurrency are starting
+points only; verify current documentation and the installed CLI before acting.

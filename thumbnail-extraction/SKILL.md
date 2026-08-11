@@ -7,8 +7,12 @@ version: 0.1.0
 # Video Thumbnail Extraction
 
 The bundled `thumbnail_extractor.py` scans a local video and writes a manifest
-plus ranked full-frame candidates. Inspect its `--help` output and current
-dependencies before running it; do not install every optional model by default.
+plus ranked full-frame candidates. It currently uses positional arguments and
+does not implement `--help`; inspect the script and
+[references/cli-manifest-and-workflows.md](references/cli-manifest-and-workflows.md)
+before running it. The bundled version imports DeepFace during Pass 2, so
+OpenCV-only fallback claims in older documentation do not describe current
+executable behavior.
 
 ## Selection strategy
 
@@ -44,6 +48,31 @@ video. Use `youtube-thumbnails` or `youtube-api` only after a human selects the
 candidate and a separate publication request authorizes the upload.
 
 If the extractor is slow or memory-bound, increase the sample interval or
-reduce optional deep analysis before adding a larger model. If no faces or
-slides are found, return ranked visual candidates or report that the source
-does not contain a reliable signal; do not fabricate an emotion or slide label.
+reduce deep candidates before adding a larger model. If the current script finds
+no faces, return ranked full-frame candidates or report that the source lacks a
+reliable face signal. Slide labels require an explicitly restored or separate
+slide path; do not fabricate an emotion or slide label.
+
+## Exact-extractor references
+
+This skill is intentionally scoped to bootstrapping and diagnosing the bundled
+extractor. Load the relevant implementation reference rather than treating its
+constants or file formats as generic thumbnail policy:
+
+- [references/setup-and-models.md](references/setup-and-models.md) for required
+  and optional packages, historical sandbox/host differences, installation,
+  and first-run model downloads;
+- [references/candidate-architecture-and-scoring.md](references/candidate-architecture-and-scoring.md)
+  for the actual two-pass implementation, exact weights/thresholds, temporal
+  diversity, cropping, and memory behavior;
+- [references/cli-manifest-and-workflows.md](references/cli-manifest-and-workflows.md)
+  for the positional CLI, output files, complete manifest schema, YouTube input,
+  background removal, compositing, and authorized publication handoff;
+- [references/tuning-and-troubleshooting.md](references/tuning-and-troubleshooting.md)
+  for parameter-by-parameter tuning and diagnosis; and
+- [references/slide-vlm-implementation-history.md](references/slide-vlm-implementation-history.md)
+  for the advanced scene-cut/slide/VLM implementation that exists in repository
+  history but is not present in the currently bundled 418-line script.
+
+No reference turns candidate scoring into evidence of emotion, authorizes frame
+uploads, or authorizes YouTube publication.

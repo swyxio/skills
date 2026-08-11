@@ -1,6 +1,7 @@
 # thumbnail-extraction
 
-Extracts the most interesting thumbnail candidates from a local video file and can also export one representative image per detected slide.
+Extracts ranked thumbnail candidates from a local video file using the currently
+bundled 418-line OpenCV + DeepFace implementation.
 
 This skill scans a recording, scores visually strong frames, and saves ready-to-use JPG outputs plus face crops when faces are detected. It is designed for long-form interviews, Zoom recordings, presentations, and talk videos where manually scrubbing for a thumbnail is slow.
 
@@ -9,43 +10,43 @@ This skill scans a recording, scores visually strong frames, and saves ready-to-
 - Full-frame thumbnail candidates
 - Face crops for the largest detected face in a candidate
 - A manifest JSON with timestamps and scores
-- Optional slide exports grouped proportionately across the video timeline
-- Optional VLM fallback when OpenCV sees no slides
+
+The current script does **not** export slides, remove backgrounds, or implement
+VLM provider flags. Advanced scene-cut/slide/VLM variants exist in repository
+history and are documented in
+[`references/slide-vlm-implementation-history.md`](references/slide-vlm-implementation-history.md).
 
 ## Typical Usage
 
 ```bash
 python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4
-
-# Also export one representative image per detected slide
-python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4 --extract-slides
-
-# If OpenCV sees no slides, retry with the lowest-overhead hosted default
-python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4 \
-  --extract-slides --vlm-provider gemini
-
-# Retry locally through Ollama if you already have a vision model installed
-python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4 \
-  --extract-slides --vlm-provider ollama --vlm-model gemma3
 ```
 
 ## Notes
 
-- Works best with OpenCV installed
-- If `deepface` is available, expression scoring improves ranking
-- If `deepface` is missing, the extractor still runs using OpenCV-only scoring
-- Slide extraction is also OpenCV-first: cheap presentation detection plus perceptual-hash grouping
-- Lowest-overhead implementation is shared sampled-frame classification, not full-video upload
-- Gemini is the best hosted default because it supports both image batches and separate native video workflows through the Files API
-- Ollama is the cheapest local option if you already run a vision model such as `gemma3` or `llama3.2-vision`
-- OpenAI is the simplest hosted image-batch fallback if you already have `OPENAI_API_KEY`
-- Anthropic is strong for image reasoning, but this skill currently uses it on sampled frames rather than native video
-- OpenRouter is useful when you want one API key that can route across multiple multimodal providers
-- Supported fallback providers: `ollama`, `gemini`, `openai`, `anthropic`, `openrouter`
-- If OpenCV sees no slides and no provider is supplied, the script completes and prints provider-specific rerun suggestions
-- Use the resulting JPG with the `youtube-api` skill's `set_thumbnail.py`
+- OpenCV and NumPy are required.
+- DeepFace is imported unconditionally during Pass 2 in the current script; it
+  is not an optional fallback despite older prose saying otherwise.
+- Always pass an explicit output directory because the current default is a
+  historical sandbox path.
+- The extractor accepts a local file, not a YouTube URL.
+- Background removal is a separate optional step.
+- YouTube publication requires a separate explicit request after a human picks
+  and approves the finished thumbnail.
 
-## Key Insight
+Detailed bootstrap and diagnosis:
+
+- [`references/setup-and-models.md`](references/setup-and-models.md)
+- [`references/candidate-architecture-and-scoring.md`](references/candidate-architecture-and-scoring.md)
+- [`references/cli-manifest-and-workflows.md`](references/cli-manifest-and-workflows.md)
+- [`references/tuning-and-troubleshooting.md`](references/tuning-and-troubleshooting.md)
+- [`references/slide-vlm-implementation-history.md`](references/slide-vlm-implementation-history.md)
+
+## Historical Slide/VLM Design Insight
+
+The remainder of this README records the advanced design work. It does not
+describe flags currently available in `thumbnail_extractor.py`; use the history
+reference above before attempting to restore it.
 
 The main miss in the first implementation was using sparse VLM classification as the primary method for slide extraction.
 
@@ -94,7 +95,7 @@ Slides can come in very different visual forms, so the extractor should branch e
   - Primary: deck-aware validation and slide-image matching
   - Secondary: use OCR / VLM only when matching confidence is low
 
-## Ollama Notes
+## Historical Ollama Notes
 
 - On this machine, `qwen3.5:4b-q4_K_M` was a workable local VLM, but only after reducing request size.
 - Early runs appeared to hang because the script sent large multimodal batches without enough timing or timeout visibility.
@@ -118,7 +119,7 @@ python3 thumbnail_extractor.py /path/to/video.mp4 ~/Downloads/thumb_candidates 4
 - With those settings, single-frame `qwen3.5` requests completed in roughly `15s` to `30s` per frame on an Apple Silicon laptop, so a 12-frame run can still take several minutes.
 - If you want faster local throughput, reduce `--vlm-max-samples` first before increasing batch size.
 
-## Test Cases
+## Historical Test Cases
 
 - `GitLab / Sid Sijbrandij cancer journey talk`
   - Video: https://www.youtube.com/watch?v=Sn5t8iPLOBQ

@@ -1,6 +1,9 @@
 ---
 name: twitter-x-scraping
 description: Scrape public Twitter/X timelines or lists through an explicitly permitted mirror or public page, with bounded pagination, date cutoffs, provenance, and artifact verification. Load for public timeline/list extraction; not for private data, authentication, posting, or bypassing access controls.
+metadata:
+  skill-cutter: ignore
+  skill-cutter-reason: "Deliberately retains operational mirror research, selectors, adapters, and samples; preserve unless the user explicitly overrides this exemption."
 ---
 
 # Public Twitter/X extraction
@@ -54,3 +57,25 @@ and warnings. Distinguish an empty result from an incomplete or blocked run.
 Surface rate limiting, markup drift, parse failures, and cursor termination;
 never present partial data as complete. Do not infer deleted/private content or
 claim that engagement fields are current unless the source supplied them.
+
+## Selective supporting files
+
+Load only the detail needed for the requested adapter or failure:
+
+- [references/mirror-inventory-apr-2026.md](references/mirror-inventory-apr-2026.md)
+  for the dated April 2026 instance snapshot and a current-verification method;
+- [references/fetch-and-retry.md](references/fetch-and-retry.md) for Axios and
+  ordinary Playwright adapters, configurable retry/backoff defaults, challenge
+  detection, and the historical dependency baseline;
+- [references/nitter-html-contract.md](references/nitter-html-contract.md) when
+  implementing or repairing Cheerio selectors and field extraction;
+- [references/pagination-media-and-edge-cases.md](references/pagination-media-and-edge-cases.md)
+  for cursor construction, stopping rules, pinned posts, retweet attribution,
+  images, and avatar fallbacks; and
+- [samples/public-nitter-timeline.ts](samples/public-nitter-timeline.ts) for a
+  bounded, provenance-bearing end-to-end adapter.
+
+Do not load every reference for a routine extraction. The mirror snapshot,
+package versions, markup, and provider behavior are historical or volatile;
+verify them before use. No supporting file overrides the access boundaries in
+this main skill.
