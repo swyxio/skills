@@ -1,30 +1,27 @@
 # Provider operation notes
 
-Use these as adapter-level rules, not as a substitute for provider-neutral request profiles, validation, cache lineage, or run lifecycle. Recheck current documentation before changing API calls or relying on a capability.
+Use these conditional adapter notes when they apply; they are not a universal telemetry or lifecycle requirement. Recheck current documentation before changing API calls or relying on a capability.
 
 ## OpenAI
 
-- Record `x-request-id` and send a unique, sanitized `X-Client-Request-Id` when the transport permits it; use either identifier to correlate ambiguous timeouts with support or internal telemetry.
-- Feed the admission controller from `x-ratelimit-*` request/token headers and, when present, project-token headers. Do not assume a single global token pool.
-- Treat requested output capacity as a reservation input to rate planning where the endpoint documents that behavior. Calibrate against actual headers and usage instead of converting a workers value directly into throughput.
-- Keep the requested model version, actual model, endpoint/API surface, schema hash, and finish reason in the attempt record. Pin versions and evaluate before interpreting a model upgrade as behavior-preserving.
+- Capture `x-request-id` and rate-limit headers when debugging, scaling, or correlating failures; a unique `X-Client-Request-Id` can help trace ambiguous timeouts.
+- Use observed headers and usage to pace a busy client; do not assume a single token pool or infer throughput directly from worker count.
+- Record the requested/actual model, endpoint, and finish reason when behavior comparisons matter. Pin versions and evaluate before treating a model upgrade as behavior-preserving.
 
 Official references: [API overview and headers](https://developers.openai.com/api/reference/overview#debugging-requests), [rate limits](https://developers.openai.com/api/docs/guides/rate-limits), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 
 ## Anthropic
 
-- Pace against separate RPM, input-token, and output-token constraints; do not model the service as one combined TPM bucket.
-- Honor `retry-after`. Ramp traffic smoothly because short-window and acceleration limits can reject a burst that looks safe at a one-minute average.
-- Capture `anthropic-ratelimit-*` headers. Keep cache-read, cache-creation, and uncached-input usage distinct: caching changes both economics and effective input-rate headroom for most models.
-- In streaming Messages responses, finalize the attempt only after the terminal `message_delta` carries `stop_reason`. Handle `max_tokens`, `tool_use`, `pause_turn`, and refusal as distinct outcomes; a continuation is a new effective request with explicit coverage semantics.
+- When scaling, pace separately for requests, input tokens, and output tokens, and honor `retry-after`; short bursts can still be rejected.
+- Cache-read, cache-creation, and uncached-input usage can change rate headroom, so retain that breakdown when optimizing throughput.
+- In streaming Messages, inspect the terminal `message_delta` stop reason. Treat `max_tokens`, tool work, pauses, and refusal as different outcomes; a continuation is a new request when it changes coverage.
 
 Official references: [rate limits and headers](https://platform.claude.com/docs/en/api/rate-limits), [stop reasons](https://platform.claude.com/docs/en/api/handling-stop-reasons).
 
 ## OpenRouter
 
-- Treat the route as variable unless it is constrained. Record requested model(s), provider preferences, actual provider/model, generation ID, router attempts, region/privacy restrictions, and routing metadata when available.
-- For schema-critical work, require structured-output parameters during provider routing and verify support per endpoint, not merely per model. `strict` improves enforcement but does not make validation optional.
-- Opt in to `X-OpenRouter-Metadata: enabled` for diagnostic runs. Decode metadata permissively; its fields are additive. Recover a post-mortem generation record from `X-Generation-Id` when appropriate.
-- Make router fallbacks explicit in the effective request identity. An implicit provider or model fallback is not identical to the originally requested transport contract.
+- A route may vary unless constrained. For comparisons, debugging, privacy controls, or schema-critical work, record requested provider policy and actual provider/model/generation.
+- Verify structured-output support per endpoint rather than only per model. `strict` helps but does not replace application validation.
+- Diagnostic runs may opt into `X-OpenRouter-Metadata: enabled`; decode its additive fields permissively. Record a router fallback separately when it changes the result contract.
 
 Official references: [provider routing](https://openrouter.ai/docs/guides/routing/provider-selection), [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), [router metadata](https://openrouter.ai/docs/guides/features/router-metadata).

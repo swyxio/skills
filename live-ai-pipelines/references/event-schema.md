@@ -1,6 +1,6 @@
 # Event and artifact contract
 
-Use JSON Lines for the event journal. Each line is a complete JSON object and can be replayed independently. The exact fields may grow, but the envelope should remain stable.
+Use this as an adaptable JSONL/event envelope for a workflow that needs progress or resume. Keep raw prompts, credentials, and sensitive source text out of browser-visible events.
 
 ## Event envelope
 
@@ -8,193 +8,57 @@ Use JSON Lines for the event journal. Each line is a complete JSON object and ca
 {
   "seq": 42,
   "timestamp": "2026-08-11T18:32:10.123Z",
-  "run_id": "run-2026-08-11-001",
+  "run_id": "run-001",
   "type": "request_completed",
-  "stage": "pass1.chunk_evidence",
-  "item_id": "unit-0003/chunk-0007",
-  "attempt": 1,
   "status": "complete",
-  "artifact": "results/pass1-chunk-evidence/chunk-000007.json",
-  "completed": 7,
-  "total": 38,
-  "elapsed_seconds": 4.82,
-  "transport": "sync",
-  "provider": "openai",
-  "model": "configured-model",
-  "schema_name": "chunk_observations",
-  "schema_hash": "sha256:...",
-  "effective_request_hash": "sha256:...",
-  "request_profile": "compact_extraction.v1",
-  "fallback_status": "none"
+  "stage": "chunk_evidence",
+  "item_id": "unit-0003/chunk-0007",
+  "artifact": "results/chunk-0007.json"
 }
 ```
 
-Required envelope fields:
+For reconnectable event streams, keep `seq`, `timestamp`, `run_id`, `type`, and `status` stable. Add what the consumer needs: attempt number, input/prompt/schema hash, coverage, elapsed time, cache/fallback status, provider/model/route, or error class. Do not force every field into every event.
 
-- `seq`: monotonically increasing cursor; gaps are safe after a crash;
-- `timestamp`: UTC event time;
-- `run_id`: stable run identity;
-- `type`: lifecycle event name;
-- `status`: event-specific state.
-
-Recommended fields:
-
-- `stage`, `item_id`, `attempt`;
-- `artifact`, `input_hash`, `prompt_hash`, `schema_hash`;
-- `completed`, `total`, `elapsed_seconds`;
-- `transport`, `provider`, `model`, `generation_id`, and actual routed provider/model where applicable;
-- `error_type`, `retryable`, `cache_hit`;
-- `effective_request_hash`, `parent_attempt_id`, `request_profile`, `fallback_status`, and coverage impact for changed-contract remediation;
-- `coverage`, `source_locator`, or `snapshot_id` where relevant.
-
-Do not put raw prompts, model output, access tokens, cookies, or full source text in browser-visible events. Put sensitive details in protected local request logs and reference them by ID.
-
-## Event types
-
-### Run lifecycle
+Useful event families include:
 
 ```text
-run_started
-run_paused
-run_resumed
-run_cancel_requested
-run_detached
-run_heartbeat
-run_finished
-run_failed
+run_started, run_paused, run_resumed, run_cancel_requested, run_finished, run_failed
+stage_started, stage_progress, stage_completed, stage_failed
+request_started, request_completed, request_failed, request_retried, artifact_published
+batch_submitted, batch_status, batch_completed, batch_failed, batch_output_recovered
+preview_updated, snapshot_render_started, snapshot_validated, snapshot_published
 ```
 
-### Stage lifecycle
+Use deltas for safe activity or a redacted preview only; do not make correctness depend on every token event.
 
-```text
-stage_started
-stage_progress
-stage_completed
-stage_failed
-```
+## Status and canonical artifacts
 
-### Item lifecycle
+`status.json` is a replaceable polling view. It normally contains current stage, completed/total counts, failures, cache/fallback counts, and last event sequence. Write it atomically.
 
-```text
-request_started
-request_delta
-request_completed
-request_failed
-request_retried
-artifact_published
-```
-
-Use `request_delta` only for safe activity metadata such as bytes received, elapsed time, or a redacted preview. Do not make the UI depend on every token delta.
-
-### Batch lifecycle
-
-```text
-batch_submitted
-batch_status
-batch_completed
-batch_failed
-batch_output_recovered
-```
-
-`batch_status` should include provider status and request counts when available. `batch_output_recovered` should identify the individual item artifact after the batch output is collected.
-
-### Projection lifecycle
-
-```text
-preview_updated
-snapshot_render_started
-snapshot_validated
-snapshot_published
-```
-
-## Status snapshot
-
-`status.json` is a replaceable materialized view for polling. It should contain enough information to render a dashboard without replaying the entire journal:
+A canonical artifact should preserve enough provenance to compare or regenerate it:
 
 ```json
 {
-  "run_id": "run-2026-08-11-001",
-  "status": "running",
-  "current_stage": "pass1.chunk_evidence",
-  "updated_at": "2026-08-11T18:32:10.123Z",
-  "last_event_seq": 42,
-  "stages": {
-    "pass1.chunk_evidence": {
-      "status": "running",
-      "completed": 7,
-      "total": 38,
-      "failed": 1,
-      "cached": 4,
-      "fallback": 1,
-      "blocked": 0,
-      "active": 2,
-      "elapsed_seconds": 61.3
-    }
-  },
-  "published": {
-    "significant_entities": 8,
-    "articles": 6,
-    "snapshots": 2
-  }
-}
-```
-
-Write status to a temporary file and atomically rename it. The UI should treat status as a snapshot, not an event log.
-
-## Artifact envelope
-
-Every canonical result should carry enough provenance to be regenerated and compared:
-
-```json
-{
-  "artifact_id": "artifact-pass1-unit0003-chunk0007-attempt1",
-  "schema_name": "chunk_observations",
-  "schema_version": "1",
-  "schema_hash": "sha256:...",
-  "run_id": "run-2026-08-11-001",
-  "stage": "pass1.chunk_evidence",
+  "artifact_id": "artifact-chunk-0007",
+  "run_id": "run-001",
+  "stage": "chunk_evidence",
   "item_id": "unit-0003/chunk-0007",
   "input_hash": "sha256:...",
   "prompt_hash": "sha256:...",
-  "provider": "openai",
-  "model_requested": "configured-model",
-  "model_actual": "configured-model",
-  "transport": "sync",
-  "attempt": 1,
-  "effective_request_hash": "sha256:...",
-  "parent_attempt_id": null,
-  "request_profile": "compact_extraction.v1",
-  "fallback_status": "none",
   "validation": "valid",
   "source_scope": ["unit-0003", "chunk-0007"],
-  "created_at": "2026-08-11T18:32:10.123Z",
   "data": {}
 }
 ```
 
-Keep the envelope stable even when the data schema evolves. A schema migration should create a new schema name/version or a deterministic migration step; do not silently reinterpret old artifacts.
+Add provider/model, schema version, effective request, parent attempt, or fallback status when they materially affect comparison or resume.
 
-## Idempotency
+## Resume metadata
 
-A useful idempotency key is:
-
-```text
-run_scope + stage + item_id + input_hash + prompt_hash + schema_hash + provider + model
-```
-
-Attempts are separate records. A retry may produce a new artifact ID, but it must not create a second published entity or duplicate graph edge without an explicit merge decision.
-
-## Item index and run lease
-
-Persist a durable item-index record before each first attempt and update it on every terminal change. It must include the logical item ID, latest effective request hash, stage, state, last attempt ID, canonical artifact (if any), coverage/fallback status, and active lease ID. It is the recovery authority; `status.json` is only a convenient projection.
-
-Persist a run lease with `lease_id`, owner identity/PID, worker process group, issued/expiry times, and heartbeat. Reclaim an expired lease only after verifying the prior owner no longer runs. Cancellation must record whether work was reaped or deliberately detached.
+A useful idempotency key combines run scope, stage, item ID, input hash, prompt/schema hash, and material provider/model settings. If a run can be detached or resumed by another owner, maintain an item index and run lease with the latest item state, active owner, heartbeat, and cancellation/detach outcome. Small in-process jobs can derive state directly from validated artifacts.
 
 ## UI rules
 
-- Use `seq` as the SSE `id` and reconnect cursor.
-- On reconnect, request events after the last seen sequence, then refresh `/api/status`.
-- Treat a missing sequence as a possible crash gap, not automatically as data loss.
-- If an artifact is unavailable, show the event with a retry/open-details state.
-- Render raw observations and candidate synthesis in separate visual regions.
-- Only add canonical navigation links after an artifact is complete and published.
+- Use the event sequence as an SSE cursor and refresh status after reconnecting.
+- Display canonical data, provisional/candidate data, and published snapshots separately.
+- Add canonical navigation only after its referenced artifact is complete and published.
