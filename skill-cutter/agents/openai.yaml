@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Cutter"
+  short_description: "Critically trim overgrown agent skills"
+  default_prompt: "Use $skill-cutter to audit this skill, classify what is essential or removable, narrow its triggers, and cut it to its behavioral core."
