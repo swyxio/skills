@@ -12,8 +12,11 @@ Use this reference when implementing or reviewing a request client. Preserve pro
 | Refusal/content filter | Policy outcome | Record explicitly; route to review or permitted alternative. | New request only if the policy-compliant task changes. |
 | `finish_reason=length` | Output contract exceeded | Split input, reduce declared response budget, or use allowed continuation/repair. | New effective request. |
 | HTTP 200 but invalid JSON/schema | Decoding/output contract | Preserve a protected diagnostic; change request shape or mark review. | New effective request if changed. |
+| Dense valid output repeatedly near its cap | Output-budget pressure | Pause broad fan-out; recalibrate output budget/schema or split the request class before spending more calls. | New effective request if changed. |
+| High p95 latency with no rate-limit pressure | Generation/context bottleneck | Measure in-flight utilization and input packet size; reduce/pack context before raising workers. | Same request for measurement; new effective request if context changes. |
 | Valid schema but unsupported facts/claims | Semantic quality | Run evaluator/targeted re-extraction with source evidence. | New evaluation or source-scoped request. |
-| User cancellation/process termination | Lifecycle interruption | Stop admission, flush status, classify in-flight work. | Resume only missing valid results. |
+| Fallback validates but has lower coverage | Degraded canonical result | Store under its changed effective request hash; mark `completed_with_fallback`, expose the contract delta, and do not satisfy a rich-contract cache lookup. | New effective request. |
+| User cancellation, process termination, or lost controller | Lifecycle interruption | Explicitly cancel or detach; stop admission if cancelling, flush status, classify in-flight work. | Resume only missing valid results. |
 
 An HTTP 200 is an **attempt-level** success, not an item-level success. A canonical item requires all declared validation checks.
 
@@ -28,6 +31,24 @@ Choose one bounded intervention and record it:
 5. Mark the item `blocked_for_review` when any smaller contract would compromise required coverage.
 
 Never repeat an unchanged oversized request several times and call it resilience. It only adds cost and consumes rate-limit capacity.
+
+## Input-packet discipline for long-form work
+
+An output that fits the schema can still be an operational failure when every
+long-form item receives an unbounded evidence bundle. Build a request packet
+before asking for a dossier or other prose projection:
+
+1. Deduplicate equivalent observations and quotes.
+2. Rank evidence by source-unit coverage, recurrence, causal/event pressure,
+   relationship impact, and contradiction value.
+3. Preserve a compact chronological trajectory and all conflicting evidence.
+4. Keep stable evidence IDs and source locators for every included claim.
+5. Enforce a per-class input-token budget and record omitted-but-available
+   evidence counts.
+
+Do not substitute raw-context volume for quality. A dossier needs enough
+representative evidence to write grounded prose, not every observation that
+mentions its subject.
 
 ## Cache identity
 
@@ -46,6 +67,12 @@ Store an attempt separately from a successful canonical artifact. If a fallback 
 
 Never place a result generated with a smaller row/prose budget under the cache identity for the richer request without recording the changed effective contract.
 
+## Run and item ownership
+
+Use a durable item index in addition to result files and caches. Each row must identify the logical item, latest effective request hash, terminal/non-terminal state, last attempt, canonical artifact (if any), and active run lease. A directory that happens to contain cached files cannot establish whether other items failed, were retried, or are still running.
+
+For a run that can outlive its terminal or UI owner, persist `owner_pid`, `process_group`, `lease_id`, `lease_expires_at`, and `last_heartbeat`. On cancellation, stop admissions and signal the owned process group. On a lease-expiry recovery, verify the prior owner is no longer active before reclaiming work. A detached supervisor must keep status and heartbeat publication alive.
+
 ## Minimal attempt record
 
 Keep this record server-side or in a protected local run directory. Copy only redacted operational fields to UI-facing telemetry.
@@ -63,6 +90,11 @@ Keep this record server-side or in a protected local run directory. Copy only re
   "validation": {"syntax": "invalid", "schema": "not_run"},
   "effective_request_hash": "sha256:...",
   "fallback_policy": "row_budget:12",
+  "request_class": "compact_extraction",
+  "input_budget_tokens": 8000,
+  "estimated_input_tokens": 2400,
+  "output_budget_tokens": 5200,
+  "evidence_packet": {"included": 18, "available": 44, "source_units": 3},
   "input_tokens": 2400,
   "output_tokens": 5200,
   "latency_seconds": 37.8,
@@ -87,8 +119,14 @@ Keep these categories separate:
 | Admission wait | Time spent waiting for in-flight/RPM/TPM/cooldown capacity. |
 | Stage elapsed | End-to-end wall time, including scheduling and retry. |
 | Completion coverage | Completed, fallback, blocked, failed, cancelled, and missing items. |
+| Cap pressure | Near-cap valid outputs, `finish_reason=length`, and validation failures by request class. |
+| Context pressure | Input-packet token distribution, evidence included/available, and source-unit coverage. |
 
 Calculate percentiles from actual completed attempt durations. Retain the run configuration and cache state with each report; otherwise throughput and cost comparisons are not interpretable.
+
+Do not infer HTTP-attempt count, rate-limit behavior, or latency percentiles
+from successful cache records alone. The cache is necessary for resume but it
+omits failed/retried/in-flight attempts unless those are persisted separately.
 
 ## Rate-aware admission pseudocode
 

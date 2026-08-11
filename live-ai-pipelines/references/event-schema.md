@@ -22,7 +22,10 @@ Use JSON Lines for the event journal. Each line is a complete JSON object and ca
   "provider": "openai",
   "model": "configured-model",
   "schema_name": "chunk_observations",
-  "schema_hash": "sha256:..."
+  "schema_hash": "sha256:...",
+  "effective_request_hash": "sha256:...",
+  "request_profile": "compact_extraction.v1",
+  "fallback_status": "none"
 }
 ```
 
@@ -39,8 +42,9 @@ Recommended fields:
 - `stage`, `item_id`, `attempt`;
 - `artifact`, `input_hash`, `prompt_hash`, `schema_hash`;
 - `completed`, `total`, `elapsed_seconds`;
-- `transport`, `provider`, `model`, `generation_id`;
+- `transport`, `provider`, `model`, `generation_id`, and actual routed provider/model where applicable;
 - `error_type`, `retryable`, `cache_hit`;
+- `effective_request_hash`, `parent_attempt_id`, `request_profile`, `fallback_status`, and coverage impact for changed-contract remediation;
 - `coverage`, `source_locator`, or `snapshot_id` where relevant.
 
 Do not put raw prompts, model output, access tokens, cookies, or full source text in browser-visible events. Put sensitive details in protected local request logs and reference them by ID.
@@ -54,6 +58,8 @@ run_started
 run_paused
 run_resumed
 run_cancel_requested
+run_detached
+run_heartbeat
 run_finished
 run_failed
 ```
@@ -119,6 +125,9 @@ snapshot_published
       "total": 38,
       "failed": 1,
       "cached": 4,
+      "fallback": 1,
+      "blocked": 0,
+      "active": 2,
       "elapsed_seconds": 61.3
     }
   },
@@ -152,6 +161,10 @@ Every canonical result should carry enough provenance to be regenerated and comp
   "model_actual": "configured-model",
   "transport": "sync",
   "attempt": 1,
+  "effective_request_hash": "sha256:...",
+  "parent_attempt_id": null,
+  "request_profile": "compact_extraction.v1",
+  "fallback_status": "none",
   "validation": "valid",
   "source_scope": ["unit-0003", "chunk-0007"],
   "created_at": "2026-08-11T18:32:10.123Z",
@@ -170,6 +183,12 @@ run_scope + stage + item_id + input_hash + prompt_hash + schema_hash + provider 
 ```
 
 Attempts are separate records. A retry may produce a new artifact ID, but it must not create a second published entity or duplicate graph edge without an explicit merge decision.
+
+## Item index and run lease
+
+Persist a durable item-index record before each first attempt and update it on every terminal change. It must include the logical item ID, latest effective request hash, stage, state, last attempt ID, canonical artifact (if any), coverage/fallback status, and active lease ID. It is the recovery authority; `status.json` is only a convenient projection.
+
+Persist a run lease with `lease_id`, owner identity/PID, worker process group, issued/expiry times, and heartbeat. Reclaim an expired lease only after verifying the prior owner no longer runs. Cancellation must record whether work was reaped or deliberately detached.
 
 ## UI rules
 

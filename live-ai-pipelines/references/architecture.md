@@ -38,6 +38,8 @@ run-2026-08-11-001/
     status.json
     events.jsonl
     events.seq
+    item-index.jsonl
+    lease.json
     stage-state/
       pass1.json
       pass5.json
@@ -69,7 +71,7 @@ Every item should have a stable `item_id`, input hash, prompt/schema hash, attem
 
 Examples: global taxonomy, canonical entity registry, plot synthesis, timeline ordering, graph publication policy, and full audit.
 
-These stages depend on a larger completed set. Show a draft or progress shell, but do not merge partial global conclusions into the canonical graph unless the stage explicitly defines a commutative/incremental algorithm.
+These stages depend on a larger completed set. Build their input from a bounded normalized projection: stable IDs, accepted claims/events, evidence references, contradictions, and compact trajectories. Do not concatenate raw source text, every chunk observation, or prior display prose. Show a draft or progress shell, but do not merge partial global conclusions into the canonical graph unless the stage explicitly defines a commutative/incremental algorithm.
 
 ### Projection stages
 
@@ -116,9 +118,11 @@ For long-form articles, either stream `prose_sections` as complete section objec
 
 ## Provider routing
 
-Direct OpenAI Structured Outputs are the baseline when schema behavior and parsed streaming matter. Use the official SDK stream helpers where available.
+Direct OpenAI Structured Outputs are the baseline when schema behavior and parsed streaming matter. Use the official SDK stream helpers where available; persist request IDs and rate-limit headers for every attempt.
 
-OpenRouter is useful for model/provider comparisons. Require structured-output parameters during routing, verify model support, and record the actual provider/model and generation ID. Treat an in-progress stream as non-retryable after content has reached the client unless the application can tolerate duplicate work.
+For Anthropic, treat request, input-token, and output-token limits as separate controller dimensions. Prompt caching can materially change input-rate headroom, so persist the usage breakdown rather than only total input. In streaming Messages, use the terminal `message_delta` stop reason to decide whether the response completed, exhausted `max_tokens`, paused, requires tool handling, or refused.
+
+OpenRouter is useful for model/provider comparisons. Require structured-output parameters during routing, verify support per endpoint rather than per model, and record requested models/provider policy plus the actual provider/model and generation ID. Opt in to router metadata for diagnostic runs; its fields are additive. Treat an in-progress stream as non-retryable after content has reached the client unless the application can tolerate duplicate work.
 
 Batch APIs provide coarse progress. Poll the batch, record status transitions, and emit one completion event for each recovered output. Split a large batch into smaller slices only when the additional checkpoints justify extra submission and polling overhead.
 
@@ -142,13 +146,14 @@ Always show coverage, last update time, source scope, and whether later work can
 
 On startup:
 
-1. read `run.json` and the latest status;
-2. enumerate complete result artifacts;
-3. validate artifact envelopes and schema hashes;
-4. rebuild or verify stage checkpoints from results;
-5. mark abandoned requests as retryable or failed;
-6. resume only missing idempotency keys;
-7. republish previews and snapshots from canonical artifacts.
+1. read `run.json`, `lease.json`, the latest status, and item index;
+2. verify whether the previous owner is alive before reclaiming an expired lease;
+3. enumerate complete result artifacts;
+4. validate artifact envelopes and schema hashes;
+5. rebuild or verify stage checkpoints from index entries and results;
+6. mark abandoned requests as retryable, cancelled, or failed;
+7. resume only missing idempotency keys;
+8. republish previews and snapshots from canonical artifacts.
 
 Do not infer completion from a worker process that is no longer alive. Do not delete old snapshots as part of recovery.
 
