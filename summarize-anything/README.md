@@ -5,23 +5,18 @@ Recursive map-reduce summarization for text of any length (1k-1M words). Pluggab
 ## Setup
 
 ```bash
-which jq || brew install jq
+command -v curl
+command -v jq
 ```
 
-Plus at least one LLM backend:
+Use an LLM backend that is already available to the project. Local execution
+can keep sensitive material off hosted APIs; hosted backends may offer more
+context or stronger final synthesis. Keep credentials in environment variables
+or a secret manager.
 
-```bash
-# Local (free, no API key)
-ollama pull llama3.1:8b
-
-# Cloud (set any of these)
-export GEMINI_API_KEY=...          # Recommended: free tier, 1M context
-export OPENAI_API_KEY=sk-...       # GPT-4.1, 1M context
-export ANTHROPIC_API_KEY=sk-ant-...# Claude Sonnet 4, 200k context
-export OPENROUTER_API_KEY=sk-or-...# Any model via proxy
-```
-
-**Recommended default:** Gemini 3.1 Flash — free tier, 1M context window (most inputs fit in a single call without chunking), and it has an OpenAI-compatible endpoint.
+Provider setup, portable request examples, and selection tradeoffs are in
+[`references/backends.md`](references/backends.md). Verify current model IDs,
+context limits, parameters, prices, and rate limits at action time.
 
 ## Problem
 
@@ -59,11 +54,11 @@ Long-form content (transcripts, articles, documents) needs to be repurposed into
 
 ## Strategy by Input Size
 
-| Input | Strategy |
-|-------|----------|
-| < 50k tokens (~37k words) | Direct — single LLM call |
-| 50k-1M tokens | Direct with Gemini/GPT-4.1 (1M context) |
-| > 1M tokens | Recursive map-reduce with any backend |
+| Input state | Strategy |
+|---|---|
+| Source, instructions, and output fit comfortably in the verified context | Direct single call |
+| Source approaches the real context or leaves inadequate output room | Map into evidence notes, then reduce |
+| Combined map notes still exceed the reduce context | Recursively reduce adjacent groups before final synthesis |
 
 ## Focus Directives
 
@@ -76,4 +71,17 @@ Steer what the summary emphasizes:
 "highlight what's relevant to developers"
 ```
 
-See SKILL.md for the full prompt catalog, LLM calling functions, chunking implementation, and troubleshooting.
+## Detailed References
+
+The compact workflow is in [`SKILL.md`](SKILL.md). Load only the detail needed:
+
+- [`references/backends.md`](references/backends.md) — provider setup,
+  selection, portable adapters, and backend failures
+- [`references/map-reduce.md`](references/map-reduce.md) — paragraph-aware
+  chunking, map/reduce prompts, recursive reduction, and validation
+- [`references/output-formats.md`](references/output-formats.md) — the 17-format
+  catalog, evidence rules, and when to split calls
+- [`references/examples-and-troubleshooting.md`](references/examples-and-troubleshooting.md)
+  — worked workflows and common failure modes
+- [`playground/src/prompts.ts`](playground/src/prompts.ts) — exact executable
+  prompt templates used by the playground

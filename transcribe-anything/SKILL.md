@@ -6,7 +6,7 @@ compatibility: Requires ffmpeg and one available ASR backend. Cloud backends req
 metadata:
   author: swyxio
   version: "1.1"
-  last-updated: "2026-06-13"
+  last-updated: "2026-08-11"
   primary-tools: ffmpeg, a local or hosted ASR backend
 ---
 
@@ -45,6 +45,131 @@ Use what is already installed or explicitly configured. As a default:
 
 Verify the chosen package and current API/CLI contract before installing or
 running it. Do not install every backend listed in an old guide.
+
+## Curated backend recommendations (deliberate research shortcut)
+
+This section is intentionally broader than the minimal workflow. It saves the
+backend-comparison and setup research that otherwise gets repeated on every
+transcription task. Treat provider models, prices, and limits as a snapshot
+checked on **2026-08-11**; verify the linked primary documentation at action
+time.
+
+### Local backend decision matrix
+
+| Need | Recommended backend | Why / caveat |
+|---|---|---|
+| Apple Silicon default | `mlx-whisper` | Native MLX acceleration; a good first local path on M-series Macs. |
+| Portable reference CLI | `openai-whisper` | Canonical Whisper implementation and CLI; simple, but not usually the fastest long-file path. |
+| Long files or bounded memory | `faster-whisper` | CTranslate2 implementation with quantization and Silero VAD support. |
+| Word alignment plus optional diarization | `whisperx` | Combines faster-whisper-style ASR, forced alignment, and pyannote-backed speaker labels. Its dependency stack is more fragile, so isolate it. |
+| Diarize an existing transcript | `pyannote.audio` | Produces a speaker timeline that can be aligned to any ASR output. `community-1` is the current open pipeline; GPU is strongly preferred. |
+| Diarization without HF/cloud credentials | NVIDIA NeMo | Real VAD/embedding/clustering or Sortformer pipelines; operationally heavier and best on CUDA. |
+| Batched NVIDIA throughput | `insanely-fast-whisper` | Opinionated Transformers/Optimum CLI. Useful when its supported CUDA/MPS stack matches the machine; benchmark before standardizing on it. |
+| Minimal Python-free runtime | `whisper.cpp` | C/C++ implementation with first-class Metal support and a simple offline binary. |
+
+Recommended priority when the user does not name a backend:
+
+1. For transcription only, use an already-installed accelerated local backend:
+   `mlx-whisper` on Apple Silicon, `faster-whisper` on CUDA/CPU, then canonical
+   `whisper` as the portable fallback.
+2. For speaker labels, prefer a configured hosted diarization model when upload
+   is acceptable; otherwise use pyannote on GPU when Hugging Face access is
+   ready, or NeMo on CUDA when no credentialed diarizer is available.
+3. Use WhisperX when both word-level forced alignment and diarization are needed
+   in one pipeline. For an already-good transcript, pyannote direct is usually a
+   cleaner separation of concerns.
+4. Use `whisper.cpp` when a small native/offline deployment matters more than
+   Python ecosystem convenience.
+
+### Isolated installation recipes
+
+Do not install all of these. Confirm the platform and requested feature, show
+the command, and obtain approval before changing the environment. Prefer an
+existing project environment; otherwise isolate incompatible audio/ML stacks.
+
+Base tools on macOS:
+
+```bash
+brew install ffmpeg yt-dlp
+```
+
+Canonical Whisper and Apple-Silicon MLX:
+
+```bash
+uv tool install openai-whisper
+uv tool install mlx-whisper
+```
+
+Long-file local ASR with faster-whisper:
+
+```bash
+uv venv --python 3.11 .venv-faster-whisper
+uv pip install --python .venv-faster-whisper/bin/python faster-whisper
+```
+
+WhisperX in its own environment:
+
+```bash
+uv venv --python 3.11 .venv-whisperx
+uv pip install --python .venv-whisperx/bin/python whisperx
+```
+
+Open pyannote diarization:
+
+```bash
+uv venv --python 3.11 .venv-pyannote
+uv pip install --python .venv-pyannote/bin/python "pyannote.audio" soundfile
+```
+
+For `pyannote/speaker-diarization-community-1`, the user must accept the model's
+Hugging Face conditions and provide `HF_TOKEN` through the environment. Do not
+embed the token in a command or generated script. WhisperX transcription and
+alignment can run without diarization access; speaker labels cannot.
+
+NeMo diarization in a separate CUDA-oriented environment:
+
+```bash
+uv venv --python 3.11 .venv-nemo
+uv pip install --python .venv-nemo/bin/python "nemo_toolkit[asr]"
+```
+
+The opinionated batched CLI and native C++ implementation:
+
+```bash
+pipx install insanely-fast-whisper
+brew install whisper-cpp
+```
+
+Run each installed tool's `--help` and a short fixture before starting a long
+recording. For faster-whisper/NeMo libraries, run a small import or repository
+example. CUDA, cuDNN, PyTorch, and package-version compatibility are part of the
+selected backend setup, not generic prerequisites for every transcription.
+
+### Hosted provider decision matrix
+
+| Provider | Prefer when | Current details to verify |
+|---|---|---|
+| OpenAI Transcription API | High-quality managed transcription, or native speaker labels with `gpt-4o-transcribe-diarize` | Current model/response-format support, VAD chunking requirements, upload limits, token pricing. `diarized_json` is required for speaker annotations. |
+| Groq Speech-to-Text | Very fast, inexpensive Whisper transcription/translation | Current `whisper-large-v3` / `whisper-large-v3-turbo` availability, tier-specific upload limits, and per-hour price. |
+| Deepgram | Production pre-recorded/streaming STT with diarization and formatting | Current Nova model, region, diarization options, file/time limits, concurrency, and pricing. |
+| AssemblyAI | Managed speaker utterances plus transcript features such as keyterms or chapters | Current Universal model, `speaker_labels`, region/language support, concurrency, and add-on pricing. |
+| Gemini audio understanding | Very long audio, transcription plus translation/Q&A/structured extraction | Current Gemini audio model, Files API, context/token cost, timestamp fidelity, and maximum combined duration. It is an audio-understanding model, not the default dedicated real-time STT path. |
+
+Primary references:
+
+- [OpenAI Whisper](https://github.com/openai/whisper),
+  [faster-whisper](https://github.com/SYSTRAN/faster-whisper),
+  [WhisperX](https://github.com/m-bain/whisperX),
+  [pyannote.audio](https://github.com/pyannote/pyannote-audio),
+  [NVIDIA NeMo Speech](https://github.com/NVIDIA-NeMo/Speech),
+  [insanely-fast-whisper](https://github.com/Vaibhavs10/insanely-fast-whisper),
+  and [whisper.cpp](https://github.com/ggml-org/whisper.cpp) for local stacks.
+- [OpenAI transcription API](https://platform.openai.com/docs/api-reference/audio/createTranscription),
+  [Groq Speech-to-Text](https://console.groq.com/docs/speech-to-text),
+  [Deepgram pre-recorded audio](https://developers.deepgram.com/docs/pre-recorded-audio),
+  [AssemblyAI speaker diarization](https://www.assemblyai.com/docs/pre-recorded-audio/label-speakers),
+  and [Gemini audio understanding](https://ai.google.dev/gemini-api/docs/audio)
+  for hosted paths.
 
 ## Minimal workflow
 

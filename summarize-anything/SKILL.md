@@ -6,7 +6,7 @@ compatibility: Requires an available local or hosted LLM backend. Keep credentia
 metadata:
   author: swyxio
   version: "1.0"
-  last-updated: "2026-03-28"
+  last-updated: "2026-08-11"
   primary-tools: curl, jq, or the user's existing LLM client
 ---
 
@@ -76,3 +76,24 @@ result with the source. If the output is truncated, reduce the requested scope,
 increase the verified output budget, or make separate calls; do not invent a
 missing ending. If a long summary is incoherent, increase chunk size/overlap or
 use a stronger available backend and report the tradeoff.
+
+## Selective references
+
+Keep this main skill compact and load only the sister reference needed for the
+task:
+
+- Read [references/backends.md](references/backends.md) when configuring or
+  selecting a provider, writing an API adapter, or diagnosing provider errors.
+- Read [references/map-reduce.md](references/map-reduce.md) when the source is
+  oversized, a direct call loses sections, or a repeatable large-document
+  pipeline is required.
+- Read [references/output-formats.md](references/output-formats.md) when the
+  user requests publishing copy, a multi-format content package, or detailed
+  format guidance. Its executable prompt source is
+  [`playground/src/prompts.ts`](playground/src/prompts.ts).
+- Read
+  [references/examples-and-troubleshooting.md](references/examples-and-troubleshooting.md)
+  for concrete workflows or quality, truncation, performance, and API failures.
+
+Do not load every reference by default. Combine them only when the task spans
+those concerns.
