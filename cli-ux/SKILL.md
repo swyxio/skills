@@ -1,6 +1,6 @@
 ---
 name: cli-ux
-description: Design, implement, or review predictable human- and agent-friendly command-line interfaces. Use for CLI architecture, commands, argument parsing, interactive prompts, authentication, typed request schemas, JSON or NDJSON output, pagination, dry runs, mutation safety, exit behavior, help text, or terminal and automation tests.
+description: Design, implement, or review predictable human- and agent-friendly command-line interfaces, including state-aware no-op behavior, credential precedence and sandbox-compatible storage, argument parsing, interactive prompts, typed request schemas, JSON or NDJSON output, pagination, dry runs, mutation safety, exit behavior, help text, and terminal or automation tests.
 ---
 
 # CLI UX
@@ -126,6 +126,50 @@ Share authorization semantics while supporting distinct credential-acquisition p
 - fail closed on expired, revoked, malformed, or insufficiently scoped credentials.
 
 Request the least authority required for the selected command. Do not make a broad human session the implicit automation credential.
+
+## Make authentication state obvious and portable
+
+Treat authentication as a stateful workflow, not only a credential-acquisition prompt.
+
+Before asking for an identity or password, perform a read-only current-session check when a stored credential is available. If the session is valid:
+
+- say who is already authenticated, such as `Already logged in as alice.`;
+- avoid prompts, network mutations, and needless credential replacement;
+- exit successfully and expose `authenticated` plus `already_authenticated` in structured output;
+- provide an explicit escape hatch such as `--force` or `--relogin` for intentional replacement;
+- if an explicit identity was supplied and it differs from the current identity, continue through the normal login flow rather than silently switching accounts.
+
+When a host keychain is invisible to a sandbox but the user and sandbox share a filesystem, make shared per-user storage the default for the sandbox-compatible path. Protect the directory and file (`0700`/`0600`), never print the bearer, record expiry metadata when available, and ignore expired or malformed entries. Keep host-only keychain storage as an explicit opt-in when it is appropriate.
+
+Document and test a deterministic credential-read waterfall. A useful default is:
+
+```text
+process-scoped environment token
+-> shared user credential file
+-> host OS keychain
+-> unauthenticated
+```
+
+Resolve the selected base URL before looking up origin-scoped credentials. Report the active source and server-confirmed identity without revealing the secret. Make logout clear every local store in the documented scope, while clearly stating that local deletion does not revoke a remote credential.
+
+## Scan for UX improvements before implementation
+
+For every CLI change, look for opportunities to reduce surprise, repeated work, and unsafe recovery. At minimum, check:
+
+- **Already complete:** Can the command detect that the requested state already exists and say so instead of duplicating work?
+- **Intent and defaults:** Are common safe actions concise, and are risky or scope-expanding choices explicit?
+- **Preflight:** Can local validation, auth checks, target resolution, and confirmations happen before secrets or network mutations?
+- **Recovery:** Does failure name the phase, explain whether retry is safe, and give one exact next command?
+- **Idempotency:** Can interrupted or repeated commands resume or safely no-op using an idempotency key or expected-state fence?
+- **State visibility:** Can users inspect current config, credential source, selected target, effective defaults, and progress without leaking secrets?
+- **Output fit:** Does a human get a concise explanation while an agent gets stable JSON/NDJSON, documented fields, and useful exit codes?
+- **Environment portability:** Does the command behave predictably across TTYs, CI, containers, sandboxes, operating systems, and missing optional integrations?
+- **Discoverability:** Do help, examples, aliases, shell completion, and typo suggestions expose the canonical safe path?
+- **Destructive actions:** Are previews, confirmations, dry runs, backups, and undo/revoke paths available in proportion to the risk?
+- **Performance:** Is progress visible for slow work, are results bounded, and are cancellation and resume semantics clear?
+- **Accessibility:** Does output remain legible without color, terminal control sequences, mouse interaction, or a particular shell?
+
+Prefer small state-aware improvements that make the next invocation safer and clearer. Add the behavior to the typed command contract and test it at the process boundary when it changes prompts, stdout/stderr, exit codes, or credential resolution.
 
 ## Keep mutations behind complete preflight
 
