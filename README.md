@@ -25,6 +25,7 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 | Design, debug, migrate, cache, or deploy a production system on Cloudflare | [cloudflare-production-builder](./cloudflare-production-builder) | Product-specific skills after the Cloudflare durability, storage, security, and release boundaries are settled |
 | Build a structured-data chatbot or Slack bot | [data-chatbots](./data-chatbots) or [slackbot-builder](./slackbot-builder) | [app-ux-paradigms](./app-ux-paradigms) for interaction details |
 | Protect usernames and public handles from route collisions, squatting, or impersonation | [reserved-handle-policy](./reserved-handle-policy) | [security-hardening](./security-hardening) when broader auth or permission review is needed |
+| Create or substantially revise a repository README around a verified first result | [ai-readme](./ai-readme) | [ai-devblog](./ai-devblog) for a dated engineering story |
 | Write, revise, verify, or publish an individual technical devblog | [ai-devblog](./ai-devblog) | [blog-system-design](./blog-system-design) only when shared presentation infrastructure must change |
 | Create or redesign a technical blog index, post shell, navigation, search, typography, or reusable components | [blog-system-design](./blog-system-design) | [ai-devblog](./ai-devblog) for individual article content |
 
@@ -109,7 +110,8 @@ narrowest atomic skill.
 
 #### Technical blogging
 
-- [ai-devblog](./ai-devblog) — decides whether technical work merits a post, develops an evidence-fit angle, writes a structured Simplified-Technical-English-inspired article, builds purposeful article-specific explanations, and carries the post through rendered verification and publication.
+- [ai-readme](./ai-readme) — turns a repository into a progressive, executable explanation for an explicitly chosen reader, with a verified first result, one stable example, honest tradeoffs, and a context-isolated cold read.
+- [ai-devblog](./ai-devblog) — routes technical material into the right story mode and weight, aligns on the reader and belief change, preserves primary evidence, and edits the result for clarity and human interest before verified publication.
 - [blog-system-design](./blog-system-design) — designs dense technical blog systems: index and section pages, compact typography, full-text `/` search, resizable article index rails, responsive floating TOCs, reusable explanatory components, and information-dense media policy.
 
 #### Media acquisition and transformation

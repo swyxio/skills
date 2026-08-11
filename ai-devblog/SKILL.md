@@ -1,499 +1,288 @@
 ---
 name: ai-devblog
-description: Turn interesting coding, debugging, research, architecture, migration, or deployment work into a dated, high-quality technical devblog within an existing publishing system. Use when an agent should reconstruct work from code and coding-agent threads, decide whether findings merit a post, offer angles, write or revise a structured site-native explanation, select claim-fit evidence, design purposeful article-specific visuals, inspect the rendered result, and publish it publicly or internally. Pair with blog-system-design when work changes the shared index, post shell, typography, navigation, search, responsive behavior, or reusable components.
+description: Turn coding, debugging, research, architecture, migration, deployment, or product work into a clear, evidence-backed technical post in an existing publishing system. Use when Codex should reconstruct primary evidence, decide whether the material deserves a note or article, align on the intended reader, choose among field-report, explainer, reversal, origin-story, hands-on, or evidence-led argument forms, write and edit the piece, inspect its rendered presentation, and publish it at the requested visibility. Pair with blog-system-design for changes to the shared blog system.
 ---
 
 # AI Devblog
 
-Write a technical account grounded in work the agent performed or can fully
-reconstruct from primary artifacts. Capture what changed, why it mattered, the
-evidence behind the conclusion, and what remains uncertain. Prefer a concise,
-useful field report over polished but generic content marketing.
+Write a technical story that changes what a particular reader understands,
+believes, or can do. Keep the empirical honesty of a good engineering report,
+but make comprehension and human interest the organizing priorities.
 
-Use `blog-system-design` together with this skill whenever the task creates or
-changes the shared blog index, taxonomy, article shell, typography, search,
-navigation, TOC, responsive behavior, or reusable presentation components. A
-single post must not silently redesign the publication. Keep article angle,
-prose, and evidence here; keep the shared reading system there.
+Use this order of attention:
 
-## Entry contract
+> route the genre → align with the reader → choose the angle → explain →
+> support with evidence → edit → cold-read → present → publish
 
-- Use this skill after technical work produced inspectable artifacts: code,
-  diffs, commits, logs, traces, benchmarks, screenshots, tests, deployments, or
-  operational receipts.
-- Apply an interestingness gate before proposing a post. Continue only when the
-  work contains at least one of:
-  - a non-obvious finding;
-  - a meaningful design decision or tradeoff;
-  - a measurable improvement or shipped capability;
-  - a surprising failure or corrected assumption;
-  - a reusable technique, tool, or operating lesson.
-  If none applies, recommend a changelog entry, commit message, or internal
-  status note instead of manufacturing a devblog.
-- Do not invent a post from memory or plans alone. Inspect the current evidence.
-- For every substantial post, complete the mandatory angle review in
-  [references/angle-review.md](references/angle-review.md) before drafting.
-  Present 3-5 materially different story packages with explicit pros, cons,
-  and a recommendation. Wait for the user's choice unless they explicitly say
-  to skip angle review. A request to “write now” does not itself waive review.
-- When the user asks to write a post, default to carrying it through publication
-  unless they set a narrower boundary. In the first progress update, remind them
-  that the planned endpoint includes preview, commit, push, deployment, and live
-  publication at the selected visibility. Give them a clear chance to request a
-  draft-only or preview-only handoff before publication work begins.
+For substantial work, read
+[the human-writing review](references/human-writing-review.md) and
+[the story modes](references/story-modes.md) before proposing an angle. Use
+these writers as structural inspiration, not as personas to imitate.
 
-## Choose visibility
+Use `blog-system-design` with this skill when the task changes the shared blog
+index, taxonomy, article shell, typography, navigation, search, responsive
+behavior, or reusable components. A post must not silently redesign its
+publication.
 
-Respect an explicit visibility choice:
+## Route the material
 
-- **Public**: suitable for the open web, with durable public links and all
-  sensitive information removed.
-- **Internal**: employees-only detail may include private architecture and
-  operational context, but never secrets, credentials, raw personal data, or
-  unnecessary customer content.
+First decide whether a devblog is the right container:
 
-Default to **public** when visibility is unspecified. Record visibility in
-front matter when the site's schema supports it. Never publish internal
-material to a public target merely because public is the default.
+- Put a routine shipped fact in a changelog or release note.
+- Put durable project onboarding, commands, API guidance, and contributor
+  instructions in a README; use `ai-readme` when available.
+- Put an exhaustive roadmap, product plan, design specification, API reference,
+  or component inventory in documentation.
+- Continue here for reconstructed technical work, a tested argument, a
+  consequential origin story, or a mechanism worth teaching.
+
+Apply an interestingness gate. A shipped capability alone is not enough. The
+material needs at least one reader payoff: a non-obvious finding, consequential
+decision, useful technique, measurable result, corrected belief, surprising
+failure, illuminating mechanism, or reusable model. Recommend a smaller form
+when the work does not earn a post.
+
+Choose one primary story mode:
+
+- **Field report:** a change, incident, migration, or measured result.
+- **Short lab note:** one useful experiment, release, artifact, or strange fact.
+- **Mechanism explainer:** a system made understandable through one example.
+- **Incident or reversal:** a reasonable belief that reality disproved.
+- **Evidence-led argument:** several concrete cases that revise a common belief.
+- **Hands-on argument:** a stance earned through a small reproducible exercise.
+- **Origin story:** turning points that explain why a system has its current
+  shape.
+- **Product announcement:** what changed, why it helps, the hidden hard part,
+  and the exact constraint.
+
+A post may borrow a secondary move, but do not turn every available fact into
+an omnibus article. See [story modes](references/story-modes.md) for structures,
+title families, and Dan Luu/Fly.io-inspired angle prompts.
+
+Choose a weight that fits the idea:
+
+- **Note:** about 300–800 words; one narrow finding and little ceremony.
+- **Standard:** about 800–2,000 words; the default for a developed story.
+- **Feature:** over 2,000 words only for a stated editorial reason; consider
+  splitting work that grows beyond roughly 4,000 words.
+
+These are editing signals, not quotas. Never inflate a useful note or compress
+a mechanism until it no longer makes sense.
+
+## Align with the reader
+
+Before a standard or feature post, determine what the skill user expects the
+reader to **be**, **know**, and **want**. If this is not already explicit, ask
+one compact batch in the `align-me` shape:
+
+1. State each belief as a numbered decision.
+2. Give lettered, mutually exclusive choices with concrete consequences.
+3. Recommend one choice for each decision.
+4. End with `Reply approve all to accept 1A, 2B, 3A, or give changes such as
+   2C.` Then wait.
+
+Use [the reader-and-angle checkpoint](references/angle-review.md) for the exact
+questions. Default to a smart adjacent engineer who knows the domain but not
+the project and wants a useful mental model or decision. Do not ask what the
+user has already answered. For a short note with an obvious readership, state
+the inferred assumptions briefly and proceed.
+
+Then write privately:
+
+- **Before:** what the reader probably believes or cannot yet do.
+- **After:** what the evidence should make them believe, understand, or try.
+- **Spine:** the one question the post answers.
+- **Not this post:** two or three tempting facts that belong elsewhere.
+
+For a standard or feature post, offer two or three genuinely different angles
+unless only one honest angle exists. Keep each option compact: title, promise,
+and tradeoff. Recommend one and wait. Never hide a single thesis behind cosmetic
+title variants.
 
 ## Establish the evidence boundary
 
-Before writing:
+Reconstruct the work before writing:
 
-1. Inspect the relevant source, diff, issue, transcript, experiment, or incident.
-2. Inspect screenshots and other media the user supplied in the coding thread.
-   Reuse them when they are primary evidence for the problem, diagnosis, or
-   shipped result. Preserve provenance in the caption, sanitize browser chrome,
-   identifiers, and private data, and distinguish a diagnostic snapshot from
-   production proof. Do not substitute a reconstructed mockup when an authentic
-   supplied screenshot tells the story accurately.
-3. Identify exact versions: commit SHA, package/model/runtime version, dataset,
-   configuration, date range, and environment where material.
-4. Re-run or read the most relevant tests and measurements when reasonably
-   cheap. Do not convert stale or unavailable evidence into a current claim.
-5. Separate these boundaries explicitly:
-   - local source changed;
-   - committed;
-   - pushed or merged;
-   - deployed or migrated;
-   - verified on the live user-facing surface.
-6. Preserve failed attempts, reversals, and uncertainty when they explain the
-   final design. Do not edit the causal history into a clean fictional path.
+1. Inspect the relevant source, diff, issue, transcript, experiment, incident,
+   or primary external research.
+2. Identify exact revisions, versions, data, configuration, dates, and
+   environment when they affect the claim.
+3. Re-run or read the decisive tests and measurements when reasonably cheap.
+4. Separate source change, commit, push or merge, deployment or migration, and
+   live user-facing verification.
+5. Preserve failed attempts, unfavorable results, reversals, and uncertainty
+   when they explain the final conclusion.
+6. Identify evidence that challenges the preferred thesis, especially for an
+   evidence-led argument.
 
-Distinguish what this agent directly executed or observed from repository
-history, another agent's work, and human decisions. Attribute material ideas,
-discoveries, and playbooks. Use the project's editorial voice where
-appropriate, but do not imply sole authorship or first-hand observation that
-the evidence does not support.
-
-Link claims to primary evidence whenever possible. Prefer exact-SHA source
-links, official documentation, original issues or papers, test output,
-deployment receipts, and public URLs over secondary summaries. Use inline
-links where they read naturally; use footnotes or a references section for
-supporting material. Keep quotations short.
-
-### Reconstruct the lived story
+Distinguish what this agent observed from repository history, another agent's
+work, human decisions, and inference. Attribute material ideas and firsthand
+observations. Do not invent motives, reactions, or a first-person experience.
 
 When coding-agent threads exist, use them to recover the real prompt, surprise,
-failed assumption, and decision sequence instead of writing from the final diff
-alone. Search Codex, Claude Code, Devin, and other available thread formats.
-Match threads to the work by exact commit, changed file, command, and timestamp
-before falling back to keyword search.
-
-- Use private threads to reconstruct causality, but publish a direct excerpt
-  only after checking disclosure, secrets, identities, private paths, customer
-  data, and internal architecture.
-- Quote only a short decisive exchange. Preserve the original wording; mark
-  omissions and light trimming, name the agent or source type, and never
-  silently rewrite a quotation for polish.
-- Pair an authentic screenshot with a compact semantic transcript excerpt when
-  the visual context matters. Use transcript text alone when a screenshot would
-  be inaccessible, illegible, or mostly browser chrome.
-- Use first person only when the trace establishes who acted or observed the
-  event. Otherwise use a transparent project or agent voice.
-
-Open with the strongest real artifact: an incident, surprising prompt exchange,
-diagnostic screenshot, failed assumption, or observed user consequence. Use two
-to four short paragraphs and at most one compact artifact before the mechanism.
-State the technical BLUF by the third paragraph. Adapt the artifact to the story
-instead of forcing every post into a conversation cold open.
-
-### Select evidence by support, not abundance
-
-Use the minimum sufficient proof for each important claim. Weigh candidate
-evidence by:
-
-1. **fit** — it directly supports the claim being made;
-2. **directness** — it observes the result rather than relying on a loose proxy;
-3. **scope** — its environment and sample match the stated conclusion;
-4. **freshness** — it describes the relevant implementation;
-5. **explanatory value** — it helps the reader understand or trust the result.
-
-Do not list numbers because they are available. Do not repeat one result as a
-metric card, paragraph, table, and chart. Put detailed receipts in an appendix
-or durable linked artifact when they matter for audit rather than explanation.
-
-Match numeric precision to the claim and the reader's decision. Do not copy
-machine precision into prose by default. For human-scale durations, normally
-round to whole seconds; use tenths when that precision changes the comparison,
-and milliseconds for genuinely subsecond behavior. Keep extra decimal places
-in linked receipts or raw evidence when auditability requires them. Apply the
-same judgment to percentages, byte counts, and other measurements: use
-appropriate significant figures, keep compared values at compatible precision,
-and avoid three-decimal-place figures unless the distinction is material.
-
-Reject proof theater. For each material claim, record the claim, the evidence
-that directly changes a skeptical reader's belief, and the evidence boundary or
-limitation. Remove an evidence block when it only demonstrates that normal
-delivery machinery ran.
-
-- Treat HTTP 200 as reachability evidence only. It does not prove the requested
-  source, behavior, bindings, migration, performance, or user outcome.
-- Do not promote CI success, a green build, an uploaded artifact, or a public
-  URL into article proof unless the article's actual claim concerns that exact
-  boundary.
-- Keep publication chain-of-custody in the release handoff, a compact provenance
-  line, or a linked receipt. Do not turn it into a large in-article pipeline or
-  set of ornamental proof cards by default.
-- Prefer one compact comparison table or sentence over a sequence of status
-  badges. A visual must compress and clarify evidence, not enlarge ceremony.
-- If removing a proof graphic leaves the argument unchanged, remove it.
-
-## Write the title and front matter
-
-Start every title with a straightforward summary that tells the reader what
-actually happened: the concrete change, result, incident, or finding. Put the
-general lesson, principle, or opinion in the subtitle or body unless that
-principle is itself the demonstrated result. Optionally follow the title with
-a subtitle that adds mechanism, context, evidence, or stakes.
-
-Good shapes:
-
-- `Exact-SHA Archives Cut Checkouts 89%`
-- `Repository Agents Stay Scoped`
-- `Durable Events Replaced Polling`
-
-Avoid vague titles such as `Some Thoughts on Agents` or hooks that conceal the
-actual result. Also reject post-hoc principle titles that abstract away a
-concrete implementation story—for example, prefer `We Split Forge's API Into
-Five Workers` over `Release Authority Follows Ownership` for a large runtime
-refactor. Before publication, repeat the title-to-story audit from
-[references/angle-review.md](references/angle-review.md).
-
-Adapt to the destination's established metadata or front-matter schema. Do not
-add fields or redesign the site's content model merely to satisfy this skill.
-When the site has no convention yet, prefer:
-
-```yaml
-title: "Short result — optional hook"
-description: "One concrete sentence about the result and why it matters."
-date: "YYYY-MM-DD"
-tags: ["specific-topic", "system-or-tool"]
-visibility: "public"
-```
-
-Use a real publication date. Choose a few specific, reusable tags rather than
-an exhaustive keyword list.
-
-### Byline and opening
-
-Follow the destination's established author and avatar conventions. Reuse an
-existing author identity or explicit AI-assistance label rather than adding a
-one-off persona or hardcoding a project-specific name into the article. When
-the post is materially AI-written, prefer a convention that makes that clear;
-do not hide AI authorship behind an invented “the team” byline or an ambiguous
-institutional voice. If the site has no applicable convention and authorship is
-required, ask the user or use the smallest transparent AI attribution the
-content model already supports.
-
-The rendered post must move directly from its title, optional subtitle/deck,
-and compact author byline into the article prose. Do not insert a metrics grid,
-implementation-evidence scorecard, validation-receipt card, ship-receipt
-sidebar, or other dashboard-like summary between the headline and the writing.
-Place important proof in the narrative at the point where it supports a claim;
-link a longer receipt naturally from that passage or from a restrained endnote.
-
-## Shape the article
-
-Use the site's native human-editable format. Use MDX when the destination
-already supports it and the article benefits from components or interaction.
-Discover and reuse the site's content directories, layouts, components,
-typography, metadata, citation style, and build pipeline. Do not introduce a
-new blog framework merely to enable one article without the user's approval.
-If the article needs a new shared component or presentation convention, load
-`blog-system-design` and make that system change explicitly.
-
-Orient the reader within the first two or three paragraphs. Assume they are
-broadly familiar with the technical area but do not know this project, incident,
-architecture, experiment, or prior argument. Spend two to four sentences naming
-the relevant system, the situation before this work, why the problem matters,
-and the specific question the post answers.
-
-A catchy opener is optional. When one genuinely helps, use it briefly and put
-the orienting context immediately after it. When there is no strong opener,
-begin directly with the context rather than manufacturing a slogan, dramatic
-anecdote, or mystery. A concrete incident may supply the hook, but readers
-should not have to infer the surrounding system or stakes from that incident.
-
-Be engaging to technical readers in the way the material earns. Preserve a
-weird failure, funny constraint, surprising reversal, vivid debugging moment,
-or unusual mechanism when it is authentic and helps explain the work. Do not
-flatten an interesting story into a formal report, but do not invent personality
-or suspense for routine work.
-
-Within that opening, deliver a two-part BLUF:
-
-1. what changed or was learned;
-2. the most important evidence or consequence.
-
-Then adapt the structure to the story. A substantial devblog usually needs:
-
-- the problem and why it mattered;
-- the prior design or failed assumption;
-- the key mechanism or decision;
-- evidence that supports the result;
-- alternatives considered and why they lost;
-- limitations, unresolved questions, and the next test.
-
-Before preview, perform a **scan-structure pass** on the source and rendered
-article; break up any viewport that reads as an uninterrupted wall of prose.
-
-- Avoid more than three consecutive body paragraphs when structure is available.
-- Use headings for transitions and bullets for parallel claims or inventories.
-- Use **bold lead-ins** for scan targets and *italics* for definitions or contrast.
-- Do not force emphasis or bullets; every device must expose the article's logic.
-
-Before drafting the body, write a private one-sentence thesis and a short causal
-outline. The thesis must state the non-obvious conclusion, not merely the work
-completed. The outline should connect the starting condition, mechanism,
-consequence, evidence, and limitation. Remove it from the finished post unless
-it also works naturally as reader-facing prose.
-
-Explain at the reader's altitude:
-
-- introduce project-specific nouns before relying on them;
-- separate what happened, why it happened, how the mechanism works, and what
-  proves it;
-- use concrete subjects and verbs instead of vague abstractions such as
-  “improved the architecture” or “leveraged the platform”;
-- make causal transitions explicit when one decision or observation leads to
-  another;
-- keep one primary idea per paragraph and cut repeated conclusions, ceremonial
-  setup, and exhaustive inventories that do not advance the argument;
-- name the strongest counterargument or tradeoff instead of presenting the
-  chosen design as inevitable;
-- preserve technical precision, but define uncommon terms and give a small
-  example when a mechanism is otherwise difficult to picture.
-
-Stay close to ASD-STE100 Simplified Technical English without making the prose
-mechanical. Prefer short direct sentences, active voice, one main idea per
-sentence, consistent terminology, defined abbreviations, and concrete verbs.
-Avoid idioms, inflated metaphors, vague intensifiers, marketing language, and
-clickbait that hides the technical result.
-
-After the first draft, perform an editorial pass independently from factual
-verification. Check whether the opening earns attention, each section advances
-the thesis, examples arrive near the concepts they explain, and the ending adds
-a durable lesson rather than repeating the introduction.
-
-Keep implementation inventories, long logs, and exhaustive methods behind a
-details block, appendix, linked receipt, or sidebar. Use asides for caveats,
-definitions, operator notes, and surprising secondary observations without
-breaking the main narrative.
-
-Avoid “AI report” furniture: front-loaded KPI tiles, three-number summary
-strips, evidence tables that merely restate the deck, and ornamental receipt
-cards. A table is appropriate only when exact row/column comparison is
-materially easier to understand than prose. Never add one just to make a post
-look rigorous.
-
-Prefer small exact code excerpts over large dumps. Explain why each excerpt is
-present. Use a focused code diff when the change itself tells the story. Use
-tabbed examples when readers benefit from comparing before/after code,
-alternative implementations, languages, frameworks, or configuration modes;
-do not hide the only complete example behind interaction. Link to the exact
-source revision when readers need the full context. When reproducibility is
-part of the value, give readers the minimum prerequisites, commands, expected
-result, and safe cleanup needed to follow along. Do not turn every devblog into
-a start-to-finish tutorial.
-
-## Make the mechanism visible
-
-Strongly prefer purposeful visuals when they expose a mechanism or relationship
-faster than prose. For every substantial post, look for the clearest opportunity
-to show the mechanism, comparison, or proof. There is no fixed quota: publish
-without a visual when every candidate would be decorative, misleading, or
-require disproportionate new infrastructure. Every included visual must make a
-relationship faster to understand than prose alone.
-
-Plan visuals before polishing the prose. List the two or three relationships a
-reader most needs to understand—such as structure, causality, sequence,
-comparison, or proof—and choose a visual form only when it improves one of
-them. Treat the visual and its nearby explanation as one unit: the prose should
-interpret the graphic, not transcribe every label in it.
-
-Before designing article visuals, read [the visual-language reference](references/visual-language.md)
-and use its selection sequence, semantic palette, layout rules, and examples.
-
-Treat visual quality as part of editorial quality, not decoration. When a
-substantial visual needs art direction, make two to four image-generation
-studies and iterate between image generation, deterministic code, and human
-feedback. Start from a text brief or pass an exact diagram back through image
-generation to explore hierarchy, texture, composition, and publication
-identity. Use `align-me` when materially different directions remain plausible;
-show concrete passes rather than asking abstract style questions.
-
-Choose the strongest final form instead of forcing every exploration back into
-code:
-
-- publish a generated image directly when it is intentionally editorial,
-  coherent with the article, accessible, and free of unsupported factual
-  detail;
-- use image generation to stylize a deterministic chart or diagram, then
-  compare it with the source and restore exact labels, scales, measurements,
-  and topology in a deterministic overlay when needed;
-- rebuild the selected direction in HTML, SVG, CSS, Mermaid, or plotting code
-  when precision, interaction, responsiveness, or accessibility requires it.
-
-Generated visual studies may become final assets; they are not automatically
-disposable moodboards. However, never treat generated pixels as evidence, and
-never trust a model to preserve factual labels, measurements, screenshots, or
-topology without verification. For a prominent or technically consequential
-visual, take a few review passes with the user when practical and obtain clear
-approval before publication.
-
-Choose the smallest useful form:
-
-- diagram for architecture, authority, or data flow;
-- timeline for an incident, migration, or changing state;
-- table for exact mappings or alternatives that genuinely need two-dimensional comparison, never as a decorative metrics summary;
-- chart for measured comparisons with units and sample boundaries;
-- annotated screenshot for user-visible or operational proof;
-- code diff for a small decisive implementation change;
-- syntax-highlighted code sample for the key technique;
-- tabbed code examples for meaningful before/after or cross-stack comparisons;
-- interactive demo, calculator, explorer, or stepper when readers benefit from
-  changing inputs or walking a causal sequence.
-
-Match the visual's semantics to its claim:
-
-- An architecture or data-flow diagram must label the meaningful entities and
-  relationships. Show direction, boundaries, ownership, protocol, or lifecycle
-  distinctions when they affect the conclusion. A collection of boxes without
-  relationships is an inventory, not an architecture diagram.
-- A comparison graphic must use a truthful common scale where comparison is
-  intended. Show units, totals or denominators, the baseline, and the sample or
-  measurement boundary. Do not imply that a proxy metric measures more than it
-  does.
-- A timeline or sequence must show state transitions and the event that moves
-  the system between them, including retries, branches, or ambiguity when those
-  are central to the lesson.
-- A screenshot must prove a user-visible or operational claim. Crop it to the
-  relevant surface and annotate the evidence when the reader would otherwise
-  have to hunt for it.
-- A code visual must be small enough to read and must call attention to the
-  decisive behavior, not merely demonstrate that code exists.
-
-Prefer deterministic HTML, SVG, Mermaid, plotting code, or site-native
-components when exact technical relationships must remain inspectable.
-Generated or hybrid editorial illustrations are welcome when they add a useful
-idea, memorable context, or publication identity and survive factual review.
-Do not let a low-information illustration dominate the initial viewport. Prefer
-an information-dense SVG diagram, chart, annotated screenshot, or compact mixed
-media treatment above the fold. Create a strong `og:image` when the publication
-supports social cards; it may be more expressive because it does not displace
-article content. Do not add decorative hero art by reflex; use it when the
-article's story and publication direction justify it. Generative imagery can
-support attention and explanation, but cannot substitute for a labeled
-technical diagram, measured chart, authentic screenshot, or other evidence.
-
-For performance work, use a before/after visual, timing waterfall, flame chart,
-or stacked stage diagram only when it supports a distinct claim. Do not show
-the same result in several forms by default. Keep comparisons on a common scale,
-show units and totals, identify the exact environment or sample boundary, and
-provide an accessible table or textual equivalent. If timing attribution is
-incomplete, label the remainder as overhead or unmeasured time; never invent a
-stage breakdown. Use supplied screenshots when they show the original symptom
-or operational surface better than reconstructed UI.
-
-Heavily favor an interactive visual when manipulating inputs, replaying a
-sequence, exploring an artifact, or switching implementations reveals the
-finding better than a static image. Do not add interaction solely as polish.
-
-For interactive visuals or MDX components:
-
-- reuse existing components before creating new ones; if the destination has
-  no component system, ask before expanding the publishing stack;
-- keep data and logic in feature-owned, reusable components;
-- make the central claim visible without interaction;
-- provide a static or textual fallback;
-- support keyboard and touch use, reduced motion, and narrow screens;
-- avoid client-side weight that is disproportionate to the lesson.
-
-When an interactive visual establishes a reusable site convention or requires
-shared responsive infrastructure, use `blog-system-design` for the component
-system and keep only article-specific data and interpretation in this skill.
-
-Every figure needs a concise caption, units or provenance where applicable,
-and meaningful alt text or an adjacent textual equivalent. Do not use a chart,
-diagram, screenshot, or decorative card merely to satisfy a quota.
-
-Apply a visual explanation test before keeping a figure:
-
-1. State the exact question the figure answers.
-2. Confirm that a reader can identify the answer without relying on the
-   surrounding paragraph.
-3. Confirm that labels, scales, arrows, colors, and grouping have declared
-   meanings rather than decorative meanings.
-4. Confirm that the adjacent prose explains why the answer matters.
-5. Remove or redesign the figure if it could be exchanged for an unrelated
-   illustration without changing the argument.
-
-## Protect readers and systems
-
-Before saving or publishing:
-
-- remove keys, cookies, tokens, internal credentials, private headers, and
-  authentication artifacts;
-- mask personal information and customer identifiers unless their inclusion is
-  explicitly authorized and necessary;
-- sanitize logs, screenshots, terminal output, URLs, analytics, and database
-  rows—not only prose;
-- do not publish private repository links as if public readers can open them;
-- distinguish inference from directly observed evidence;
-- avoid claiming production success from a build, commit, push, preview, or
-  health endpoint alone.
-
-## Preview and publish
-
-Follow repository instructions and the user's requested boundary. Unless the
-user asks for a narrower handoff, carry the article through:
-
-1. write the human-editable post and any reusable visual components;
-2. run the relevant content, type, link, lint, and production-build checks;
-3. preview the rendered article;
-4. visually inspect mobile and desktop, plus tablet or ultrawide when shared
-   layout or wide interactive content changed;
-5. verify captions, code wrapping, tables, sidebars, navigation, metadata,
-   dates, tags, citations, and fallbacks;
-6. inspect every explanatory figure at its rendered size: labels must be
-   legible, relationships unambiguous, scales truthful, colors distinguishable,
-   and content unclipped without requiring unexplained interaction;
-7. test visual components through meaningful rendered or structural assertions.
-   String-presence checks alone do not prove that a chart, diagram, or fallback
-   works;
-8. commit only the intended files;
-9. push and use the owning deployment path;
-10. verify the final URL and any binding-dependent or interactive behavior.
-
-When the post changes shared layout, navigation, search, typography, or reusable
-components, also complete the `blog-system-design` verification checklist.
-
-Do not call a visual article complete when the preview is unavailable or when
-its explanatory figures have not been inspected in the rendered page. Report
-that state as an incomplete handoff even if content tests and the production
-build pass.
-
-Report source, commit, push/merge, deployment, and live verification as
-separate facts. A public devblog handoff should end with a verified public URL;
-an internal devblog should end with the authorized internal preview or URL.
+failed assumption, and decision sequence. Match a thread by commit, file,
+command, and timestamp before using keyword similarity. Private threads may
+inform causality, but quote or screenshot them only after checking disclosure,
+secrets, identities, private paths, customer data, and internal architecture.
+
+Use the minimum proof that changes a skeptical reader's mind. Judge evidence by
+fit, directness, scope, freshness, and explanatory value. Link exact source,
+official documentation, original issues or papers, tests, deployment records,
+and public results near the claim they support. Put exhaustive logs, methods,
+and provenance in a linked artifact or appendix.
+
+Do not promote a green build, HTTP 200, commit, upload, or public URL into proof
+of a different claim. Match numeric precision to the decision: round human
+durations and measurements unless extra precision changes the conclusion.
+
+## Address the elephant
+
+Treat the title and deck as one honest promise. Choose the family that fits the
+story: result, stance, reversal, distinction, paradox, mechanism, imperative,
+question, or origin. Between the title, deck, and first paragraph, name the
+central subject and stakes plainly.
+
+If the post is about a Program Database, say `Program Database`. If it is about
+SQLite, a product failure, a commercial interest, or a controversial
+recommendation, say that. Do not bury the lede behind an abstract principle or
+mystery hook. Cleverness may sharpen a clear subject; it may not conceal one.
+
+Open according to the mode:
+
+- use an artifact or consequence for a field report;
+- use the disputed premise for an argument;
+- use the visible result for a tutorial or lab note;
+- use the admission and current consequence for a reversal;
+- use the present constraint or decisive turn for an origin story.
+
+Name the system and why it matters by the end of the first paragraph. State the
+bottom line by the third. Label proposals and unshipped plans explicitly.
+
+Follow the destination's existing front matter, author, avatar, and AI
+assistance conventions. Do not invent a persona or add a new metadata model for
+one post. Use a real publication date and a few durable, specific tags.
+
+## Explain at the reader's altitude
+
+Default to a smart adjacent engineer. Declare at most three concepts the post
+may assume. Define project-specific nouns on first use and give plain behavior
+before an abbreviation or formal term. A link may deepen an explanation; it
+cannot replace one.
+
+When the mechanism is unfamiliar or the draft makes a causal jump, use as many
+of these rungs as the reader needs:
+
+1. observable consequence;
+2. smallest concrete example;
+3. plain-language model;
+4. precise technical term;
+5. implementation detail;
+6. important edge case.
+
+The first three are the usual minimum. Skip a later rung when it does not help
+the intended reader. Prefer one recurring request, row, trace, failure, or
+fixture that gains detail over several disconnected examples. Before a command,
+code excerpt, table, transcript, or screenshot, tell the reader what question
+it answers; afterward, interpret what matters.
+
+Build a private causal outline that connects the starting condition, mechanism,
+consequence, evidence, objection, and limitation. Let the selected story mode
+determine the public section order. Add a heading when the argument turns, not
+because a fixed number of paragraphs elapsed.
+
+## Sound like a thoughtful person
+
+Use plain technical prose: concrete subjects, active verbs, consistent terms,
+and one main idea per sentence. Analogy, contrast, parallelism, humor, and
+first-person reaction are welcome when they clarify a real mechanism and the
+evidence supports the voice. Remove them when they merely decorate the prose or
+widen the claim.
+
+Preserve what Forge and OverGrid do well: empirical honesty, real limitations,
+unfavorable measurements, exact artifacts, and corrected assumptions. Tone
+down their recurring AI-shaped habits:
+
+- internal nouns and architecture before the reader knows the concrete system;
+- repeated `not X, but Y`, `X is not Y`, and perfectly balanced reversals;
+- titles that default to `We`, a product name, a percentage, or a slogan;
+- `authority`, `boundary`, `contract`, `receipt`, `durable`, `surface`, and
+  `exact` used as atmosphere instead of necessary terms;
+- uniform triads, bold thesis restatements, symmetrical sections, and compulsory
+  recaps;
+- exhaustive evidence promoted into the main narrative;
+- every observation enlarged into a principle and every paragraph polished into
+  an aphorism;
+- a suspiciously clean causal history or a plan narrated as an accomplished
+  result.
+
+Prefer `the release controller deploys the Worker` to `authority flows through
+the release boundary`. Earn one or two memorable sentences by compressing a
+true and useful distinction. Do not impose a slogan quota.
+
+## Make artifacts and visuals earn their place
+
+Use small exact code excerpts, focused diffs, authentic screenshots, commands,
+measured comparisons, and brief quotations only when they advance the chosen
+angle. Give readers prerequisites, expected results, and safe cleanup when
+reproducibility is part of the value. Never dump a full transcript or
+implementation inventory into the story merely because it exists.
+
+Use a visual only when it answers an important question faster than prose.
+Plan it around the relationship being explained, not decoration. Before
+producing or reviewing article visuals, read
+[the visual-language reference](references/visual-language.md). Generated
+pixels may illustrate an idea but never establish technical evidence. Keep the
+central claim available in accessible text.
+
+## Review in three editorial passes
+
+1. **Developmental:** check the angle, belief change, order, deliberate
+   omissions, strongest objection, elephant in the room, and whether the ending
+   earns its lesson.
+2. **Explanatory:** check assumed knowledge, undefined nouns, jargon, missing
+   causal steps, the recurring example, artifacts without interpretation, and
+   concepts introduced too late.
+3. **Line:** check concrete verbs, sentence rhythm, noun piles, repeated
+   antithesis, duplicated conclusions, ordinary proofreading, and title/deck
+   accuracy. As the final step, sharpen the thesis, minimum-model, and
+   consequence sentences where they can become easier to remember without
+   becoming less true.
+
+Factual verification remains a separate evidence check, not a fourth editorial
+pass.
+
+Then run a mandatory context-isolated cold read for every standard or feature
+post. Give a fresh subagent or uninvolved reader only the draft and public
+links—not the task thread, repository history, intended thesis, or angle notes.
+Ask:
+
+1. What is this about?
+2. What changed, or what is the author arguing?
+3. How does the central mechanism work?
+4. What evidence supports it?
+5. What remains uncertain?
+6. Which terms, transitions, or assumed facts block understanding?
+
+Compare the answers with the approved reader beliefs. If the cold reader misses
+the subject, thesis, mechanism, or evidence limit, revise and repeat. Fix the
+post; do not coach the reviewer. Use the same check in abbreviated form for a
+note when confusion risk is high.
+
+## Protect readers and publish deliberately
+
+Remove secrets, credentials, private headers, personal data, customer
+identifiers, private paths, and inaccessible links from prose and media.
+Distinguish inference from observation. Respect an explicit public or internal
+visibility choice; default to public only when the evidence is safe for the
+open web.
+
+When the user asks for a finished post, default to carrying it through preview,
+commit, push, deployment, and final URL verification unless they request a
+draft-only or preview-only handoff. State that intended endpoint in the first
+progress update so the user can narrow it. Follow repository instructions and
+read [the publishing checklist](references/publishing-checklist.md) before
+publication work.
+
+Report source creation, commit, push or merge, deployment, and live verification
+as separate facts. Never call a preview, build, health check, or URL alone proof
+that the article's technical claim is true.

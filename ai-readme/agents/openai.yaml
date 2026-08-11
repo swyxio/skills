@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI README"
+  short_description: "Write executable, human-centered READMEs"
+  default_prompt: "Use $ai-readme to turn this repository into a clear, executable README that gets a new reader to a verified first result."

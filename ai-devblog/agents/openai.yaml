@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Devblog"
-  short_description: "Publish evidenced technical stories with strong visuals."
-  default_prompt: "Use $ai-devblog to reconstruct technical work, present distinct evidence-backed angle packages with pros, cons, and a recommendation, align on one, iterate on story-carrying visuals, and publish a contextual site-native account."
+  short_description: "Write clear, evidence-backed technical stories"
+  default_prompt: "Use $ai-devblog to turn this technical work into a clear, evidence-backed post for an explicitly aligned reader, from angle selection through verified publication."
