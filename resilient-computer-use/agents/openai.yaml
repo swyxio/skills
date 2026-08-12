@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resilient Computer Use"
+  short_description: "Recover from common desktop automation failures"
+  default_prompt: "Use $resilient-computer-use to operate this app reliably and recover from stale state or lost context."
