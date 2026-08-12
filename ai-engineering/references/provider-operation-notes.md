@@ -4,6 +4,7 @@ Use these conditional adapter notes when they apply; they are not a universal te
 
 ## OpenAI
 
+- For schema-critical artifacts, use OpenAI's documented Structured Outputs interface rather than prompt-only JSON. Keep local validation and source/domain checks after the provider returns a complete object.
 - Capture `x-request-id` and rate-limit headers when debugging, scaling, or correlating failures; a unique `X-Client-Request-Id` can help trace ambiguous timeouts.
 - Use observed headers and usage to pace a busy client; do not assume a single token pool or infer throughput directly from worker count.
 - Record the requested/actual model, endpoint, and finish reason when behavior comparisons matter. Pin versions and evaluate before treating a model upgrade as behavior-preserving.
@@ -21,7 +22,7 @@ Official references: [rate limits and headers](https://platform.claude.com/docs/
 ## OpenRouter
 
 - A route may vary unless constrained. For comparisons, debugging, privacy controls, or schema-critical work, record requested provider policy and actual provider/model/generation.
-- Verify structured-output support per endpoint rather than only per model. `strict` helps but does not replace application validation.
+- Prefer the official provider API for schema-critical structured artifacts. If OpenRouter is intentionally used, pin and verify its exact provider endpoint supports native structured outputs; `strict` helps but does not replace application validation, and prompt-only JSON is not an acceptable substitute.
 - Diagnostic runs may opt into `X-OpenRouter-Metadata: enabled`; decode its additive fields permissively. Record a router fallback separately when it changes the result contract.
 
 Official references: [provider routing](https://openrouter.ai/docs/guides/routing/provider-selection), [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), [router metadata](https://openrouter.ai/docs/guides/features/router-metadata).

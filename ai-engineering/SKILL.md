@@ -15,6 +15,9 @@ For provider-specific API behavior, read [provider operation notes](references/p
 ## Useful defaults
 
 - Do not publish a malformed, partial, or schema-invalid result as complete.
+- For a machine-consumed structured artifact, use the selected model provider's documented native structured-output API with an explicit schema. Do **not** treat a free-form completion prompted with “return JSON” plus local `JSON.parse` as structured output.
+- Prefer the official provider API for schema-critical work. A router is acceptable only when its exact pinned endpoint advertises native structured-output support and a canary has verified the complete request/stream/validation path; otherwise call the provider directly.
+- Prompted JSON is acceptable only as a human-readable/debug artifact. It is not an input contract for a canonical graph, database write, workflow transition, or published page.
 - Keep observed source data, generated prose, inferred claims, and repair output distinct when downstream consumers need that distinction.
 - Treat workers as an in-flight limit, not as a request-rate setting.
 - When a fallback changes coverage or semantics, record that difference rather than silently treating it as the richer result.
@@ -30,6 +33,8 @@ Find the client wrapper, parser/schema, fan-out helper, cache, retry loop, and t
 ### 2. Shape the request before scaling it
 
 Bound arrays, quotes, prose sections, and nesting to a response size the model can finish. Validate syntax, schema, source references, and any domain invariants that make the result usable.
+
+**Do not use “please return JSON” + a local parser as the primary structured-output mechanism.** In a dense long-form extraction workload, that pattern produced roughly 47–52% retries despite HTTP 200 responses: it conflated malformed text, empty final content, mid-stream errors, and `finish_reason=length` with ordinary JSON parsing. Treat that as an unacceptable calibration result, not a universal percentage. Use native schema-constrained output first; still validate the completed object locally, because syntax/schema conformance does not establish source grounding or semantic correctness.
 
 For an expensive or broad fan-out, run a small sparse/typical/dense sample first. Use the result to tune per-class input and output budgets. Long-form requests benefit from a bounded evidence packet: deduplicate, rank representative support, preserve conflicts, and keep stable locators. Global synthesis should receive normalized IDs and compact summaries rather than the raw corpus plus every intermediate artifact.
 

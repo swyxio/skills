@@ -11,7 +11,7 @@ Use this as a menu, not a universal compliance checklist. Keep provider-specific
 | 400/401/403 or invalid request shape | Configuration, auth, or policy | Stop and retain a redacted diagnostic; retry only after something changes. |
 | Refusal/content filter | Policy outcome | Record it explicitly; change scope only if the new task is permitted. |
 | `finish_reason=length` | Response contract too large | Split the input, lower declared rows/sections, or use an allowed continuation. |
-| HTTP 200 but invalid JSON/schema | Output contract failure | Preserve a diagnostic and change prompt, schema, or source scope before retrying. |
+| HTTP 200 but invalid JSON/schema | Output contract failure, including a stream that began successfully but did not finish validly | Preserve the partial diagnostic and terminal event; use native structured output rather than prompt-only JSON, then change schema/input scope before retrying. |
 | High p95 without rate pressure | Context or generation bottleneck | Pack/reduce input before adding workers. |
 | Valid but unsupported claims | Semantic quality issue | Evaluate against source evidence or re-extract a narrower scope. |
 | Cancellation/lost controller | Lifecycle interruption | Stop admission or explicitly detach; preserve completed work and classify the rest. |
@@ -20,7 +20,7 @@ An HTTP 200 only establishes that an attempt reached the provider. Decide separa
 
 ## Compact response-shape and context guidance
 
-For structured extraction, cap rows, quote length, and nesting. For long-form work, build a bounded packet of deduplicated, ranked evidence with locators and conflicts. If a dense calibration sample repeatedly reaches the cap, consider changing the request shape before spending on a broad fan-out.
+For structured extraction, call the official provider's documented native structured-output API with an explicit schema, then apply local schema and domain validation. Do not substitute a prompt such as “return JSON” followed by `JSON.parse`; that is ordinary free-form generation with a fragile parser. Cap rows, quote length, and nesting. For long-form work, build a bounded packet of deduplicated, ranked evidence with locators and conflicts. If a dense calibration sample repeatedly reaches the cap, consider changing the request shape before spending on a broad fan-out.
 
 ## Cache and fallback identity
 
