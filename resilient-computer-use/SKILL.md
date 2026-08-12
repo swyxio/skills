@@ -1,6 +1,6 @@
 ---
 name: resilient-computer-use
-description: Operate desktop applications and browsers reliably through Computer Use, with proactive state tracking and recovery from common automation failures. Use for any multi-step or consequential UI workflow, especially when app focus moves, multiple monitors or windows are present, accessibility state is empty or stale, element indices change, screenshots and accessibility disagree, dialogs or file pickers appear, buttons remain disabled, typing submits unexpectedly, a user interrupts or concurrently uses the app, an action may already have completed, a browser tab or extension binding appears lost, or a dedicated browser tool fails and Computer Use should recover the same live session.
+description: Operate desktop applications and browsers reliably through Computer Use, with proactive state tracking and recovery from common automation failures. Use for any multi-step or consequential UI workflow, especially when app focus moves, multiple monitors or windows are present, accessibility state is empty or stale, element indices change, screenshots and accessibility disagree, dialogs or file pickers appear, a local artifact is prepared but not attached, buttons remain disabled, typing submits unexpectedly, a user interrupts or concurrently uses the app, an action may already have completed, a browser tab or extension binding appears lost, or a dedicated browser tool fails and Computer Use should recover the same live session.
 ---
 
 # Resilient Computer Use
@@ -53,6 +53,19 @@ Use the narrowest reliable surface that preserves the user's intended session:
 6. Ask the user to intervene only after supported state refresh, identity recovery, same-app fallback, and tool-specific troubleshooting fail.
 
 Never silently switch browser family, browser profile, desktop app, account, or authenticated destination.
+
+## Finish the requested UI outcome
+
+Treat local preparation as an intermediate checkpoint, not completion. If the user asked to attach, upload, save, publish, submit, or otherwise finish a UI workflow, do not stop at “the file is ready,” “select it manually,” or “the browser binding cannot handle the picker” while a supported Computer Use path remains.
+
+- Switch to Computer Use immediately when the dedicated surface reaches a native-control boundary it cannot operate.
+- Continue in the same turn through attachment and post-action verification when authorization permits.
+- Do not merely promise to use the fallback later. Invoke it and report observed results.
+- If a named Computer Use tool is not visible, use the supported `node_repl` plus `@oai/sky` bootstrap before calling the capability unavailable.
+- If the first fallback attempt fails, re-observe and try the next supported same-app path. Escalate only with the exact attempted methods and current UI state.
+- During a stalled or long handoff, provide a concrete progress update within 60 seconds and keep working.
+
+The fallback changes the control surface, not the task scope, destination, account, or confirmation requirements.
 
 ## Reliable operating loop
 
@@ -135,6 +148,40 @@ Do not reload, duplicate, or recreate the tab until the user-visible inventory a
 - For file uploads, verify the selected filename, upload completion, and resulting preview before saving.
 - For multiline input, protect against Return-triggered submission.
 - Before saving, compare the intended payload with visible fields and destination identity.
+
+## Native file-picker handoff
+
+Use this sequence when a browser/app plugin can click an upload control but cannot operate the native macOS picker:
+
+1. Verify the exact app, stable browser tab or document, destination account, upload field, and absolute local file path.
+2. Click the upload control with the dedicated plugin when possible. If that cannot open the picker, inspect the same app with Computer Use and click the control there.
+3. Bootstrap Computer Use directly when needed:
+
+```js
+globalThis.sky = globalThis.sky ?? (await import("@oai/sky")).sky;
+var pickerState = await sky.get_app_state({
+  app: "com.google.Chrome",
+  disableDiff: true
+});
+nodeRepl.write(pickerState.text);
+```
+
+4. Confirm from fresh accessibility or screenshot evidence that the native picker or sheet is active. Do not send path keystrokes before confirming picker focus.
+5. Use the macOS Go to Folder command, enter the exact absolute path without a newline, and re-observe between steps:
+
+```js
+await sky.press_key({ app: "com.google.Chrome", key: "super+shift+g" });
+var goState = await sky.get_app_state({ app: "com.google.Chrome" });
+await sky.type_text({ app: "com.google.Chrome", text: absoluteFilePath });
+await sky.press_key({ app: "com.google.Chrome", key: "Return" });
+var selectedState = await sky.get_app_state({ app: "com.google.Chrome" });
+```
+
+6. If the picker now highlights the file but remains open, verify the filename and activate the visible Open/Choose control or press Return once. Never press Return repeatedly without re-observing; it can submit the parent page after the dialog closes.
+7. Reacquire the parent app or stable browser tab. Verify the picker closed, the expected filename/preview appeared, upload processing completed, and no error is shown.
+8. Complete the requested Save/Publish step only under the active confirmation policy, then verify persisted state.
+
+If accessibility does not expose the picker, inspect the current screenshot and use current coordinates against the same app. Do not fall back to AppleScript or a different browser unless the user explicitly requests it. A plugin's inability to set native file input is a routing signal to Computer Use, not a blocker.
 
 ## Interruptions and ambiguous completion
 
