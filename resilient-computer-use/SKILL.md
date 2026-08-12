@@ -1,6 +1,6 @@
 ---
 name: resilient-computer-use
-description: Operate desktop applications and browsers reliably through Computer Use, with proactive state tracking and recovery from common automation failures. Use for any multi-step or consequential UI workflow, especially when app focus moves, multiple monitors or windows are present, accessibility state is empty or stale, element indices change, screenshots and accessibility disagree, dialogs or file pickers appear, a local artifact is prepared but not attached, buttons remain disabled, typing submits unexpectedly, a user interrupts or concurrently uses the app, an action may already have completed, a browser tab or extension binding appears lost, or a dedicated browser tool fails and Computer Use should recover the same live session.
+description: Operate desktop applications and browsers reliably through Computer Use, with proactive state tracking and recovery from common automation failures. Use for any multi-step or consequential UI workflow, especially when app focus moves, multiple monitors or windows are present, accessibility state is empty or stale, element indices change, screenshots and accessibility disagree, dialogs or file pickers appear, a browser upload chooser or native picker fails, a local artifact is prepared but not attached, buttons remain disabled, typing submits unexpectedly, a user interrupts or concurrently uses the app, an action may already have completed, a browser tab or extension binding appears lost, or a dedicated browser tool fails and Computer Use should recover the same live session.
 ---
 
 # Resilient Computer Use
@@ -112,7 +112,8 @@ After each item, record target identity, intended action, completion evidence, a
 | Click has no visible effect | UI/operation | Re-observe; check overlays, disabled state, focus, and persisted result | Click failed or should be repeated |
 | Wrong window receives input | Focus/identity | Stop typing, fetch full state, identify exact window/document | Frontmost window is the target |
 | Button remains disabled | UI validation | Inspect required fields and select real UI options that update internal state | Setting displayed text is sufficient |
-| Native file picker appears | Window/modal | Identify the picker, complete or cancel it, then reacquire the parent app state | Parent-page indices remain valid |
+| Browser upload opens a native picker | Browser/file chooser | Cancel the picker, reacquire the exact tab, and use the browser `filechooser` plus `setFiles` flow first | Native picker automation is required |
+| File is highlighted but Open stays disabled | Native picker/validation | Cancel the picker and use the browser chooser flow; inspect the site's accepted types only if that fails | The local file is invalid |
 | Loading appears stuck | Operation | Recheck progress, network/error UI, and persisted state with bounded waits | Timeout means failure |
 | User interrupts or uses the app | Focus/operation | Stop, re-observe from scratch, verify whether the last action completed | Focus and form contents are unchanged |
 | Browser tab list is empty | Tab binding | Enumerate user-visible tabs, claim stable ID, then verify URL/account | Browser or tab closed |
@@ -149,9 +150,37 @@ Do not reload, duplicate, or recreate the tab until the user-visible inventory a
 - For multiline input, protect against Return-triggered submission.
 - Before saving, compare the intended payload with visible fields and destination identity.
 
+## Browser file uploads
+
+Prefer the dedicated browser's file-chooser API over operating the native macOS picker. A native picker showing the expected file while Open remains disabled is a routing failure, not evidence that the file is invalid.
+
+1. Verify the exact tab, destination account or record, visible upload control, accepted file type, and absolute local path.
+2. Start the chooser wait and click the visible upload control concurrently. Click the visible button or label instead of a hidden `input[type="file"]`; extensions may augment or intercept the hidden input.
+3. Set the file through the returned chooser and catch asynchronous failures so a timed-out chooser cannot reset the persistent browser session:
+
+```js
+var chooser;
+try {
+  var [openedChooser] = await Promise.all([
+    tab.playwright.waitForEvent("filechooser", { timeoutMs: 10000 }),
+    tab.playwright.getByRole("button", { name: "Upload file" }).click()
+  ]);
+  chooser = openedChooser;
+  await chooser.setFiles([absoluteFilePath], { timeoutMs: 15000 });
+} catch (error) {
+  nodeRepl.write(`File chooser failed: ${error.message}`);
+}
+```
+
+4. Re-observe the page and verify the exact filename, preview, upload completion, and enabled Save/Submit state. Save only when authorization permits, then verify the saved state.
+5. If `setFiles` fails in Chrome, read the browser's file-upload troubleshooting documentation. A common prerequisite is enabling **Allow access to file URLs** for the ChatGPT browser extension in `chrome://extensions`.
+6. Fall back to the native picker through Computer Use only when the supported chooser flow is unavailable or fails. Keep the same browser, profile, tab, account, and destination.
+
+If a native picker is already open from an earlier attempt, cancel it before starting the browser chooser flow. Reacquire the exact user-visible tab by its fresh stable identity and verify its URL/account before retrying.
+
 ## Native file-picker handoff
 
-Use this sequence when a browser/app plugin can click an upload control but cannot operate the native macOS picker:
+Use this sequence only after the browser file-chooser flow above is unavailable or has failed:
 
 1. Verify the exact app, stable browser tab or document, destination account, upload field, and absolute local file path.
 2. Click the upload control with the dedicated plugin when possible. If that cannot open the picker, inspect the same app with Computer Use and click the control there.
