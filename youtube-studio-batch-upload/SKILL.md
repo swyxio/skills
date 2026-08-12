@@ -1,6 +1,6 @@
 ---
 name: youtube-studio-batch-upload
-description: Batch YouTube Studio upload workflow for videos sourced from Airtable, Google Drive, Loom, YouTube, or local files. Use when Codex needs to download many submitted videos, stage filenames, build YouTube titles/descriptions from table fields, upload through Chrome/Computer Use, set videos Unlisted, add a playlist, save each upload before moving on, track links, and report incomplete or blocked source rows.
+description: Batch YouTube Studio upload workflow for videos sourced from Airtable, Google Drive, Loom, YouTube, or local files. Use when Codex needs to stage multiple videos, build metadata from source fields, upload through Chrome/Computer Use, apply an explicitly chosen visibility and playlist, save each item before moving on, track links, and report incomplete or blocked source rows.
 ---
 
 # YouTube Studio Batch Upload
@@ -13,7 +13,9 @@ description: Batch YouTube Studio upload workflow for videos sourced from Airtab
 - Use the full submitted talk abstract in the description by default; do not compress it to a teaser unless the user asks for short copy.
 - Do not publish internal Airtable fields such as `Additional Notes`, reviewer notes, source status, or operational comments unless the user explicitly marks them as public copy.
 - Always select the target playlist before advancing to visibility.
-- Always choose `Unlisted` and click `Save` before opening or editing the next upload.
+- Choose the user-approved visibility and click `Save` before opening or editing
+  the next upload; use `Unlisted` as a staging default only when no release
+  intent was supplied.
 - If YouTube blocks saving because SD processing is not finished, wait on the modal and save after processing clears. Do not assume the draft is published.
 - Prefer batch file selection where the UI allows it. If selector controls fail, upload smaller batches or one file at a time, but keep download and metadata preparation batched.
 - Preserve a clear blocked list for rows like `waitlisted`, `WIP`, `To provide`, private/deleted links, or access-denied Drive files.

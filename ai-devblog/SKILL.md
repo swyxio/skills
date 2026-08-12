@@ -1,6 +1,6 @@
 ---
 name: ai-devblog
-description: Turn coding, debugging, research, architecture, migration, deployment, or product work into a clear, evidence-backed technical post in an existing publishing system. Use when Codex should reconstruct primary evidence, decide whether the material deserves a note or article, align on the intended reader, choose among field-report, explainer, reversal, origin-story, hands-on, or evidence-led argument forms, write and edit the piece, inspect its rendered presentation, and publish it at the requested visibility. Pair with blog-system-design for changes to the shared blog system.
+description: Turn a reconstructed coding, debugging, research, architecture, migration, deployment, or product result into a clear, evidence-backed technical note or post in an existing publishing system. Use when the user asks for article creation, revision, editorial review, or publication of that work; pair with blog-system-design when shared blog infrastructure changes. Do not trigger for a README, changelog, product spec, or ordinary code documentation.
 ---
 
 # AI Devblog
@@ -198,9 +198,8 @@ first-person reaction are welcome when they clarify a real mechanism and the
 evidence supports the voice. Remove them when they merely decorate the prose or
 widen the claim.
 
-Preserve what Forge and OverGrid do well: empirical honesty, real limitations,
-unfavorable measurements, exact artifacts, and corrected assumptions. Tone
-down their recurring AI-shaped habits:
+Preserve empirical honesty, real limitations, unfavorable measurements, exact
+artifacts, and corrected assumptions. Tone down recurring AI-shaped habits:
 
 - internal nouns and architecture before the reader knows the concrete system;
 - repeated `not X, but Y`, `X is not Y`, and perfectly balanced reversals;
@@ -276,12 +275,11 @@ Distinguish inference from observation. Respect an explicit public or internal
 visibility choice; default to public only when the evidence is safe for the
 open web.
 
-When the user asks for a finished post, default to carrying it through preview,
-commit, push, deployment, and final URL verification unless they request a
-draft-only or preview-only handoff. State that intended endpoint in the first
-progress update so the user can narrow it. Follow repository instructions and
-read [the publishing checklist](references/publishing-checklist.md) before
-publication work.
+When publication is requested, inspect the destination's existing workflow and
+read [the publishing checklist](references/publishing-checklist.md). Preview,
+commit, push, deployment, and URL verification are separate authorized actions;
+do not infer them from a request to draft or edit a post. State which endpoint
+the user requested and report each completed stage separately.
 
 Report source creation, commit, push or merge, deployment, and live verification
 as separate facts. Never call a preview, build, health check, or URL alone proof

@@ -13,9 +13,8 @@ version: 0.1.0
 ## Overview
 Download recent Zoom cloud recordings, selecting the correct file type and skipping already-uploaded content. Optionally delete old recordings from Zoom after confirming they've been uploaded.
 
-## Which Recordings to Download
-- **"AI in Action Weekly Jam!"** meetings → weekly demos/presentations
-- **Paper Club / guest sessions** (e.g., "[Person] and swyx") → paper readings
+## Which recordings to download
+- Select only the meeting types and date range the user requested.
 - **Skip** recordings under ~10 minutes (test calls, false starts)
 - **Cross-check** against existing YouTube content to avoid re-downloading
 
@@ -40,7 +39,7 @@ Download recent Zoom cloud recordings, selecting the correct file type and skipp
 2. On each recording's detail page, locate the **"Shared screen with gallery view"** row
 3. Hover over the row to reveal the download button (appears on the right)
 4. Click download — file saves to ~/Downloads
-5. Wait for download to complete before moving to the next recording
+5. Wait for download to complete and verify the file before moving to the next recording.
 
 ## Content Analysis via Frame Extraction
 After downloading, extract frames to understand what each video contains:
@@ -62,10 +61,10 @@ Visually analyze the extracted frames to identify:
 Save these notes — they feed into the `youtube-publish` skill for titling and description.
 
 ## Deleting Old Recordings from Zoom
-After confirming videos are successfully uploaded and published on YouTube:
+After the user confirms the downstream upload and explicitly asks about cleanup:
 - Navigate back to `zoom.us/recording`
 - Select the recordings that have been uploaded
-- User must perform the actual deletion (permanent deletion is a prohibited action)
+- The user must perform the actual deletion; do not delete cloud recordings.
 - Inform the user which recordings are safe to delete
 
 ## Troubleshooting

@@ -9,7 +9,7 @@ Download video from X/Twitter posts via yt-dlp.
 
 ## Prerequisites
 
-- `yt-dlp`: `brew install yt-dlp`
+- Use an available, current `yt-dlp`; do not install packages without approval.
 
 ## Usage
 

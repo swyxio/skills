@@ -1,34 +1,33 @@
 ---
 name: youtube-thumbnails
 description: >
-  This skill should be used when the user asks to "create YouTube thumbnails",
-  "generate thumbnails", "make video thumbnails", or needs AI-generated
-  thumbnail images via Google Gemini for YouTube videos. Covers prompt
-  engineering, image generation, compression, and upload to YouTube Studio.
+  Use when the user asks to create or upload a YouTube thumbnail, including an
+  AI-generated image, prompt, compression, or Studio update. Preserve supplied
+  branding and do not assume a particular series, logo, model, or date.
 version: 0.1.0
 ---
 
-# YouTube Thumbnail Generation via Gemini
+# YouTube Thumbnail Generation
 
 ## Overview
-Generate custom YouTube thumbnails using Google Gemini's image generation (Pro mode). Each thumbnail is a 1280x720 image with bold text overlays, thematic visuals, and branding.
+Generate custom thumbnails with the currently authorized image tool or the
+user's chosen generator, then prepare and optionally upload them. Confirm the
+channel's current size/format limits and preserve the user's branding.
 
 ## Step-by-Step Workflow
 
 ### 1. Gather Video Info
 For each video that needs a thumbnail, collect:
 - **Title** (already set on YouTube)
-- **Content type**: "AI in Action" weekly jam or "Paper Club" reading
+- **Content type** and series, if any
 - **Topic summary**: What was presented/demoed (from frame extraction or title)
 - **Presenter name** (optional, for subtitle text)
-- **Date** in `D Mon YYYY` format
+- **Date**, if the user wants it shown
 
 ### 2. Navigate to Gemini
-- Go to `gemini.google.com`
-- Click **Tools** button (bottom toolbar)
-- Enable **Create images**
-- Click the model dropdown (shows "Fast" by default) and select **Pro**
-- Confirm "Image" chip and "Pro" label appear in the chat input area
+Use the authorized image-generation workflow available in the current
+environment. Do not ask the user to paste secrets or search for an unlicensed
+logo; use supplied or approved brand assets.
 
 ### 3. Craft the Thumbnail Prompt
 Use this prompt template, customized per video:
@@ -38,8 +37,8 @@ Create a YouTube thumbnail (1280x720) for a video titled "[FULL TITLE]".
 [1-2 sentences describing what the video is about — the demo, paper, or topic].
 The visual should be [THEME DESCRIPTION]: [specific visual elements relevant to the topic].
 Bold text overlay: "[MAIN TITLE]" prominently, with smaller text "[SUBTITLE]" below it.
-Include a bottom bar with "[SERIES NAME] [D MON YYYY]" in bold.
-Please include the Latent Space podcast logo in a corner — search the web for "Latent Space podcast logo" to find it.
+Include a bottom bar with "[SERIES NAME] [DATE]" only when requested.
+Use an approved logo asset only when supplied or licensed.
 Use [COLOR PALETTE] with a dark [THEME] background.
 ```
 
@@ -58,14 +57,15 @@ Use [COLOR PALETTE] with a dark [THEME] background.
 - Subtitle: Full paper name
 
 #### Key Prompt Tips
-- Always ask Gemini to **search the web** for relevant logos and reference images
+- Use only user-supplied or approved reference assets.
 - Specify **1280x720** dimensions explicitly
 - Request **bold, large text** for the main title — readable at thumbnail size
 - Include a **colored bottom bar** with the series name and date
 - Keep the background **dark** so text pops
 
 ### 4. Generate and Save
-- Submit the prompt and wait ~30-45 seconds for Pro mode generation
+- Submit the prompt and wait for the current tool to finish; do not assume a
+  fixed provider or latency.
 - Click the generated image to expand it
 - Click **Save** to download to ~/Downloads
 - Generated files will be named `Gemini_Generated_Image_[hash].jpeg`
@@ -114,7 +114,7 @@ Take a screenshot of each video's details page to confirm the custom thumbnail i
 - YouTube thumbnail dimensions: 1280x720 (16:9)
 - Accepted formats: JPG, PNG, GIF
 
-## Example Prompts
+## Example prompt shapes
 
 ### Tech Demo Thumbnail
 ```
@@ -122,8 +122,7 @@ Create a YouTube thumbnail (1280x720) for a video titled "SpaceMolt - AI Agents 
 This is about a demo of SpaceMolt, a multiplayer space trading and mining game where AI agents autonomously play alongside human players.
 The visual should be exciting and space-themed: spaceships, asteroids, neon glow, a dark cosmic background.
 Bold text overlay: "SPACEMOLT" prominently, with smaller text "AI AGENTS IN SPACE GAMES" below it.
-Include a bottom bar with "AI IN ACTION 7 FEB 2026" in bold.
-Please include the Latent Space podcast logo in a corner — search the web for "Latent Space podcast logo".
+Include a bottom bar with the supplied series/date in bold, if requested.
 Use vibrant sci-fi colors — electric blue, green, purple neon tones.
 ```
 
@@ -133,8 +132,7 @@ Create a YouTube thumbnail (1280x720) for a video titled "RL via Self-Distillati
 This is an academic paper reading session about SDPO — Self-Distillation Preference Optimization.
 The visual should be academic but engaging: neural network or brain visualization with mathematical formulas.
 Bold text overlay: "SDPO" prominently, with smaller text "SELF-DISTILLATION PREFERENCE OPTIMIZATION" below it.
-Include a bottom bar with "PAPER CLUB 12 FEB 2026" in bold.
-Please include the Latent Space podcast logo in a corner — search the web for "Latent Space podcast logo".
+Include a bottom bar with the supplied series/date in bold, if requested.
 Use deep blue, orange, and white color palette with a dark academic-themed background.
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: youtube-channel-operator
-description: Design, build, review, or extend a production YouTube channel operator that combines complete typed YouTube Data, Analytics, Reporting, and Live API access with guided Slack or chatbot workflows, human approval, durable execution, audit history, multi-channel OAuth isolation, caption downloads, transcript summaries, viewer timestamps, paid-versus-organic acquisition analysis, and post-change measurement. Use for YouTube operations bots, creator-management copilots, raw power-user API tools, transcript processing, chapters, pull quotes, clips, title or thumbnail experiments, description and comment workflows, playlist management, uploads, moderation, live operations, Google Ads/paid-promotion measurement, or analytics tied to channel changes. Hand atomic one-off API execution to youtube-api and Studio-only browser work to youtube-studio-computer-use.
+description: Design, build, or review a production multi-channel YouTube operations operator with typed API methods, guided human approval, durable execution, OAuth isolation, audit history, and post-change measurement. Use when the shared operator core or its channel/approval/analytics architecture is the task; hand one-off API execution to youtube-api, Studio-only browser work to youtube-studio-computer-use, and ordinary content writing to the narrower media skills.
 ---
 
 # YouTube Channel Operator

@@ -32,8 +32,9 @@ The implementation is intentionally speed-first:
 ## Requirements
 
 ```bash
-brew install ffmpeg yt-dlp
-pip3 install --break-system-packages openai-whisper
+Use the repository's available `ffmpeg`, downloader, and transcription backend.
+If a dependency is missing, report it and ask before installing or changing the
+environment.
 ```
 
 The following existing local script is reused:

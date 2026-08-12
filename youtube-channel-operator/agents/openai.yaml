@@ -1,6 +1,6 @@
 interface:
   display_name: "YouTube Channel Operator"
-  short_description: "Build YouTube operations, growth measurement, and approvals"
-  default_prompt: "Use $youtube-channel-operator to design a YouTube workflow with raw API access, paid-versus-organic growth measurement, transcript tooling, and guided approvals."
+  short_description: "Design a safe multi-channel YouTube operator"
+  default_prompt: "Use $youtube-channel-operator when the shared YouTube operations core, channel isolation, approvals, durable execution, or post-change measurement needs design or review."
 policy:
   allow_implicit_invocation: true

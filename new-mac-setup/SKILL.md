@@ -6,6 +6,8 @@ license: MIT
 compatibility: |
   Requires macOS on Apple Silicon (M1/M2/M3/M4). Scripts use Homebrew, which handles all dependencies. Bash 3.2+ (ships with macOS). Internet connection required for package downloads.
 metadata:
+  skill-cutter: ignore
+  skill-cutter-reason: "Deliberately comprehensive personal bootstrap; preserve unless the user explicitly overrides this exemption."
   author: swyxio
   version: "2.0"
   last-updated: "2026-06-13"

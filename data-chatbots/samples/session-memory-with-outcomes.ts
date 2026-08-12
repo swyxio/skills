@@ -10,18 +10,20 @@ const SESSION_CONTEXT_PREAMBLE = [
   'Schedule truth: only changes marked APPLIED below are on the schedule.',
   'DRAFT = proposed but not applied yet — do NOT assume it happened.',
   'IGNORED = the human rejected it — do NOT assume it happened.',
-  'If your earlier reply said "I moved/placed" but outcomes show DRAFT or IGNORED, the schedule was NOT changed.',
+  'FAILED = Apply was attempted but rejected — canonical state did NOT change.',
+  'If earlier prose claims a change but outcomes show DRAFT, IGNORED, or FAILED, the change did NOT happen.',
   ''
 ].join('\n');
 
 export function formatProposalStatusLines(
-  proposals: Array<{ summary: string; status: 'draft' | 'applied' | 'ignored' }>
+  proposals: Array<{ summary: string; status: 'draft' | 'applied' | 'ignored' | 'failed'; failureReason?: string }>
 ): string {
   if (!proposals.length) return '';
   const lines = proposals.map((p) => {
     const label =
       p.status === 'applied' ? 'APPLIED — on schedule'
         : p.status === 'ignored' ? 'IGNORED — not on schedule'
+          : p.status === 'failed' ? `FAILED — write rejected; not on schedule${p.failureReason ? ` (${p.failureReason})` : ''}`
           : 'DRAFT — pending human review, not on schedule yet';
     return `  • "${p.summary}" → ${label}`;
   });
@@ -54,19 +56,38 @@ export async function loadSessionContextNote(
   return `${SESSION_CONTEXT_PREAMBLE}${lines.join('\n')}\n--- end conversation ---`;
 }
 
-/** Called from Apply / Ignore handlers — not from the planner. */
+/** Called from Apply / Ignore / failure handlers — not from the planner. */
 export async function recordSessionProposalResolution(
   db: Db,
   sessionKey: string,
-  action: 'applied' | 'ignored',
+  action: 'applied' | 'ignored' | 'failed',
   proposal: { summary: string },
-  operationId?: string
+  detail?: string
 ): Promise<void> {
   const text =
     action === 'applied'
-      ? `[Human applied draft "${proposal.summary}"] — now on the canonical store${operationId ? ` (${operationId})` : ''}.`
-      : `[Human ignored draft "${proposal.summary}"] — NOT applied; do not assume this change happened.`;
+      ? `[Human applied draft "${proposal.summary}"] — now on the canonical store${detail ? ` (${detail})` : ''}.`
+      : action === 'ignored'
+        ? `[Human ignored draft "${proposal.summary}"] — NOT applied; do not assume this change happened.`
+        : `[Apply FAILED for "${proposal.summary}"] — write REJECTED${detail ? ` (${detail})` : ''}; canonical data NOT changed; diagnose before re-drafting.`;
   await db.insert('messages', { session_key: sessionKey, role: 'user', text, proposal_set_id: null });
+}
+
+/** Record failure before the handler returns or rethrows the write error. */
+export async function applyWithFailureMemory(
+  db: Db,
+  sessionKey: string,
+  proposal: { summary: string },
+  apply: () => Promise<{ operationId: string }>
+): Promise<void> {
+  try {
+    const result = await apply();
+    await recordSessionProposalResolution(db, sessionKey, 'applied', proposal, result.operationId);
+  } catch (error) {
+    const reason = describeApplyFailure(error); // Bounded, user-safe; do not expose raw DB/provider errors.
+    await recordSessionProposalResolution(db, sessionKey, 'failed', proposal, truncate(reason, 240));
+    throw error;
+  }
 }
 
 type Db = {
@@ -74,4 +95,9 @@ type Db = {
   insert(table: string, row: unknown): Promise<void>;
 };
 declare function truncate(s: string, n: number): string;
-declare function loadProposalsForSet(db: Db, id: string): Promise<Array<{ summary: string; status: 'draft' | 'applied' | 'ignored' }>>;
+declare function describeApplyFailure(error: unknown): string;
+declare function loadProposalsForSet(db: Db, id: string): Promise<Array<{
+  summary: string;
+  status: 'draft' | 'applied' | 'ignored' | 'failed';
+  failureReason?: string;
+}>>;

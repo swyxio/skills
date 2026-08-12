@@ -1,11 +1,14 @@
 ---
 name: accelevents-speaker-sync
-description: Use when website speaker, session, schedule, room, track, or headshot changes must be synchronized back to Accelevents for AI Engineer Europe 2026.
+description: Use when an explicit AI Engineer Europe 2026 task requires synchronizing website speaker, session, schedule, room, track, or headshot changes back to Accelevents. Do not load for ordinary website edits that are not meant to update the event platform.
 ---
 
 # Accelevents Speaker & Session Sync
 
-Whenever you update speaker data OR session/schedule details on the website, you MUST also push those changes to the corresponding profiles and sessions in Accelevents.
+For this project's event-operations workflow, an approved website change that
+is intended to be authoritative in Accelevents must be mirrored to the matching
+platform record. Do not infer that every local draft or preview edit should be
+published externally.
 
 ## When This Applies
 
@@ -20,7 +23,7 @@ Whenever you update speaker data OR session/schedule details on the website, you
 - Updating a session/talk title
 - Moving a speaker to a different session slot
 
-## Accelevents API Details
+## Accelevents API details
 
 - **API base**: `https://api.accelevents.com`
 - **Event URL**: `ai-engineer-europe-2026`
@@ -53,7 +56,8 @@ This returns `{"type": "Success", "message": "<image-uuid>"}`. Save the `message
 
 ### 3. Update the speaker profile
 
-Use PUT with the `Key` header (NOT `Authorization: Bearer`) for write operations:
+Use the currently verified write header for the endpoint (historically `Key`,
+not the read-only `Authorization: Bearer` header):
 ```bash
 curl -s -X PUT \
   -H "Key: $ACCELEVENTS_API_KEY" \
