@@ -1,0 +1,4 @@
+interface:
+  display_name: "G Suite Setup"
+  short_description: "Configure open, collaborative Workspace defaults"
+  default_prompt: "Use $gsuite-setup to audit and configure a Google Workspace organization for open collaboration and user autonomy."
