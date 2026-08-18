@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub to Cloudflare Delivery"
+  short_description: "Optimize safe GitHub-to-Cloudflare delivery"
+  default_prompt: "Use $github-cloudflare-delivery to audit and improve this GitHub Actions preview and Cloudflare production pipeline."
