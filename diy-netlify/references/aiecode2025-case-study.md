@@ -4,6 +4,33 @@ Use this case only as calibration for a Netlify/Vercel-style preview experience
 built with GitHub Actions and Cloudflare. The numbers describe one media-heavy
 pnpm monorepo in August 2026, not general SLOs.
 
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    PR["Pull request head"] --> Detect["Detect affected targets"]
+    Detect --> Checks["Required source checks"]
+    Detect --> PreviewBuild["Sparse checkout + filtered install + build"]
+    PreviewBuild --> Preview["Dedicated route-less preview Worker"]
+    Preview --> Review["GitHub check + one PR comment + stable preview URL"]
+    Review --> Merge["Reviewer merges"]
+
+    Merge --> Main["Exact merge SHA on main"]
+    Main --> Release["One serialized production release job"]
+    Release --> Version["Build once + upload immutable Worker version"]
+    Version --> Verify["Verify identity, bindings, and preview"]
+    Verify --> Promote["Promote + live smoke + rollback fence"]
+
+    Isolation["No production routes, secrets, or bindings"] -. protects .-> Preview
+    Review -. "review decision only; do not reuse PR artifacts" .-> Main
+```
+
+The key boundary is between review and release. The PR preview proves the
+proposed change in an isolated environment; production independently builds and
+deploys the exact merged commit. Keeping that handoff conceptual rather than an
+artifact or state-machine handoff preserved both security and operational
+simplicity.
+
 ## Starting evidence
 
 The tracked working tree was about 720 MiB; the main app was about 529 MiB.
