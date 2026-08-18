@@ -1,7 +1,8 @@
-# AI Engineer GitHub-to-Cloudflare case study
+# AI Engineer DIY Netlify case study
 
-Use this case only as calibration and as an example of honest reporting. The
-numbers describe one media-heavy pnpm monorepo in August 2026, not general SLOs.
+Use this case only as calibration for a Netlify/Vercel-style preview experience
+built with GitHub Actions and Cloudflare. The numbers describe one media-heavy
+pnpm monorepo in August 2026, not general SLOs.
 
 ## Starting evidence
 
