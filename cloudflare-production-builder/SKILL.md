@@ -117,7 +117,9 @@ runtime.
 - [deployments-and-migrations.md](references/deployments-and-migrations.md): use
   for multi-surface rollout, schema or Durable Object lifecycle, and rollback.
 - [multitenant-hosting-and-security.md](references/multitenant-hosting-and-security.md):
-  use for untrusted code or tenant isolation.
+  use when customer-controlled code, public-fork changes, or another adversarial
+  execution boundary requires tenant isolation. Do not load it solely because a
+  preview comes from a same-repository PR by trusted collaborators.
 - [observability-testing-and-cost.md](references/observability-testing-and-cost.md):
   use when adding or reviewing telemetry, test layers, or spend controls.
 

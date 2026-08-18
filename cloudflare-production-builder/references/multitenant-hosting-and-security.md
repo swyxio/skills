@@ -1,5 +1,26 @@
 # Multi-tenant hosting and security
 
+## Scope the trust boundary first
+
+Use this reference when the platform builds, runs, or serves code controlled by
+an actor outside the deployment trust boundary, such as customer repositories,
+public-fork pull requests, or arbitrary user code. A same-repository pull
+request from trusted collaborators is not automatically an adversarial build.
+
+For trusted collaborator CI, ordinary least privilege is proportional: use a
+dedicated route-less preview Worker, omit production data and service bindings,
+guard credentials from forks, and scope the deployment token as narrowly as
+Cloudflare supports. The build and upload may share a workflow when repository
+writers and workflow changes are inside the deployment trust boundary.
+
+Cloudflare Workers Scripts permissions are account-scoped rather than scoped to
+one Worker script. A dedicated preview Worker reduces accidental routing and
+binding risk, but does not constrain what an exposed account-level token could
+edit. When repository code is adversarial, use a credential-free build plus a
+trusted publisher sourced outside that code, or deploy previews in a separate
+Cloudflare account. Verify current token resource options in first-party docs at
+action time.
+
 ## Origin boundary
 
 Serve user-controlled content from a registrably separate origin from the
@@ -30,9 +51,9 @@ content.
 - Recheck current head, eligibility, and authorization before activation.
 - A stale plan must fail or become superseded, never silently publish.
 
-## Build isolation
+## Adversarial build isolation
 
-Untrusted builds require:
+Builds outside the deployment trust boundary require:
 
 - no Cloudflare/provider credentials in the sandbox;
 - separate build, runtime, and agent images/caches/networks;
@@ -43,7 +64,8 @@ Untrusted builds require:
   concurrency, and spend limits;
 - cache isolation by tenant, source inputs, lockfile, image, toolchain, and
   policy;
-- no production-deployment authority for repository writers, CI jobs, or agents.
+- no production-deployment authority inside the adversarial build job or
+  sandbox; a separate trusted publisher may hold narrowly scoped authority.
 
 Treat broad public egress as an explicit entitlement with tighter monitoring,
 not a harmless default.
