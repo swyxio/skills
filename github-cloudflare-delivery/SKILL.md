@@ -1,28 +1,26 @@
 ---
 name: github-cloudflare-delivery
-description: Audit, optimize, harden, or explain a GitHub Actions pipeline that builds pull-request previews and deploys applications to Cloudflare Workers or Pages. Use for slow or flaky checkout/install/browser steps, affected-app detection, isolated PR previews, exact-SHA production promotion, release timing comparisons, rollback proof, or proposals to split build/upload/promote across jobs. Emphasizes measured tail reduction and warns against distributed release-state complexity without evidence.
+description: Audit, optimize, harden, or explain a GitHub Actions pipeline that builds pull-request previews and deploys applications to Cloudflare Workers or Pages. Use for slow or flaky checkout/install/browser steps, affected-app detection, isolated PR previews, exact-SHA production proof, release timing comparisons, or proposals to split build/upload/promote across jobs. Emphasizes measured tail reduction and warns against distributed release complexity without evidence.
 ---
 
 # GitHub to Cloudflare Delivery
 
-Improve the delivery loop in the smallest independently provable layers. Optimize
-measured bottlenecks; do not turn CI cleanup into a new deployment platform.
+Improve the delivery loop in small, independently provable layers. Optimize
+measured bottlenecks; do not turn CI cleanup into a deployment-platform rewrite.
 
-Pair this skill with `cloudflare-production-builder` only when changing material
-production upload, traffic, rollback, binding, route, or migration behavior. This
-skill owns GitHub workflow shape, preview isolation, performance evidence, and the
-decision about whether more release machinery is justified.
+Pair with `cloudflare-production-builder` when changing production upload,
+traffic, rollback, binding, route, or migration behavior. Keep provider-specific
+release mechanics there rather than universalizing one repository's topology.
 
 ## Preserve the proof boundaries
 
 Report these as separate facts:
 
-1. Source and required checks passed for the PR head.
+1. Required checks passed for the intended PR head.
 2. A preview built the intended PR or merge context.
-3. The preview uses an isolated Worker with no production routes, secrets, or
-   bindings.
+3. The preview is isolated from production routes, secrets, and bindings.
 4. Production built and uploaded the exact merged SHA.
-5. Provider readback verified version identity and bindings.
+5. Provider readback verified the intended version and configuration.
 6. Traffic changed to that version.
 7. The owning public hostname passed stable live smoke checks.
 
@@ -30,155 +28,101 @@ Never infer a later fact from an earlier one.
 
 ## Workflow
 
-### 1. Establish a distribution, not one anecdote
+### 1. Measure a distribution
 
-Inspect recent successful and failed runs. Measure median, p90/p95, and maximum
-for checkout, toolchain/cache restore, dependency install, tests, application
-build, upload, preview smoke, promotion, and live smoke. Separate deterministic
-work from long-tail network or provider stalls.
+Inspect recent successes and failures. Measure median, p90/p95, and maximum for
+checkout, setup/cache restore, install, tests, build, upload, and smoke. Separate
+deterministic work from network or provider tails.
 
-Read [case-study.md](references/case-study.md) when calibrating expected numbers
-or communicating before/after results. Do not copy its timings as universal
-targets.
+Read [case-study.md](references/case-study.md) for a calibrated example of honest
+before/after reporting. Do not reuse its timings as universal targets.
 
-### 2. Map scope and trust before editing
+### 2. Map scope and trust
 
-Identify:
+Identify affected-path ownership, shared dependency closures, full-tree test
+requirements, secret-bearing jobs, protected environments, trusted versus forked
+PRs, required-check behavior, and the production source SHA.
 
-- which paths affect each app, Worker, and shared package;
-- which tests truly require the full repository or media tree;
-- which jobs receive secrets or a protected environment;
-- whether PRs are same-repository, forked, draft, or untrusted;
-- which required check must always report a terminal conclusion;
-- the exact merge SHA that production must deploy.
-
-Keep detection and the required aggregator present even when no target is
-affected. Avoid workflow-level `paths-ignore` when it could leave a required
-check pending.
+Keep detection and a required aggregator present even when no target is affected.
+Avoid workflow-level path filters that can leave required checks pending.
 
 ### 3. Remove avoidable I/O first
 
-Prefer these changes in order, verifying each one independently:
+Apply only patterns justified by the repository:
 
-1. Use the browser already installed on the runner when Playwright supports the
-   required channel. Keep local development on bundled Chromium when the channel
-   environment variable is absent. Remove browser and apt installation only
-   after the real browser test passes.
-2. Use target-specific sparse, blobless checkouts for app builds, previews, and
-   small Workers. Verify the checkout log actually uses blob filtering.
-3. Install the selected workspace closure with `pnpm --filter '<package>...'`
-   rather than the entire workspace. Exercise every matrix target on Ubuntu.
-4. Skip unrelated app, archive, and Worker work through affected-target
-   detection. Keep conservative shared-manifest and lockfile behavior.
-5. Remove package-manager setup from Node-only jobs. Replace obsolete cron jobs
-   with authoritative path triggers plus manual dispatch where reconciliation is
-   still useful.
-6. Add bounded job timeouts based on healthy tail evidence, with enough headroom
-   for known legitimate outliers.
-7. Add step timings and size measurements before considering caches or new
-   orchestration.
+- Use an installed runner browser when the real test passes with its supported
+  channel; preserve a suitable local default.
+- Use target-specific sparse/blobless checkouts and verify the fetch behavior.
+- Install only the selected workspace closure and exercise every matrix target.
+- Skip unrelated apps and Workers through conservative affected-target detection.
+- Remove package-manager setup from jobs that use only built-in runtime modules.
+- Replace obsolete cron work with authoritative path triggers and manual dispatch.
+- Add timeouts from healthy-tail evidence and instrument time and size before
+  proposing caches or orchestration.
 
-Do not weaken a full-tree contract merely to advertise a faster checkout. If a
-test recursively validates every public asset, either keep its full checkout or
-design a separately reviewed authoritative inventory.
+Do not weaken a full-tree contract to advertise a faster checkout. Retain the
+full tree or create a separately reviewed authoritative inventory.
 
-### 4. Build a safe PR-preview boundary
+### 4. Isolate PR previews
 
-For ordinary trusted collaboration, allow only same-repository, non-draft PRs.
-Build into dedicated preview Workers or projects that have:
-
-- no production routes or custom domains;
-- no production service, database, bucket, or secret bindings;
-- no promotion command;
-- deterministic names and receipts tied to PR, SHA, run, and attempt;
-- a PR comment containing the usable preview URL and source identity.
+For trusted same-repository collaboration, prefer dedicated preview Workers or
+projects with no production routes, secrets, data/service bindings, or promotion
+command. Tie the preview identity to PR, SHA, run, and attempt, and comment the
+usable URL and source identity on the PR.
 
 Treat fork previews as an adversarial execution problem requiring a separate
-design. Do not expose protected credentials to arbitrary fork code.
+design. Never expose protected credentials to arbitrary fork code.
 
-### 5. Validate the optimization on the real matrix
+### 5. Validate the real matrix
 
-Run repository contract tests, the actual browser assertion, and the selected
-app build locally where practical. Then exercise all matrix apps and small
-Workers on a real runner, because an ordinary workflow-change PR may select only
-the main app.
+Run contract tests, the actual browser assertion, and representative app builds.
+Exercise every app and small Worker on a real runner when ordinary change
+detection would otherwise select only one target.
 
-Check for:
+Check for undeclared workspace dependencies, runtime-resolution changes after
+filtered installs, missing sparse paths or manifests, partial-clone commands that
+lazy-fetch omitted blobs, rename detection that hydrates media, and divergent
+nested lockfiles. Preserve correctness when an optimization fails one of these
+checks.
 
-- undeclared workspace dependencies hidden by a previous full install;
-- duplicate React or runtime resolution after filtered installs;
-- missing sparse paths, generated config, or workspace manifests;
-- partial-clone commands that lazy-fetch omitted media;
-- stale guards using rename detection and unexpectedly hydrating blobs;
-- nested lockfiles that resolve different deployment tooling versions.
+### 6. Prove production proportionately
 
-### 6. Keep production serialized by default
+Keep the existing per-target release serialized unless evidence justifies a new
+coordination model. Build the exact merged SHA once, upload through the provider's
+supported immutable boundary when available, verify identity/configuration before
+traffic, and prove the owning live path afterward. Preserve a precise rollback
+target and fail closed on provider drift.
 
-The default safe shape is one per-target production job that:
-
-1. authorizes the exact merged source and required checks;
-2. builds that exact SHA once;
-3. performs a dry compile and immutable version upload;
-4. verifies preview identity, hostname, bindings, and source metadata;
-5. checks the active rollback baseline and stale-head guard;
-6. stages the candidate at 0% when supported and runs an override smoke;
-7. promotes it to 100%;
-8. verifies provider state and stable public-hostname behavior;
-9. rolls back only from a precisely run-owned traffic state.
-
-Accept multiple successful instances of the same required source check for the
-exact PR head when manual all-target validation creates them. Cardinality alone
-must not reject an otherwise valid release.
+Use `cloudflare-production-builder` for topology-specific staging, version
+override, migration, promotion, and rollback choices.
 
 ### 7. Compare honestly
 
-Show before median and tail, the new measured run, absolute delta, and percent
-delta. Mark a new capability such as PR preview as `new`, not infinitely faster.
-Call out regressions and unchanged deterministic floors.
+Show the before median and tail, the new measured run, absolute delta, percent
+delta, and sample size. Mark a new preview capability as `new`, not infinitely
+faster. Call out regressions and unchanged deterministic floors.
 
-Distinguish:
+Distinguish wall-clock latency, runner minutes, tail reliability, review
+capability, and production safety. A scoped optimization can succeed while a
+separate full-tree job remains slow; report both facts.
 
-- wall-clock latency;
-- runner-minute consumption;
-- tail reliability;
-- review capability;
-- production safety.
+## Architecture brake
 
-A canary that encounters an unrelated full-checkout stall does not disprove a
-targeted checkout optimization, but it does prove the repository still has a
-remaining tail.
+Do not split build, upload, stage, and promote across jobs merely because it is
+possible. First verify whether production already builds the exact merge SHA once.
+If so, a split does not reduce healthy-path build count.
 
-## Architecture brake: do not distribute the release casually
+A distributed release adds artifact/receipt handoff, concurrency gaps, resume
+states, protected-environment behavior, retention limits, and rollback branches.
+Large framework outputs may cost more to transfer than to rebuild. Prefer better
+step timing, logs, and small non-secret receipts inside the serialized release.
 
-Do not split build, upload, stage, and promote across jobs merely because
-immutable versions make it possible. First verify whether the current production
-job already builds the exact merge SHA once. If it does, a split does not reduce
-healthy-path build count.
-
-A distributed stage/promote design adds receipt schemas, artifact handoff,
-cross-job concurrency gaps, resume classifiers, possible duplicate protected
-environment approvals, version-retention concerns, and more rollback states.
-Large Next/OpenNext artifacts may also make upload/download slower than a
-rebuild.
-
-Prefer step-level timing, clearer logs, small non-secret receipts, and preserving
-the existing serialized rollback fence.
-
-Reconsider a split only when evidence shows frequent post-upload failures whose
-rebuild cost dominates, artifact transfer has been benchmarked, provider version
-retention is sufficient, protected-environment behavior is acceptable, and an
-external lease or equivalent fence prevents cross-run interleaving. Document the
-new failure-state matrix before implementation.
+Reconsider only when frequent post-upload failures make rebuild waste material,
+artifact transfer is benchmarked, provider retention and approvals are suitable,
+and cross-run ownership can be fenced. Define the failure-state matrix first.
 
 ## Hand off
 
-Report:
-
-- merged PR and exact merge SHA;
-- preview URL, Worker/version identity, and isolation proof;
-- before/after timing table with sample sizes and percentile labels;
-- production run, uploaded and active version IDs, binding verification, and
-  live hostname smoke result;
-- skipped targets and why;
-- remaining bottleneck and the safest next experiment;
-- any proposed architecture deliberately rejected as disproportionate.
+Report the preview identity and isolation proof, before/after timing table, exact
+merged and deployed identities, live-host smoke, skipped targets, remaining
+bottleneck, and any disproportionate architecture deliberately rejected.
