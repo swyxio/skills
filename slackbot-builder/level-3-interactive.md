@@ -18,7 +18,7 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **Owned-resource resolution** before asking humans for IDs; exact matches draft even if siblings remain unresolved.
 - [ ] **Live status streaming** of agent steps into the composer (native version → L4).
 - [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
-- [ ] **Rich outputs + in-message settings** — file/media uploads, control buttons under output (Regenerate/Variation/Settings), a `views.open` settings modal persisted per thread. (Generating images? → [image-generation.md](image-generation.md).)
+- [ ] **Rich outputs + in-message settings** — native analytical visuals, file/media uploads, control buttons under output (Regenerate/Variation/Settings), and a `views.open` settings modal persisted per thread. (Analytical charts/tables → [analytical-visualizations.md](analytical-visualizations.md); generating images → [image-generation.md](image-generation.md).)
 
 ## Mutations require a human
 
@@ -267,6 +267,12 @@ Ack with an ephemeral "working on it…", then post the answer to `response_url`
 still record observability (L5) and support per-request flags (e.g. `--history`).
 
 ## Rich outputs: file/media uploads + in-message controls + a settings modal
+
+For quantitative answers, start with Slack-native charts and interactive data
+tables; move to deterministic PNG/SVG renders or hosted HTML only when the
+visual form needs more than Slack provides. Follow the bounded schema, visual
+selection, accessibility, table-budget, and live-QA guidance in
+[analytical-visualizations.md](analytical-visualizations.md).
 
 When the bot produces an **artifact** (a generated image, a rendered chart, a PDF)
 rather than text, give it the same affordances Slack gives the Cursor/agent apps:

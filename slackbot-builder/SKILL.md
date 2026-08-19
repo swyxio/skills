@@ -12,7 +12,7 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.4"
+ version: "2.5"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -53,9 +53,15 @@ business logic, that's the bug.
 | **L6** | Multi-surface / scale — *polished platform* | one core across web/Slack/cron, multi-workspace/tenancy, queues + backpressure for heavy work, target caching, usage analytics + answer-quality feedback, break-glass/degraded config | [level-6-scale.md](level-6-scale.md) |
 
 **Optional capability references** (load only if you ship the feature — they're not
-always-on rungs): **image generation** → [image-generation.md](image-generation.md)
-(multimodal thread context, sticky routing, reference selection, durable renders,
-model-param gating, iterate buttons).
+always-on rungs):
+
+- **analytical visualizations** →
+  [analytical-visualizations.md](analytical-visualizations.md) (L3 native charts,
+  interactive tables, deterministic PNG/SVG rendering, hosted HTML, accessibility,
+  limits, and live visual QA);
+- **image generation** → [image-generation.md](image-generation.md) (multimodal
+  thread context, sticky routing, reference selection, durable renders,
+  model-param gating, iterate buttons).
 
 **Cross-cutting operational reference:** for multi-turn agents, named-resource
 resolution, or external mutations, also read
