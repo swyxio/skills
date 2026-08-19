@@ -1,4 +1,4 @@
 interface:
   display_name: "DIY Netlify"
-  short_description: "Build fast, isolated PR previews with Actions"
-  default_prompt: "Use $diy-netlify to add a fast, isolated PR-preview and merge-to-production workflow to this repository."
+  short_description: "Build isolated PR previews with Actions"
+  default_prompt: "Use $diy-netlify to add an isolated PR-preview workflow with stable and immutable URLs, safe credential boundaries, and concise GitHub reporting."
