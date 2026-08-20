@@ -81,6 +81,22 @@ its thread and look for later causal replies that supersede or resolve the first
 hit. Prefer the newest supported state while retaining the earlier message only
 as history. Prospecting, hypotheticals, and requests are not commitments.
 
+Do not rescue an unsupported requested analysis by quietly answering an adjacent
+question. If the required rows, dimensions, or metric are absent, stop that
+analysis, report the useful verified facts inline, and name the missing evidence.
+An execution receipt can record the failed or partial attempt privately without
+turning it into a user-facing dashboard.
+
+Answer the requested decision before describing the search process. If no
+returned evidence satisfies the user's stated criteria, say so plainly and do
+not build a table or enumerate rejected candidates merely to demonstrate work.
+State a shared coverage limitation once rather than repeating it per candidate.
+Include at most three near-misses only when they materially explain ambiguity,
+under a short "Closest evidence" list. Render permalinks as concise descriptive
+links instead of exposing raw URLs. This empty-result rule applies even when the
+user requested a table: an empty reconciliation is prose, not a table of false
+positives.
+
 ## Ground-truth retrieval behavior
 
 When changing an existing Slack retrieval path, test the deployed behavior in
@@ -130,8 +146,12 @@ Cover at least:
 - query and result budgets are enforced and duplicates collapse;
 - answers cite returned files;
 - zero-result answers report exact executed coverage;
+- zero-qualifying-result answers lead with the decision, omit false-positive
+  tables, state shared limitations once, and label any useful source links;
 - no-search paths cannot claim that Slack was searched;
-- requester-scoped/private results do not leak into public delivery or logs.
+- requester-scoped/private results do not leak into public delivery or logs;
+- an unsupported requested metric stays unavailable instead of being replaced by
+  a nearby metric or mostly-empty table;
 - a mixed-source request still runs its explicit deterministic lookup when
   Slack returns zero results;
 - near-duplicate Slack variants cannot consume the budget reserved for another

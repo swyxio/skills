@@ -92,6 +92,12 @@ series lengths, oversized payloads, ambiguous row headers, and incompatible
 combinations. Strip the internal spec from prose and fallback text. If one visual
 fails validation, preserve the prose answer and add a sanitized omission note.
 
+Treat model-authored pipe tables as untrusted intermediate text. Convert them to
+native `data_table` only after validating one physical line per row, matching
+leading/trailing pipes, one header divider, equal cell counts, and a practical
+column count. If conversion fails, render compact bullets or plain prose; never
+show raw pipe fragments or a broken Markdown table to the user.
+
 ## Apply the approved analytical decision
 
 Receive a publishable analytical specification from the channel-agnostic core.
@@ -112,6 +118,20 @@ validated dataset. Slack may show a legible sampled preview, but the authorized
 interactive view and export should retain all meaningful observations. If that
 cannot be done honestly, prefer the inline answer or table over a misleading
 partial visualization.
+
+When an artifact is justified, make its portable receipt useful outside the UI.
+Arrange the sanitized prompt, applicable application instructions, concise
+decision/process summary, and validated data in a logical top-to-bottom
+transcript. Keep referenced thread context separate from the requester's verbatim
+prompt. Offer copy/download as Markdown when useful, but exclude platform
+prompts, secrets, hidden reasoning, raw private search hits, and unsafe tool
+payloads.
+
+Public sharing may remain a useful explicit action. Build the share view from a
+separately redacted public projection: the safe answer and public data may be
+included, while requester-scoped Slack evidence, internal provenance, private
+receipts, and capability-gated exports remain excluded. Do not infer public
+authorization merely because an authenticated artifact exists.
 
 ## Honor Slack contracts
 
@@ -188,8 +208,10 @@ Validate:
 1. malformed, duplicate, oversized, and ambiguous parser cases;
 2. exact Block Kit, including `raw_number.text` and message-wide budgets;
 3. `chat.postMessage` `{ok:false}` handling plus prose-only fallback;
-4. live pagination, filtering, sorting, and row-header behavior;
-5. desktop/mobile labels, legends, cropping, alt text, and readability.
+4. malformed pipe-table suppression plus readable bullet/prose fallback;
+5. live pagination, filtering, sorting, and row-header behavior;
+6. Markdown receipt completeness and public-share redaction;
+7. desktop/mobile labels, legends, cropping, alt text, and readability.
 
 A success reaction, generated payload, or mocked Slack card is not visual proof.
 After deployment, send representative prompts through the real Slack instance,

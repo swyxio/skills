@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.6"
+ version: "2.8"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
