@@ -22,10 +22,13 @@ metadata:
 Use this skill when creating or hardening Slack apps, Slack bots, agent-in-Slack
 workflows, or production Slack integrations.
 
-This skill is organized as a **maturity ladder (L0 → L6)**. Find the level you're
-targeting, build everything at and below it, then graduate. Each level has a full
-reference file with prose, code, and anti-patterns — read the file for the level
-you're working on; don't load all of them at once.
+This skill has two routing modes:
+
+- **Lifecycle work:** use the maturity ladder for greenfield builds, broad audits,
+  or upgrades that change the bot's operating level.
+- **Bounded capability work:** load only the reference for the named behavior and
+  any lower-level contract the change actually touches. Do not read the whole
+  maturity ladder for a search bug, rendering fix, or isolated tool integration.
 
 Patterns distill source-level lessons from AppSumo OpenInspect's Slack bot at
 [packages/slack-bot/src](https://github.com/appsumo/openinspect/tree/main/packages/slack-bot/src)
@@ -55,6 +58,10 @@ business logic, that's the bug.
 **Optional capability references** (load only if you ship the feature — they're not
 always-on rungs):
 
+- **Slack search and retrieval** →
+  [search-and-retrieval.md](search-and-retrieval.md) (query construction, file/PDF
+  search, causal follow-ups, requester-scoped access, evidence-backed claims, and
+  retrieval regression tests);
 - **analytical visualizations** →
   [analytical-visualizations.md](analytical-visualizations.md) (L3 native charts,
   interactive tables, deterministic PNG/SVG rendering, hosted HTML, accessibility,
@@ -63,19 +70,40 @@ always-on rungs):
   thread context, sticky routing, reference selection, durable renders,
   model-param gating, iterate buttons).
 
-**Cross-cutting operational reference:** for multi-turn agents, named-resource
-resolution, or external mutations, also read
+**Cross-cutting operational reference:** read
 [stateful-agent-workflows.md](stateful-agent-workflows.md). It covers causal
 Slack pagination/cutoffs, shared thread sessions, per-thread serialization,
 stateful routing, owned-resource catalogs, independently grounded writes,
-remaining-draft bulk approvals, and ephemeral-result publication.
+remaining-draft bulk approvals, and ephemeral-result publication. Load it only
+when the task changes thread/session state, named-resource routing, ordering, or
+external mutations. A bounded retrieval fix may rely on existing causal context
+without loading this whole reference.
 
-**Cloudflare implementation reference:** when the bot runs on Workers with D1,
-Durable Objects, Workflows, Queues, or managed fibers, read
+**Cloudflare implementation reference:** read
 [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md). It gives the
 concrete signed-ingress → durable-acceptance → fast-ack state machine, including
 the important distinction between an event being seen and its work being
-durably dispatched.
+durably dispatched. Load it only when the task changes ingress, acknowledgement,
+deduplication, dispatch, retries, serialization, or durable delivery. Merely
+running on Cloudflare is not sufficient reason to load it.
+
+## Route before loading references
+
+Classify the requested change first, then load the smallest matching set:
+
+| Task shape | Load | Do not load unless the task expands |
+|---|---|---|
+| New bot or broad maturity audit | Target ladder level; lower levels only to verify missing prerequisites | Unrelated optional capabilities |
+| Slack search, files, PDFs, citations, or false retrieval claims | [search-and-retrieval.md](search-and-retrieval.md) | L4/L5, durable ingress, mutation workflows |
+| Thread history, follow-up continuity, or shared session state | L2; add [stateful-agent-workflows.md](stateful-agent-workflows.md) only for persistence, routing, or ordering changes | L3–L6 |
+| Block Kit actions, approvals, or provider writes | L3 + [stateful-agent-workflows.md](stateful-agent-workflows.md) | L4–L6 unless their behavior changes |
+| Native assistant container or streaming | L4 | L5/L6 |
+| Timeouts, retries, durable execution, rate limits, or security hardening | L5; add [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md) only for Cloudflare ingress/dispatch changes | L6 |
+| Multi-workspace, multi-surface, queues, or backpressure | L6 plus the directly affected lower-level contracts | Optional capabilities not involved |
+
+When diagnosing an existing bot, inspect its current code and tests before
+choosing a level. A production bot can have an L2 retrieval defect without the
+task becoming an L5 hardening project.
 
 ## Strong opinions
 
@@ -117,14 +145,13 @@ image-gen specifics → [image-generation.md](image-generation.md).
 
 ## How to use this skill
 
-1. Identify your target level from the table.
-2. Open the reference file for that level (and skim the one below it).
-3. If the bot is multi-turn or mutates external systems, read
-   [stateful-agent-workflows.md](stateful-agent-workflows.md).
-4. If it runs on Cloudflare, read
-   [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md).
-5. Build the checklist for each level bottom-up; don't skip L0/L1 hardening to chase L3 features.
-6. Use the "Graduate when…" gate at the end of each file before moving up.
+1. Decide whether the request is lifecycle work or bounded capability work.
+2. Use the routing table to open only the directly relevant references.
+3. Expand to another reference only when code inspection proves that its contract
+   will change; state that reason before loading it.
+4. For lifecycle work, build the checklist bottom-up and use each "Graduate
+   when…" gate. For bounded work, preserve existing lower-level invariants and
+   validate the changed behavior end to end.
 
 ## Implementation bias: start boring
 
