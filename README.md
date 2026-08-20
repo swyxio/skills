@@ -167,6 +167,18 @@ narrowest atomic skill.
 
 Click into each folder for the detailed workflow, prerequisites, and command examples.
 
+## Validating skills
+
+The repository pins its validator dependency in `pyproject.toml` and `uv.lock`.
+With [uv](https://docs.astral.sh/uv/) installed, validate a changed skill with:
+
+```bash
+uv run python .system/skill-creator/scripts/quick_validate.py <skill-directory>
+```
+
+Use `uv sync --locked` to prepare the development environment without changing
+the lockfile.
+
 ## Installing in Cursor
 
 Clone this repo, then point Cursor at it with **one symlink for the whole directory** (recommended):

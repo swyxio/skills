@@ -1,0 +1,11 @@
+[project]
+name = "swyxio-skills-dev"
+version = "0.0.0"
+description = "Development dependencies for validating the swyxio skills repository"
+requires-python = ">=3.10"
+dependencies = [
+  "pyyaml==6.0.3",
+]
+
+[tool.uv]
+package = false
