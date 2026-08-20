@@ -1,10 +1,10 @@
 ---
 name: app-ux-paradigms
 description: >-
-  Applies standard web app UX for keyboard shortcuts, modals, overlays, forms,
-  and interaction patterns. Use when building UI, dialogs, menus, hotkeys, help
-  text, accessibility, or when the user asks about Esc, shortcuts, modal close,
-  backdrop click, or common desktop-app expectations.
+  Apply conventional interaction behavior for keyboard shortcuts, focus,
+  dialogs, overlays, menus, forms, and asynchronous controls. Use when those
+  interaction mechanics are being built or reviewed; do not use for general
+  page aesthetics, information architecture, or visualization quality.
 ---
 
 # App UX: keyboard shortcuts and common paradigms
@@ -75,6 +75,10 @@ Apply the same close trio (**Esc**, backdrop, ×) to **Speaker editor**, **slot 
 - **Shift+click** multi-select where bulk actions exist; show selection chrome and a bulk action bar.
 - **ID chips**: click copies to clipboard with brief status feedback (`Copied`).
 - **Empty states**: explain why no rows (no data vs no matches vs filters too narrow).
+- **Unavailable states**: when primary content cannot be produced, do not show
+  the normal success workspace with irrelevant export, share, filter, or edit
+  controls. Explain the missing prerequisite and offer the most useful recovery
+  action. Analytical publishability belongs to `data-visualization-quality`.
 - **Load more** for long tables instead of rendering thousands of rows at once.
 
 ## Search and filters

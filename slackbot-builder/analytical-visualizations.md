@@ -4,11 +4,15 @@ Use this L3 reference for quantitative answers rendered as native charts,
 interactive tables, or deterministic artifacts. Keep the analytical spec in the
 channel-agnostic core; let the Slack adapter validate and render it.
 
+Apply `data-visualization-quality` before this reference when deciding whether
+an analysis is publishable and which visual form is justified. This reference
+owns Slack delivery constraints, not general analytical design.
+
 ## Contents
 
 - [Choose the surface](#choose-the-surface)
 - [Bound model output](#bound-model-output)
-- [Apply useful defaults](#apply-useful-defaults)
+- [Apply the approved analytical decision](#apply-the-approved-analytical-decision)
 - [Honor Slack contracts](#honor-slack-contracts)
 - [Render richer forms](#render-richer-forms)
 - [Test the real result](#test-the-real-result)
@@ -62,37 +66,13 @@ series lengths, oversized payloads, ambiguous row headers, and incompatible
 combinations. Strip the internal spec from prose and fallback text. If one visual
 fails validation, preserve the prose answer and add a sanitized omission note.
 
-## Apply useful defaults
+## Apply the approved analytical decision
 
-These are product defaults, not Slack requirements:
-
-- Lead with one decision-useful sentence, then one decisive visual. Use a
-  mini-dashboard only when its pieces answer different parts of one question.
-- Prefer time-series line/area for truly ordered time data; use area when filled
-  magnitude or cumulative volume matters.
-- Prefer grouped bars for cross-category or multi-metric comparisons.
-- Use pie only for clear parts-of-whole questions, normally ≤6 slices. Prefer a
-  time series when either could answer the question.
-- Use tables for exact values. Show compact results of ≤10 rows without
-  pagination; paginate longer lists.
-- Keep labels short, order categories intentionally, and state units/currency.
-- Do not imply continuity across unlike cohorts; facet or label separate series.
-- Preserve `unavailable`, `pending`, `reported`, and `calculated`; never coerce
-  missing evidence to zero.
-- Keep pending/unavailable rows outside columns that must sort numerically.
-
-### Compact visual catalog
-
-| Form | Good use |
-| --- | --- |
-| Dumbbell/slope | Issued versus active, before versus after |
-| Waterfall | Gross → refunds → net |
-| Heatmap/coverage matrix | Entity × evidence availability |
-| Lollipop/dot plot | Rates or ranked values |
-| Scatter | Relationship between two metrics |
-| Stacked bar | Composition across comparable groups |
-| Small multiples | Separate cohorts, event families, or time windows |
-| Funnel | Stages sharing one precisely defined population only |
+Receive a publishable analytical specification from the channel-agnostic core.
+Do not use Slack rendering as a reason to substitute a nearby metric, publish a
+mostly unavailable table, or turn an unavailable analysis into a dashboard.
+Preserve explicit missing-value states in accessible fallback text. Keep
+pending or unavailable values outside columns that must sort numerically.
 
 ## Honor Slack contracts
 

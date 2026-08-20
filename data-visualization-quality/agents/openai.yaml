@@ -1,0 +1,6 @@
+interface:
+  display_name: "Data Visualization Quality"
+  short_description: "Design useful, analytically faithful visualizations"
+  default_prompt: "Use $data-visualization-quality to decide whether this analysis should be visualized and design the smallest faithful result."
+policy:
+  allow_implicit_invocation: true
