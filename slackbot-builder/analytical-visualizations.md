@@ -35,6 +35,14 @@ Run this gate before allocating chart rendering, artifact storage, previews,
 share links, CSV generation, or follow-up controls. This avoids spending model,
 rendering, storage, and user attention on an output that should never ship.
 
+Requester-scoped Slack evidence inherits the private source boundary. Answer
+inline and privately unless the product has a separately designed,
+capability-matched private artifact with audited access. Do not persist raw
+search hits or derived private tables into ordinary visualization artifacts,
+share links, PNG attachments, CSV downloads, traces, or logs. A useful native
+Slack table may still be appropriate when the answer is substantial; it is not
+a reason to create a durable artifact.
+
 ## Choose the surface
 
 | Need | Surface |
@@ -98,6 +106,12 @@ chart easier to render. If the provider or Slack surface imposes a point limit,
 use an honest aggregation or a richer authenticated surface, disclose the
 transformation, and keep the complete authorized dataset in the matching
 export.
+
+Keep preview, interactive view, Markdown receipt, and CSV derived from the same
+validated dataset. Slack may show a legible sampled preview, but the authorized
+interactive view and export should retain all meaningful observations. If that
+cannot be done honestly, prefer the inline answer or table over a misleading
+partial visualization.
 
 ## Honor Slack contracts
 
@@ -163,6 +177,11 @@ Use clearly marked synthetic design-lab prompts to compare grouped bar, ordered
 line/area, pie, a tall compact table, and a two-chart-plus-table dashboard.
 Also test one unavailable or insubstantial result that must remain an inline
 Slack answer with no visualization artifact.
+
+For mixed Slack-plus-data prompts, also test a zero-result Slack search paired
+with a successful deterministic lookup. The answer should still report the
+verified data, state that no Slack comparison was supported, remain private,
+and create no durable artifact.
 
 Validate:
 

@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
  author: swyx
- version: "2.5"
+ version: "2.6"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -50,6 +50,7 @@ delegate application behavior to a channel-agnostic core.
 |---|---|
 | Slack search, files, PDFs, or requester-scoped retrieval | [search-and-retrieval.md](search-and-retrieval.md) |
 | Native charts/tables or hosted analytical artifacts | [analytical-visualizations.md](analytical-visualizations.md) |
+| Mixed Slack evidence plus deterministic application/provider data | Read both [search-and-retrieval.md](search-and-retrieval.md) and [analytical-visualizations.md](analytical-visualizations.md) |
 | Generated images and iteration controls | [image-generation.md](image-generation.md) |
 | Thread persistence, ordering, resource routing, or mutations | [stateful-agent-workflows.md](stateful-agent-workflows.md) |
 | Cloudflare ingress, dispatch, dedupe, or durable acceptance | [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md) |
