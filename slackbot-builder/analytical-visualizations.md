@@ -10,12 +10,30 @@ owns Slack delivery constraints, not general analytical design.
 
 ## Contents
 
+- [Gate visualization creation](#gate-visualization-creation)
 - [Choose the surface](#choose-the-surface)
 - [Bound model output](#bound-model-output)
 - [Apply the approved analytical decision](#apply-the-approved-analytical-decision)
 - [Honor Slack contracts](#honor-slack-contracts)
 - [Render richer forms](#render-richer-forms)
 - [Test the real result](#test-the-real-result)
+
+## Gate visualization creation
+
+Answer inline in Slack unless the validated result is substantial and a visual
+materially improves understanding. A request that mentions charts, drawing, or
+visualization does not override this publishability gate.
+
+Do not create a hosted artifact when the central measure is unavailable, the
+result answers only an adjacent question, the returned data is too sparse to
+support the requested claim, or concise prose communicates everything useful.
+Give the inline answer, state the material gap once, and suggest a recovery
+action when one exists. Preserve failed-attempt telemetry privately; do not turn
+the receipt itself into a user-facing visualization.
+
+Run this gate before allocating chart rendering, artifact storage, previews,
+share links, CSV generation, or follow-up controls. This avoids spending model,
+rendering, storage, and user attention on an output that should never ship.
 
 ## Choose the surface
 
@@ -73,6 +91,13 @@ Do not use Slack rendering as a reason to substitute a nearby metric, publish a
 mostly unavailable table, or turn an unavailable analysis into a dashboard.
 Preserve explicit missing-value states in accessible fallback text. Keep
 pending or unavailable values outside columns that must sort numerically.
+
+Preserve all meaningful validated observations by default. Do not silently
+reduce an ordered series to a handful of representative points merely to make a
+chart easier to render. If the provider or Slack surface imposes a point limit,
+use an honest aggregation or a richer authenticated surface, disclose the
+transformation, and keep the complete authorized dataset in the matching
+export.
 
 ## Honor Slack contracts
 
@@ -136,6 +161,8 @@ outlive the request must use L5 durable execution and guarantee result-or-error.
 
 Use clearly marked synthetic design-lab prompts to compare grouped bar, ordered
 line/area, pie, a tall compact table, and a two-chart-plus-table dashboard.
+Also test one unavailable or insubstantial result that must remain an inline
+Slack answer with no visualization artifact.
 
 Validate:
 
@@ -145,5 +172,9 @@ Validate:
 4. live pagination, filtering, sorting, and row-header behavior;
 5. desktop/mobile labels, legends, cropping, alt text, and readability.
 
-A success reaction is not visual proof. Report source/CI, deployment, Slack API
-acceptance, and human-visible rendering as separate claims.
+A success reaction, generated payload, or mocked Slack card is not visual proof.
+After deployment, send representative prompts through the real Slack instance,
+inspect the human-visible Slack response, and open any authenticated artifact in
+the real browser UI at desktop and mobile widths. Report source/CI, deployment,
+Slack API acceptance, artifact authorization, and human-visible rendering as
+separate claims.
