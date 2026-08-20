@@ -1,178 +1,86 @@
 ---
 name: cloudflare-do-turn-based-multiplayer
-description: Design, implement, debug, review, or verify remote turn-based multiplayer games on Cloudflare Durable Objects. Use for room URLs and invites, reconnectable player identity, WebSocket hibernation, server-authoritative turns, revision conflicts, idempotent actions, concurrent move races, presence, lobby/start failures, deterministic bots, local Wrangler testing, cross-browser playthroughs, or production verification of a Durable Object game room.
+description: Design, implement, debug, or verify a remote turn-based multiplayer game whose rooms run on Cloudflare Durable Objects. Use for room and invite identity, reconnectable seats, WebSocket hibernation, concurrent turns, action idempotency, revision conflicts, or cross-browser game-state agreement. Do not trigger for generic Durable Object applications or local-only games.
 ---
 
 # Cloudflare DO Turn-Based Multiplayer
 
-Build each room as one server-authoritative state machine. Treat the room URL,
-resume credential, WebSocket connection, player seat, game revision, action
-acknowledgement, deployment, and browser-visible outcome as separate facts.
+Model each room as one server-authoritative state machine. Keep the deterministic
+game reducer independent from Cloudflare transport so rules and concurrency can
+be tested without Wrangler.
 
-Use this skill together with the adjacent `cloudflare-production-builder` skill
-when the work includes provisioning, migrations, deployment, observability,
-cost, or live release verification.
+## Establish authority
 
-## Start with the authority sentence
+Before editing, identify:
 
-Write this before changing code:
+- the room's deterministic Durable Object ID;
+- the public room code and any private invite credential;
+- how a device resumes and which seats it owns;
+- the persisted room revision and action identity; and
+- how clients recover after an unknown result.
 
-> The Durable Object owns ____. The room is addressed by ____. A device resumes
-> with ____. Mutations serialize by ____. Every action is identified by ____ and
-> fenced by revision ____. Clients recover from uncertainty by ____.
-
-Stop and resolve ambiguity if the URL, local storage, client reducer, and
-Durable Object can select different rooms or disagree about canonical state.
-
-## Inspect the full path
-
-Trace these surfaces before designing:
-
-1. room creation and `getByName()` routing;
-2. public and private invitation URL generation;
-3. local credential storage and resume behavior;
-4. join, resume, and WebSocket upgrade routes;
-5. Durable Object class export, binding, migration, storage schema, and
-   generated deployment config;
-6. WebSocket attachment, tags, presence, and hibernation;
-7. client action submission, acknowledgement, retry, and error UI;
-8. deterministic reducer, validation, scoring, bots, and turn advancement;
-9. local Wrangler bindings, browser tests, and release path.
-
-Do not infer a working Durable Object from a frontend-only dev server. Exercise
-the real Worker entry point with the actual local DO binding.
-
-Keep the deterministic room coordinator/reducer independent of Cloudflare
-transport so authority, migrations, and adversarial concurrency can be tested
-without Wrangler.
-
-## Enforce the room and identity contract
-
-- Make the explicit room code in the URL the sole room selector.
-- Store resume credentials by room code, never as one global “last room.”
-- Let a public room URL resume only credentials for that exact room.
-- Force a private seat invite through the join path even if another credential
-  exists.
-- Strip private seat and invite tokens from the visible URL after successful
-  exchange for a device resume token.
-- Treat a room code as routing information, not authentication.
-- Model a device as owning one or more seats; do not assume one token equals one
-  player. Re-authorize ownership against current room state on every message.
-- Add an authenticated resume preflight. Return `200` for a valid device,
-  `401` for an invalid credential, and `404` for a missing room.
-- On `401` or `404`, remove only that room’s credential and show a recoverable
-  join screen. Do not reconnect forever.
-- Make leaving one room preserve credentials for other rooms.
-- Do not silently resume a saved room from a bare online landing route.
+The URL room code is the room selector, not authentication. Store resume
+credentials per room, exchange private invites for device credentials, and
+remove invite secrets from the visible URL after exchange. Re-authorize the
+device against current room state on every mutation.
 
 Read [protocol-and-architecture.md](references/protocol-and-architecture.md)
-when designing URLs, identity storage, message schemas, or recovery behavior.
+when changing URLs, identity, message schemas, persistence, or recovery.
 
-## Serialize every authoritative mutation
+## Serialize mutations
 
-Durable Objects provide a single logical owner, but WebSocket handlers can
-interleave at `await` boundaries. A read-modify-write sequence is not safe
-merely because it runs in one object.
+Durable Objects serialize events, but handlers can interleave at external
+`await` boundaries. For every authoritative action:
 
-- Put create, join, seat changes, game actions, and bot transitions through one
-  mutation gate when they can touch the same room state.
-- Re-read room state and re-authorize the device inside the gate.
-- Use an immutable `actionId` as the idempotency key.
-- Check duplicate `actionId` before `expectedRevision`, so a retry of an already
-  committed action with its old revision remains idempotently accepted.
-- Validate `expectedRevision` against fresh state for nonduplicates.
-- Persist accepted state before acknowledging or broadcasting it.
-- Acknowledge duplicates as accepted with the canonical snapshot, but do not
-  apply, persist, broadcast activity, or trigger bots twice.
-- Reject a stale or illegal action with its `actionId`, reason, and canonical
-  snapshot.
-- Keep deterministic rule validation, scoring, turn order, and bot state
-  authoritative on the server. The client proposes actions; it does not submit
-  trusted outcomes.
+1. enter one room mutation gate;
+2. re-read state and re-authorize the device inside it;
+3. check immutable `actionId` duplication before checking `expectedRevision`;
+4. validate the fresh revision and deterministic game rule;
+5. persist the accepted state before acknowledgement or broadcast; and
+6. return the canonical snapshot for acceptance, duplication, or rejection.
 
-## Make acknowledgement explicit
+A duplicate action returns the prior accepted result without applying side
+effects again. A stale or illegal action returns its `actionId`, reason, and
+canonical snapshot. The client proposes an action; it never submits trusted
+scores, turn order, or board outcomes.
 
-Use a correlated result for every syntactically valid game action:
+## Keep acknowledgement and recovery explicit
 
-```ts
-type ActionResult = {
-  type: "action.result";
-  actionId: string;
-  accepted: boolean;
-  reason?: string;
-  snapshot: RoomSnapshot;
-};
-```
+Correlate every syntactically valid mutation with its `actionId`. Apply snapshots
+monotonically by revision. Keep a rejected local draft available for repair.
+After an acknowledgement timeout, treat the result as unknown: reconnect, load
+the canonical snapshot, and retry only with the same action identity when the
+protocol permits it.
 
-- Allow one in-flight game action per client unless a more sophisticated
-  optimistic protocol is deliberately implemented.
-- Disable mutation controls while awaiting the result and expose syncing state.
-- Apply snapshots monotonically by revision; ignore older arrivals.
-- Clear a local draft only after acceptance. Keep it on rejection so the player
-  can repair the move.
-- On acknowledgement timeout, treat the result as unknown: reconnect, install
-  the canonical snapshot, then let the player decide whether to retry.
-- Never blindly resend an uncertain mutation with a new action ID.
+One in-flight action per client is the simple default. More optimistic behavior
+requires an explicit conflict and rebase design.
 
-## Keep transport and lifecycle safe
+## Durable Object and WebSocket boundaries
 
-- Hash long-lived device tokens at rest and compare them without early exit.
-- Put only stable device or seat identifiers in WebSocket attachments.
-- Derive presence from live tagged sockets; do not make presence authoritative
-  game state.
-- Version stored room state and normalize older versions on read.
-- Validate cross-field invariants after normalization: one host, correct seat
-  count/order, unique seat ownership, bidirectional device-seat links, and
-  mode-specific bot/invite/local fields.
-- Include scheduled bot/alarm transitions in the same mutation discipline.
-- Close every tagged socket for a device immediately when host action revokes
-  that device.
-- When proxying request bodies from a Worker to a Durable Object, consume or
-  clone the body deliberately before constructing the forwarded request.
-  Reusing a request stream after sending a response can fail under Wrangler.
-- Bound message sizes, text lengths, activity frequency, chat rate, recent
-  action IDs, and retained activity.
-- Parse explicit message allowlists in both directions. Never cast arbitrary
-  decoded JSON into a protocol union.
-- Return room, join, and resume responses with `Cache-Control: no-store`.
+- Use the Hibernation WebSocket API for idle server connections when appropriate.
+- Store only stable identifiers in WebSocket attachments; persistent room state
+  belongs in Durable Object storage.
+- Derive presence from live sockets rather than treating it as game authority.
+- Version and normalize stored room state, then validate cross-field invariants.
+- Put alarm-driven bot or timeout transitions through the same mutation path.
+- Bound message sizes, text, activity rate, and retained action IDs.
+- Parse explicit inbound and outbound protocol allowlists.
+- Hash long-lived device credentials and return room/join/resume responses with
+  `Cache-Control: no-store`.
 
-## Verify adversarially
+Exercise the actual Worker entrypoint and Durable Object binding; a frontend-only
+development server is not a multiplayer test.
 
-At minimum, prove:
+## Verify the failure cases that matter
 
-1. stored room A plus URL room B opens B, never A;
-2. A and B credentials coexist, and leaving A preserves B;
-3. private invites force joining and secrets disappear from the URL;
-4. invalid resume credentials return to join without an infinite loop;
-5. two same-revision concurrent actions result in exactly one state mutation;
-6. a duplicate action returns the same canonical state without duplicate work;
-7. rapid local transforms followed by commit submit the latest transform;
-8. two remote humans join, start, complete one turn each, and agree on round,
-   active player, scores, and board;
-9. four players join, start, complete a full round, and agree on the next turn;
-10. disconnect and resume preserve seat ownership and canonical state.
-
-Use actual browsers where compatibility matters. Keep each player in an
-isolated browser profile or context. Capture the room code, player names,
-revision/round, active player, and scores as evidence.
+At minimum, cover wrong-room credential isolation, private-invite exchange,
+invalid resume recovery, same-revision concurrent actions, duplicate delivery,
+disconnect/resume, and two isolated browsers completing turns with identical
+room state. Add four-player or full-round playthroughs only when supported by
+the game being changed.
 
 Read
 [failure-modes-and-verification.md](references/failure-modes-and-verification.md)
-before diagnosing a reported lobby/start failure or declaring multiplayer
-ready.
-
-## Completion language
-
-Report these separately:
-
-- `implemented locally`
-- `focused protocol tests pass`
-- `local Durable Object browser flow passed`
-- `cross-browser playthrough passed`
-- `committed`
-- `pushed`
-- `Worker deployed`
-- `custom-domain multiplayer verified`
-
-Never call a create/join smoke test a turn-playthrough, or a successful build a
-multiplayer verification.
+for reported lobby/start failures or a release-readiness review. Report exactly
+which layer passed: pure protocol, local Worker/DO, isolated-browser playthrough,
+or deployed custom-domain behavior.

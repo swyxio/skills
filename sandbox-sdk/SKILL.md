@@ -1,177 +1,58 @@
 ---
 name: sandbox-sdk
-description: Build sandboxed applications for secure code execution. Load when building AI code execution, code interpreters, CI/CD systems, interactive dev environments, or executing untrusted code. Covers Sandbox SDK lifecycle, commands, files, code interpreter, and preview URLs. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
+description: Build or debug applications that specifically use Cloudflare Sandbox SDK (`@cloudflare/sandbox`) for isolated command execution, code interpretation, files, processes, sessions, or preview URLs. Do not trigger for generic container design, local shell scripting, or unrelated sandbox products.
 ---
 
 # Cloudflare Sandbox SDK
 
-Build secure, isolated code execution environments on Cloudflare Workers.
+Use current Cloudflare docs and the installed package as the API contract. The
+SDK and its container topology evolve quickly; inspect package exports, types,
+Wrangler schema, and generated configuration before coding.
 
-## FIRST: Verify Installation
+## Establish the isolation contract
 
-```bash
-npm install @cloudflare/sandbox
-docker info  # Must succeed - Docker required for local dev
-```
+Identify:
 
-## Retrieval Sources
+- who chooses the sandbox ID and how it is scoped to a tenant or session;
+- which code, files, environment variables, and network access are untrusted;
+- what must survive container sleep or recreation;
+- which operations need a shared session versus isolated execution; and
+- whether an exposed service is private, temporary, or public.
 
-Your knowledge of the Sandbox SDK may be outdated. **Prefer retrieval over pre-training** for any Sandbox SDK task.
+A Sandbox is backed by a Durable Object and its container starts lazily. The
+same ID selects the same logical Sandbox, but container-local files, processes,
+and shell state can be lost after sleep or restart. Put durable application state
+outside the ephemeral container filesystem.
 
-| Resource | URL |
-|----------|-----|
-| Docs | https://developers.cloudflare.com/sandbox/ |
-| API Reference | https://developers.cloudflare.com/sandbox/api/ |
-| Examples | https://github.com/cloudflare/sandbox-sdk/tree/main/examples |
-| Get Started | https://developers.cloudflare.com/sandbox/get-started/ |
+## Configure from current docs
 
-When implementing features, fetch the relevant doc page or example first.
+Verify the exact container, Durable Object binding, and class lifecycle required
+by the installed SDK. Re-export the SDK's `Sandbox` class from the Worker when
+the current integration requires it. Do not copy a pinned image tag, lifecycle
+declaration, instance type, or preview-domain configuration from this skill.
 
-## Required Configuration
+Use [api-quick-ref.md](references/api-quick-ref.md) only after checking installed
+types. Use [examples.md](references/examples.md) to locate a relevant upstream
+example rather than combining several patterns speculatively.
 
-**wrangler.jsonc** (exact - do not modify structure):
+## Choose execution deliberately
 
-```jsonc
-{
-  "containers": [{
-    "class_name": "Sandbox",
-    "image": "./Dockerfile",
-    "instance_type": "lite",
-    "max_instances": 1
-  }],
-  "durable_objects": {
-    "bindings": [{ "class_name": "Sandbox", "name": "Sandbox" }]
-  },
-  "migrations": [{ "new_sqlite_classes": ["Sandbox"], "tag": "v1" }]
-}
-```
+- Use command/process APIs when exit status, streams, or process lifecycle is the
+  contract.
+- Use code-interpreter APIs when structured rich results or a deliberate session
+  is required.
+- Disable or avoid shared default sessions when calls must be isolated.
+- Scope IDs and credentials so one tenant cannot address another tenant's
+  sandbox.
+- Bound input, runtime, output, files, processes, and cleanup according to the
+  untrusted-code threat model.
+- Treat preview URLs as public capabilities unless an owning authentication layer
+  proves otherwise. Check current custom-domain and tunnel requirements.
 
-**Worker entry** - must re-export Sandbox class:
+## Verify the real lifecycle
 
-```typescript
-import { getSandbox } from '@cloudflare/sandbox';
-export { Sandbox } from '@cloudflare/sandbox';  // Required export
-```
-
-## Quick Reference
-
-| Task | Method |
-|------|--------|
-| Get sandbox | `getSandbox(env.Sandbox, 'user-123')` |
-| Run command | `await sandbox.exec('python script.py')` |
-| Run code (interpreter) | `await sandbox.runCode(code, { language: 'python' })` |
-| Write file | `await sandbox.writeFile('/workspace/app.py', content)` |
-| Read file | `await sandbox.readFile('/workspace/app.py')` |
-| Create directory | `await sandbox.mkdir('/workspace/src', { recursive: true })` |
-| List files | `await sandbox.listFiles('/workspace')` |
-| Expose port | `await sandbox.exposePort(8080)` |
-| Destroy | `await sandbox.destroy()` |
-
-## Core Patterns
-
-### Execute Commands
-
-```typescript
-const sandbox = getSandbox(env.Sandbox, 'user-123');
-const result = await sandbox.exec('python --version');
-// result: { stdout, stderr, exitCode, success }
-```
-
-### Code Interpreter (Recommended for AI)
-
-Use `runCode()` for executing LLM-generated code with rich outputs:
-
-```typescript
-const ctx = await sandbox.createCodeContext({ language: 'python' });
-
-await sandbox.runCode('import pandas as pd; data = [1,2,3]', { context: ctx });
-const result = await sandbox.runCode('sum(data)', { context: ctx });
-// result.results[0].text = "6"
-```
-
-**Languages**: `python`, `javascript`, `typescript`
-
-State persists within context. Create explicit contexts for production.
-
-### File Operations
-
-```typescript
-await sandbox.mkdir('/workspace/project', { recursive: true });
-await sandbox.writeFile('/workspace/project/main.py', code);
-const file = await sandbox.readFile('/workspace/project/main.py');
-const files = await sandbox.listFiles('/workspace/project');
-```
-
-## When to Use What
-
-| Need | Use | Why |
-|------|-----|-----|
-| Shell commands, scripts | `exec()` | Direct control, streaming |
-| LLM-generated code | `runCode()` | Rich outputs, state persistence |
-| Build/test pipelines | `exec()` | Exit codes, stderr capture |
-| Data analysis | `runCode()` | Charts, tables, pandas |
-
-## Extending the Dockerfile
-
-Base image (`docker.io/cloudflare/sandbox:0.7.0`) includes Python 3.11, Node.js 20, and common tools.
-
-Add dependencies by extending the Dockerfile:
-
-```dockerfile
-FROM docker.io/cloudflare/sandbox:0.7.0
-
-# Python packages
-RUN pip install requests beautifulsoup4
-
-# Node packages (global)
-RUN npm install -g typescript
-
-# System packages
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
-
-EXPOSE 8080  # Required for local dev port exposure
-```
-
-Keep images lean - affects cold start time.
-
-## Preview URLs (Port Exposure)
-
-Expose HTTP services running in sandboxes:
-
-```typescript
-const { url } = await sandbox.exposePort(8080);
-// Returns preview URL for the service
-```
-
-**Production requirement**: Preview URLs need a custom domain with wildcard DNS (`*.yourdomain.com`). The `.workers.dev` domain does not support preview URL subdomains.
-
-See: https://developers.cloudflare.com/sandbox/guides/expose-services/
-
-## OpenAI Agents SDK Integration
-
-The SDK provides helpers for OpenAI Agents at `@cloudflare/sandbox/openai`:
-
-```typescript
-import { Shell, Editor } from '@cloudflare/sandbox/openai';
-```
-
-See `examples/openai-agents` for complete integration pattern.
-
-## Sandbox Lifecycle
-
-- `getSandbox()` returns immediately - container starts lazily on first operation
-- Containers sleep after 10 minutes of inactivity (configurable via `sleepAfter`)
-- Use `destroy()` to immediately free resources
-- Same `sandboxId` always returns same sandbox instance
-
-## Anti-Patterns
-
-- **Don't use internal clients** (`CommandClient`, `FileClient`) - use `sandbox.*` methods
-- **Don't skip the Sandbox export** - Worker won't deploy without `export { Sandbox }`
-- **Don't hardcode sandbox IDs for multi-user** - use user/session identifiers
-- **Don't forget cleanup** - call `destroy()` for temporary sandboxes
-
-## Detailed References
-
-- **[references/api-quick-ref.md](references/api-quick-ref.md)** - Full API with options and return types
-- **[references/examples.md](references/examples.md)** - Example index with use cases
+Test the exact package version and generated Worker bundle. Exercise creation,
+one representative command or code run, expected file/session behavior,
+sleep/recreation when persistence matters, cleanup, and any exposed route.
+Successful object creation alone does not prove container execution or preview
+routing.
