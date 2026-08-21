@@ -36,7 +36,7 @@ Use lightweight read-only discovery only when it could materially change the opt
 
 ## Generate adaptive option groups
 
-Create two to five goal-oriented groups that fit the thread. Examples include product direction, technical work, evidence gaps, rollout, operations, growth, or follow-up. Do not use fixed categories when they distort the actual decision.
+Create two to five goal-oriented groups that fit the thread. Number group headings sequentially from `1` so each option has a stable shorthand such as `1A` or `2B`. Examples include product direction, technical work, evidence gaps, rollout, operations, growth, or follow-up. Do not use fixed categories when they distort the actual decision.
 
 Within each group, provide up to three ranked options. For each option include:
 
@@ -47,10 +47,17 @@ Within each group, provide up to three ranked options. For each option include:
 - one concise judgment explaining why it belongs there and what outcome it produces;
 - effort, risk, reversibility, or dependencies only when they materially affect the choice.
 
-Treat letters as local scan order only. Never refer to an option elsewhere as
-“Rollout A,” “Protect A,” “Option B,” or similar shorthand. Repeat the option's
-short title whenever referring back to it so every recommendation remains clear
-when skimmed out of order.
+Treat the group number plus option letter as the stable option ID. A user may
+reply with shorthand such as `1A` or `2B`; interpret it against the most recent
+next-steps output. When referring back to an option in the response, pair its ID
+with the repeated short title, such as **1A — Verify the production rollout**,
+instead of ambiguous wording such as “Rollout A” or “Protect A.”
+
+Format each option as one compact heading line followed by one or two indented
+bullets. Put the judgment and outcome in a **Why** bullet. Add a second bullet
+for dependencies, effort, risk, or reversibility only when materially useful.
+This nested structure should make the groups easy to scan without flattening
+all details into dense paragraphs.
 
 Rank with judgment rather than a synthetic numeric score. Consider expected impact, urgency, uncertainty reduction, ability to unblock other work, dependency order, risk, reversibility, and fit with the user's demonstrated intent.
 
@@ -65,7 +72,7 @@ Include a monitor-or-stop option when taking no further action is legitimately s
 
 ## Recommend a portfolio
 
-After the grouped options, recommend a small portfolio of complementary moves, normally one to three. Repeat each selected option's exact short title and explain which can proceed together. Distinguish alternatives from complements and note any necessary order, but do not collapse the whole answer into a single mandatory sequence. Do not make the reader decode group names or letters to understand the portfolio.
+After the grouped options, recommend a small portfolio of complementary moves, normally one to three. Identify each selected option with its stable ID and repeat its exact short title. Use a short numbered or bulleted list with nested bullets for ordering or concurrency. Distinguish alternatives from complements and note any necessary order, but do not collapse the whole answer into a single mandatory sequence.
 
 Recommendations are not authorization to execute. If the user asks only what comes next, remain non-mutating.
 
@@ -82,22 +89,32 @@ Stay compact by default and expand only for consequential, ambiguous, or complex
 
 - <Up to five delta-first bullets.>
 
-## <Adaptive goal area>
+## 1. <Adaptive goal area>
 
-A. **Now · Verification** — **Verify the production rollout.** <Concise judgment.>
-B. **Soon · Action** — **Freeze further homepage changes.** <Concise judgment.>
+A. **Now · Verification — Verify the production rollout**
+   - **Why:** <Concise judgment and outcome.>
+   - **Dependency:** <Only when materially useful.>
 
-## <Another adaptive goal area>
+B. **Soon · Action — Freeze further homepage changes**
+   - **Why:** <Concise judgment and outcome.>
 
-A. **Now · Decision** — **Choose the measurement window.** <Concise judgment.>
+## 2. <Another adaptive goal area>
+
+A. **Now · Decision — Choose the measurement window**
+   - **Why:** <Concise judgment and outcome.>
 
 ## Recommended portfolio
 
-Start with **Verify the production rollout**, run **Freeze further homepage changes** in parallel, then use **Choose the measurement window** after live verification.
+1. **1A — Verify the production rollout**
+   - Do this first because it unlocks reliable live evidence.
+2. **1B — Freeze further homepage changes**
+   - Run this in parallel to protect the experiment.
+3. **2A — Choose the measurement window**
+   - Do this after live verification.
 
 ## Decision needed
 
 <Up to two questions only when answers materially change the path.>
 ```
 
-Omit empty sections. Use letters within each group, resetting at `A`, but never use those letters as cross-references. Keep option titles short, action-led, and repeated verbatim wherever referenced. Keep the default response to one intent paragraph, no more than five progress bullets, two to five groups, up to three options per group, one portfolio recommendation, and at most two decision-critical questions.
+Omit empty sections. Number groups sequentially and use letters within each group, resetting at `A`, to create stable IDs such as `1A` and `2B`. Keep option titles short, action-led, and repeated verbatim with their IDs wherever referenced. Use nested bullets consistently, but omit empty metadata bullets. Keep the default response to one intent paragraph, no more than five progress bullets, two to five groups, up to three options per group, one portfolio recommendation, and at most two decision-critical questions.
