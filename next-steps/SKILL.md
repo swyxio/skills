@@ -43,8 +43,14 @@ Within each group, provide up to three ranked options. For each option include:
 - a rank within its group;
 - a priority: **Now**, **Soon**, **Later**, or **Optional**;
 - a type tag such as **Research**, **Review**, **Decision**, **Action**, **Verification**, or **Monitoring**;
+- a short, action-led title using consistent verb-object wording, such as **Verify the production rollout** or **Freeze further homepage changes**;
 - one concise judgment explaining why it belongs there and what outcome it produces;
 - effort, risk, reversibility, or dependencies only when they materially affect the choice.
+
+Treat letters as local scan order only. Never refer to an option elsewhere as
+“Rollout A,” “Protect A,” “Option B,” or similar shorthand. Repeat the option's
+short title whenever referring back to it so every recommendation remains clear
+when skimmed out of order.
 
 Rank with judgment rather than a synthetic numeric score. Consider expected impact, urgency, uncertainty reduction, ability to unblock other work, dependency order, risk, reversibility, and fit with the user's demonstrated intent.
 
@@ -59,7 +65,7 @@ Include a monitor-or-stop option when taking no further action is legitimately s
 
 ## Recommend a portfolio
 
-After the grouped options, recommend a small portfolio of complementary moves, normally one to three. Name group leaders and explain which can proceed together. Distinguish alternatives from complements and note any necessary order, but do not collapse the whole answer into a single mandatory sequence.
+After the grouped options, recommend a small portfolio of complementary moves, normally one to three. Repeat each selected option's exact short title and explain which can proceed together. Distinguish alternatives from complements and note any necessary order, but do not collapse the whole answer into a single mandatory sequence. Do not make the reader decode group names or letters to understand the portfolio.
 
 Recommendations are not authorization to execute. If the user asks only what comes next, remain non-mutating.
 
@@ -78,20 +84,20 @@ Stay compact by default and expand only for consequential, ambiguous, or complex
 
 ## <Adaptive goal area>
 
-A. **Now · Verification** — <Highest-priority option and concise judgment.>
-B. **Soon · Action** — <Next option and concise judgment.>
+A. **Now · Verification** — **Verify the production rollout.** <Concise judgment.>
+B. **Soon · Action** — **Freeze further homepage changes.** <Concise judgment.>
 
 ## <Another adaptive goal area>
 
-A. **Now · Decision** — <Highest-priority option and concise judgment.>
+A. **Now · Decision** — **Choose the measurement window.** <Concise judgment.>
 
 ## Recommended portfolio
 
-<One to three complementary group leaders, with any necessary ordering.>
+Start with **Verify the production rollout**, run **Freeze further homepage changes** in parallel, then use **Choose the measurement window** after live verification.
 
 ## Decision needed
 
 <Up to two questions only when answers materially change the path.>
 ```
 
-Omit empty sections. Use letters within each group, resetting at `A`. Keep the default response to one intent paragraph, no more than five progress bullets, two to five groups, up to three options per group, one portfolio recommendation, and at most two decision-critical questions.
+Omit empty sections. Use letters within each group, resetting at `A`, but never use those letters as cross-references. Keep option titles short, action-led, and repeated verbatim wherever referenced. Keep the default response to one intent paragraph, no more than five progress bullets, two to five groups, up to three options per group, one portfolio recommendation, and at most two decision-critical questions.
