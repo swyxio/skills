@@ -1,0 +1,4 @@
+interface:
+  display_name: "Next Steps"
+  short_description: "Rank holistic options from full thread context"
+  default_prompt: "Use $next-steps to assess this thread and recommend prioritized groups of next-step options."
