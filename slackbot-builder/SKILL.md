@@ -3,14 +3,16 @@ name: slackbot-builder
 description: >
  Design or harden Slack bot transport and interaction architecture: signed Events
  API ingress, fast acknowledgement, idempotency, causal thread context, Block Kit
- actions, durable agent execution, or multi-workspace operation. Use for new Slack
- bots, broad Slack architecture audits, or changes to these contracts. Do not use
- for deploying or visually testing an existing bot, editing Slack copy/layout,
- changing channel-agnostic application logic, or merely operating Slack.
+ actions, durable agent execution, multi-workspace operation, or Slack-specific
+ delivery of typed follow-up controls and privacy-bounded execution receipts. Use
+ for new Slack bots, broad Slack architecture audits, or changes to these Slack
+ contracts. Do not use for deployment or visual testing, cosmetic copy/layout,
+ general answer quality, channel-agnostic transcript or receipt schemas, core
+ suggestion generation, or merely operating Slack.
 license: MIT
 metadata:
  author: swyx
- version: "2.8"
+ version: "2.9"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -51,6 +53,7 @@ delegate application behavior to a channel-agnostic core.
 | Slack search, files, PDFs, or requester-scoped retrieval | [search-and-retrieval.md](search-and-retrieval.md) |
 | Native charts/tables or hosted analytical artifacts | [analytical-visualizations.md](analytical-visualizations.md) |
 | Mixed Slack evidence plus deterministic application/provider data | Read both [search-and-retrieval.md](search-and-retrieval.md) and [analytical-visualizations.md](analytical-visualizations.md) |
+| Slack rendering of typed follow-up controls or execution receipts | [answer-quality-and-receipts.md](answer-quality-and-receipts.md) |
 | Generated images and iteration controls | [image-generation.md](image-generation.md) |
 | Thread persistence, ordering, resource routing, or mutations | [stateful-agent-workflows.md](stateful-agent-workflows.md) |
 | Cloudflare ingress, dispatch, dedupe, or durable acceptance | [cloudflare-durable-ingress.md](cloudflare-durable-ingress.md) |
@@ -83,7 +86,9 @@ their level files so they load only when needed):
   effort. Fail closed when identity, authorization, or required evidence cannot
   be established.
 - Record structured safe telemetry for ingress, provider calls, fallbacks, and
-  terminal delivery. Never silently substitute a fallback.
+  terminal delivery. Never silently substitute a fallback. Requester-visible
+  receipts expose only allowlisted fields, never hidden reasoning, raw private
+  context, or unrestricted provider payloads.
 
 **Level-specific opinions** (full rationale + war stories in the linked file): mutations
 require a human, inline flags configure the core, route on the raw request not the
