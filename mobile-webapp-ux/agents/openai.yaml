@@ -1,4 +1,4 @@
 interface:
   display_name: "Mobile Web-App UX"
   short_description: "Task-first mobile UX for web apps"
-  default_prompt: "Use $mobile-webapp-ux to make this web app work well on phones without weakening its desktop experience."
+  default_prompt: "Use $mobile-webapp-ux to improve the requested phone task loop and validate only its relevant responsive states without weakening the existing desktop behavior."

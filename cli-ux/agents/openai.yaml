@@ -1,4 +1,4 @@
 interface:
   display_name: "CLI UX"
   short_description: "Design predictable, state-aware human and agent CLIs"
-  default_prompt: "Use $cli-ux to design or review this CLI for clear state, safe auth, recovery, and automated use."
+  default_prompt: "Use $cli-ux to improve the requested CLI contract proportionally, applying only the interaction and safety guidance relevant to this change."

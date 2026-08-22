@@ -17,6 +17,17 @@ metadata:
 
 A comprehensive skill for building unauthenticated, public-facing Q&A chatbot widgets on marketing sites, conference pages, documentation portals, and similar contexts where you need to serve anonymous visitors while controlling cost and abuse.
 
+Use this as a design and review catalog, not a requirement to add every listed
+service or subsystem. Select controls for the public exposure, cost, privacy,
+and UX risks created by the requested change. Server-side secret isolation,
+server-authoritative enforcement of abuse limits, and safe handling of user
+content are invariants where those boundaries are touched. Caching, vector
+search, tracing, virtualization, voice, and multi-layer infrastructure are
+recommendations or opportunities unless the requested scale or failure mode
+makes one necessary. Stop when the named widget behavior is usable and its
+concrete public-abuse/cost risks are bounded; report adjacent improvements as
+follow-ups.
+
 Distilled from a production implementation powering the [AI Engineer Europe 2026](https://ai.engineer/europe) conference chatbot, with additional chat-scroll lessons from [TanStack Virtual's chat guidance](https://tanstack.com/blog/tanstack-virtual-chat) and agentic retrieval lessons from Mintlify's [virtual filesystem assistant](https://www.mintlify.com/blog/how-we-built-a-virtual-filesystem-for-our-assistant). See [MINTLIFY_VIRTUAL_FILESYSTEM.md](MINTLIFY_VIRTUAL_FILESYSTEM.md) for a clean markdown reference version of the Mintlify pattern.
 
 For a runnable React/TanStack Virtual demo of long chat scroll behavior plus an expanded bottom command shelf, use `assets/vite-react-tanstack-chat-demo`. The demo includes hover/double-click message controls, subtle token/latency stats, tool-call and multimodal examples, assistant response variants via left/right swipe, and a Realtime voice capture strip with live transcription and an audiogram.

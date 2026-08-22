@@ -7,6 +7,13 @@ description: Design, build, or review responsive mobile web-app UX when a phone 
 
 Treat the phone as a distinct task surface, not a narrower desktop canvas. Preserve the desktop contract unless the requested behavior genuinely differs.
 
+Apply this skill to the requested mobile loop and the responsive states closest
+to it. The patterns below are recommendations unless accessibility, reachability
+of the primary action, or prevention of data loss makes one blocking. A mobile
+review is read-only unless implementation was requested. Stop when the named
+loop works at the agreed narrow viewport and its existing desktop counterpart;
+report unrelated redesign opportunities separately.
+
 ## Start with the mobile task loop
 
 Identify the smallest repeated loop the user needs to complete: inspect → decide → act; scan → filter → open; compose → send. Make that loop dominant in the first viewport.
@@ -16,7 +23,7 @@ Identify the smallest repeated loop the user needs to complete: inspect → deci
 - Prefer a concise mobile-specific composition over merely scaling down desktop spacing.
 - Keep secondary operations available but visually subordinate: overflow, disclosure, an anchored utility area, or a later section.
 
-For a head-to-head visual review, use this default hierarchy:
+When a head-to-head visual review is the requested task, use this default hierarchy:
 
 1. Two equal, side-by-side candidate thumbnails.
 2. Large, labeled voting controls immediately beneath the candidates.
@@ -43,7 +50,7 @@ Do not stack the two candidates vertically when the comparison itself is the pri
 
 ## Responsive layout rules
 
-- Establish a supported narrow reference size (normally 390 × 844) and test there before considering the work complete.
+- When the product does not already define a supported narrow viewport, use 390 × 844 as a practical reference rather than creating a new product-wide support contract.
 - Use a two-column grid for compact comparisons: `grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)`.
 - Prevent labels, chips, and candidate IDs from forcing cards wider; allow controlled ellipsis or hide nonessential metadata.
 - Use `dvh` for viewport-constrained media and overlays where browser chrome changes can otherwise cause clipping.
@@ -52,7 +59,8 @@ Do not stack the two candidates vertically when the comparison itself is the pri
 
 ## Validate the actual phone experience
 
-After implementation, inspect the rendered app at the narrow reference viewport. Check:
+After implementation, inspect the rendered app at the agreed narrow reference
+viewport. Select the checks relevant to the requested loop:
 
 - Both compared items are visible simultaneously.
 - The primary actions are in the initial viewport and are comfortably tappable.

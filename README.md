@@ -167,6 +167,62 @@ narrowest atomic skill.
 
 Click into each folder for the detailed workflow, prerequisites, and command examples.
 
+## Skill acceptance model
+
+A skill is an advisory lens, not an implicit acceptance gate. Author and review
+skills with this model:
+
+```text
+User outcome
+  + higher-level invariants
+  + risks created by this action
+  = blocking acceptance criteria
+
+Everything else is advice or follow-up.
+```
+
+Classify meaningful instructions by their actual force:
+
+| Class | Meaning |
+| --- | --- |
+| **Invariant** | Must never be violated, such as authorization, privacy, secret handling, destructive-target clarity, or user-data integrity. |
+| **Action-required** | Intrinsic to the named task type; without it the requested result is not correct or usable. |
+| **Risk-triggered gate** | Blocking only when the skill names a concrete risk introduced by the proposed action. |
+| **Recommendation** | A useful default that may be skipped without blocking completion. |
+| **Opportunity** | An adjacent improvement or follow-up outside the current critical path. |
+
+Write the class directly when prose could otherwise make a recommendation sound
+mandatory. A comprehensive checklist is not a demand to satisfy every item:
+tell agents to select only relevant items and state the concrete risk before
+promoting one to a gate.
+
+For bounded tasks, a skill should normally add no more than one or two blocking
+criteria. Exceed that budget only for a direct correctness, privacy, security,
+data-integrity, or irreversible-action risk. Match evidence to impact: a local
+documentation edit may need formatting and link checks; a CLI contract fix
+needs focused process or contract tests; one Worker repair needs component
+checks, health, one bounded reproduction, and rollback evidence; a schema or
+data mutation warrants stronger integrity and repair proof; a destructive or
+externally consequential action requires exact targets and explicit authority.
+
+Do not silently expand scope. Adjacent improvements, checklist findings, and
+residual issues are observations or follow-ups unless necessary to make the
+requested result correct, safe, or usable. Define a stop condition for workflows
+that can otherwise accumulate proof or retries, and allow completion when that
+condition is met.
+
+Do not make a broken control plane approve or execute its own repair when a
+documented lower-level operator path exists. Preserve that path's authorization,
+target-resolution, rollback, and evidence requirements. Coordinate only for
+concrete overlap: the same files with likely merge conflicts, production
+resource, migration sequence, or externally mutable object. Read-only work and
+unrelated components do not need a global mutex or continual peer updates.
+
+Users may simplify recommendations and authorize documented break-glass paths.
+They cannot waive higher-level constraints around secrets, destructive
+ambiguity, unauthorized external action, privacy, or irreversible user-data
+loss.
+
 ## Validating skills
 
 The repository pins its validator dependency in `pyproject.toml` and `uv.lock`.

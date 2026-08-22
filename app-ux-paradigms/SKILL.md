@@ -11,13 +11,21 @@ description: >-
 
 ## User preference
 
-**Match desktop-app and modern web conventions by default.** Users should not need to hunt for close affordances or discover shortcuts only by accident. Implement the patterns below unless the product explicitly opts out.
+**Match desktop-app and modern web conventions by default.** Users should not need to hunt for close affordances or discover shortcuts only by accident.
+
+Apply only the patterns relevant to the interaction being built or reviewed.
+This skill does not authorize unrelated UI changes, and its tables are defaults,
+not a product-wide acceptance checklist. Accessibility, prevention of unintended
+destructive action, and avoiding silent data loss remain blocking where the
+touched interaction creates those risks. Stop when the requested interaction
+works in its relevant input and state variants; report adjacent consistency
+improvements as follow-ups.
 
 Pair with the **sync-url-navigation** skill for bookmarkable nav/filter state.
 
 ## Keyboard shortcuts
 
-### Must-have behaviors
+### Common expectations for touched interactions
 
 | Key / chord | Expected behavior |
 |-------------|-------------------|
@@ -26,7 +34,7 @@ Pair with the **sync-url-navigation** skill for bookmarkable nav/filter state.
 | **Enter** | Submit single-line fields; in multi-line fields, Enter = newline unless Shift+Enter is documented as send. |
 | **⌘/Ctrl+letter** | Use for global toggles (e.g. **⌘/Ctrl+J** = open assistant panel). Always support **both** `metaKey` (Mac) and `ctrlKey` (Windows/Linux). |
 
-### Implementation notes
+### Recommended implementation notes
 
 - Attach **document-level** `keydown` listeners when an overlay opens; remove on unmount.
 - Call `event.preventDefault()` on Esc when handling it so nested browser UI does not steal the key.
@@ -45,16 +53,17 @@ Pair with the **sync-url-navigation** skill for bookmarkable nav/filter state.
 
 ## Modals and overlays
 
-| Paradigm | Requirement |
+| Paradigm | Expected behavior when applicable |
 |----------|-------------|
 | **Esc** | Closes modal (see above). |
-| **Backdrop click** | Clicking dimmed area outside the panel closes (call same `close()` as ×). |
+| **Backdrop click** | Clicking outside may close lightweight dialogs; keep explicit confirmation dialogs or forms with unsaved work open when dismissal would be unsafe. |
 | **× control** | Top-right (or consistent corner), `type="button"`, labeled `title` with Esc hint. |
 | **Click propagation** | `stopPropagation` on panel content so inner clicks do not close. |
 | **Focus** | Move focus into modal on open; return focus to trigger on close when practical. |
 | **Scroll** | Lock or contain body scroll for full-screen overlays; allow scroll inside tall forms. |
 
-Apply the same close trio (**Esc**, backdrop, ×) to **Speaker editor**, **slot editor**, confirmation dialogs, and any `fixed inset-0` overlay.
+Use a consistent close model across comparable overlays. Do not add every close
+mechanism when it would discard unsaved work or weaken an explicit confirmation.
 
 ## Menus and transient UI
 
@@ -66,13 +75,13 @@ Apply the same close trio (**Esc**, backdrop, ×) to **Speaker editor**, **slot 
 
 - Disable primary submit while **saving**; label button `Saving…`.
 - Show **inline error** under the form, not only `alert`.
-- **Required fields**: validate on submit; focus first invalid field.
+- **Required fields**: when the touched form has them, validate on submit and focus the first invalid field.
 - **Clear** resets filters to empty defaults and syncs URL if using query-param routing.
 
 ## Lists, tables, and selection
 
 - **Row click** opens editor or expands detail (consistent per table).
-- **Shift+click** multi-select where bulk actions exist; show selection chrome and a bulk action bar.
+- **Shift+click** multi-select when desktop bulk selection is in scope; show selection chrome and a bulk action bar.
 - **ID chips**: click copies to clipboard with brief status feedback (`Copied`).
 - **Empty states**: explain why no rows (no data vs no matches vs filters too narrow).
 - **Unavailable states**: when primary content cannot be produced, do not show
@@ -101,7 +110,10 @@ Apply the same close trio (**Esc**, backdrop, ×) to **Speaker editor**, **slot 
 - Meaningful `title` / `aria-label` on icon-only controls.
 - Do not rely on color alone for status (use text labels or pills).
 
-## Checklist for new UI
+## Selective review lens
+
+Select only items relevant to the changed interaction. Unselected items are not
+failed gates, and a review request does not authorize implementation.
 
 - [ ] Esc closes overlay / menu / inline edit
 - [ ] Backdrop + × use same close handler
@@ -111,20 +123,9 @@ Apply the same close trio (**Esc**, backdrop, ×) to **Speaker editor**, **slot 
 - [ ] Click-outside closes non-modal menus
 - [ ] Primary action discoverable without reading source
 
-## Reference (this repo)
-
-AI Engineer WF 2026 schedule admin examples:
-
-- `SpeakerEditor.tsx` — Esc + backdrop + ×; Esc disabled while saving
-- `ContextMenu.tsx` — Esc + outside click
-- `GridView.tsx` — Esc cancels inline edit; Shift+click selection
-- `FloatingAiebot.tsx` — ⌘/Ctrl+J toggle, ⌘/Ctrl+Shift+K clear chat
-- `AiebotPanel.tsx` — ⌘/Ctrl+Enter send
-- `HelpPanel.tsx` — documents grid and aiebot shortcuts
-
 ## Anti-patterns
 
-- Modal with only × and no Esc or backdrop close
+- Ordinary dismissible modal with only × and no keyboard or safe outside-dismiss path
 - Shortcut only in README, not in UI
 - Mac-only `metaKey` with no `ctrlKey`
 - Esc closes modal but leaves a nested context menu open underneath

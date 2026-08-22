@@ -1,13 +1,19 @@
 ---
 name: conference-developer-endpoints
-description: Use when adding or reviewing developer and AI-facing conference data endpoints such as llms.txt, sessions.json, speakers.json, and MCP routes across AI Engineer conference pages.
+description: Add or review developer- and AI-facing conference data endpoints such as llms.txt, sessions.json, speakers.json, or MCP routes for AI Engineer conference pages. Implement only the requested surface unless the user asks for the full endpoint suite; never expose private speaker, CFP, or organizer data.
 ---
 
 # Conference Developer & AI Endpoints — General Pattern
 
-This skill documents the standard pattern for exposing developer/AI-facing data endpoints for any AI Engineer conference. Every conference in this repo (e.g. `/europe`, `/worldsfair`, `/miami`) should follow this pattern to provide consistent, machine-readable access to conference data.
+This skill documents the available pattern for developer/AI-facing conference
+data. Treat the sections as a surface catalog, not an all-or-nothing acceptance
+checklist. For one endpoint, change and validate that endpoint plus its shared
+public-data boundary; do not add MCP, CLI, documentation pages, agent skills, or
+unrelated endpoints. Stripping private and internal fields is an invariant for
+every public surface. Stop when the requested surface is usable and its privacy
+contract is verified.
 
-## What To Build For Each Conference
+## Surface catalog for a full conference endpoint suite
 
 For a conference at route `/{conf}`, create the following:
 

@@ -1,6 +1,6 @@
 ---
 name: cli-ux
-description: Design, implement, or review predictable human- and agent-friendly command-line interfaces, including state-aware no-op behavior, credential precedence and sandbox-compatible storage, argument parsing, interactive prompts, typed request schemas, JSON or NDJSON output, pagination, dry runs, mutation safety, exit behavior, help text, and terminal or automation tests.
+description: Design, implement, or review a command-line interface when its user-facing command contract, interaction behavior, automation output, credentials, or mutation safety is the primary concern. For a bounded CLI mismatch or bug, apply only the relevant contract guidance; do not expand it into a full CLI or authentication redesign.
 ---
 
 # CLI UX
@@ -12,9 +12,17 @@ Design one CLI with two deliberate modes:
 
 Keep the CLI self-contained. Do not require an MCP server or companion agent skill. Make the installed CLI capable of describing and safely exercising its own exact-version contract.
 
+Apply this skill proportionally. The requested CLI outcome and concrete risks
+created by the changed command define the blocking criteria. The remaining
+sections are design options and review lenses, not a demand to redesign every
+CLI surface. Stop when the named contract is corrected and focused process or
+contract tests prove it; report adjacent improvements as follow-ups.
+
 ## Define one typed command contract
 
-Model each command once in a checked-in, versioned registry. Derive these surfaces from it where practical:
+For a new CLI or a command family whose contract is duplicated across surfaces,
+prefer modeling each command once in a checked-in, versioned registry. Derive
+these surfaces from it where practical:
 
 - parsing and validation;
 - human-readable help and examples;
@@ -152,9 +160,12 @@ process-scoped environment token
 
 Resolve the selected base URL before looking up origin-scoped credentials. Report the active source and server-confirmed identity without revealing the secret. Make logout clear every local store in the documented scope, while clearly stating that local deletion does not revoke a remote credential.
 
-## Scan for UX improvements before implementation
+## Optional opportunity scan
 
-For every CLI change, look for opportunities to reduce surprise, repeated work, and unsafe recovery. At minimum, check:
+For a CLI design or broad review, select the questions that can materially
+affect the requested outcome. A one-line help mismatch, parser bug, or focused
+output fix does not require this scan or adjacent auth, pagination, recovery,
+portability, and accessibility work.
 
 - **Already complete:** Can the command detect that the requested state already exists and say so instead of duplicating work?
 - **Intent and defaults:** Are common safe actions concise, and are risky or scope-expanding choices explicit?
@@ -169,11 +180,15 @@ For every CLI change, look for opportunities to reduce surprise, repeated work, 
 - **Performance:** Is progress visible for slow work, are results bounded, and are cancellation and resume semantics clear?
 - **Accessibility:** Does output remain legible without color, terminal control sequences, mouse interaction, or a particular shell?
 
-Prefer small state-aware improvements that make the next invocation safer and clearer. Add the behavior to the typed command contract and test it at the process boundary when it changes prompts, stdout/stderr, exit codes, or credential resolution.
+Treat findings outside the requested contract as follow-up opportunities.
+Implement one only when necessary for correctness or to mitigate a concrete
+risk created by the current change. Test at the process boundary when the
+change affects prompts, stdout/stderr, exit codes, or credential resolution.
 
-## Keep mutations behind complete preflight
+## Use risk-triggered mutation controls
 
-Before a network mutation, validate all locally knowable facts:
+Before a destructive, costly, privilege-changing, or externally consequential
+mutation, validate the locally knowable facts that can prevent the named harm:
 
 - syntax, types, conflicts, and required inputs;
 - local files and configuration;
@@ -182,13 +197,20 @@ Before a network mutation, validate all locally knowable facts:
 - expected resource version or state;
 - whether the requested operation is already complete.
 
-Provide `--dry-run` for mutations. Make it execute the same parsing, normalization, local validation, request construction, authorization planning, and output-shaping paths without performing the mutation. Clearly distinguish locally proven checks from server-dependent checks that were skipped.
+Provide `--dry-run` when previewing the resolved target and effect materially
+reduces mutation risk. Make it share parsing, normalization, local validation,
+request construction, authorization planning, and output-shaping paths without
+performing the mutation. Clearly distinguish locally proven checks from
+server-dependent checks that were skipped. A harmless idempotent update does
+not need a ceremonial dry run merely because it uses the network.
 
 Use idempotency keys for retryable creates and expected-state or version fencing for destructive or concurrency-sensitive operations. Make retry safety explicit. Do not use universal interactive confirmations as a substitute for idempotency and preconditions.
 
 ## Defend against agent-shaped input mistakes
 
-Treat generated input as untrusted even when it is syntactically plausible. Validate identifiers and path-like values before transport. Test at least:
+When a changed command accepts generated or otherwise untrusted identifiers and
+path-like values, validate them before transport. Select adversarial cases that
+match the accepted grammar and sink, such as:
 
 - `..`, absolute paths, and separator confusion;
 - control characters, newlines, NULs, and terminal escapes;
@@ -232,43 +254,25 @@ Avoid exposing secret values, dumping parser internals, or blaming the user for 
 
 ## Test contracts, not only handlers
 
-Add unit, transcript or PTY, schema, and end-to-end tests as appropriate.
+Choose the smallest boundary that proves the changed contract. Add unit,
+transcript or PTY, schema, or end-to-end tests only as appropriate to that
+change.
 
-Cover interaction behavior:
+For interaction changes, exercise the relevant TTY and non-TTY process paths,
+prompt order, secret redaction, and structured-output behavior. For machine
+contract changes, prove agreement among the touched parser, help, schema,
+request, output, and exit-code surfaces. Add pagination, dry-run, retry,
+adversarial-input, or terminal-safety cases only when the changed command uses
+those features or exposes those sinks.
 
-1. supplied identity -> password is the first interactive prompt;
-2. missing identity in a TTY -> identity precedes password;
-3. missing identity without a TTY -> fail without prompting or reading a password;
-4. conflicting or malformed identity -> fail before prompting for a password;
-5. authentication failure -> never echo the secret;
-6. piped or explicitly structured output -> never prompt and always emit valid structured output.
+## Selective review lens
 
-Cover machine contracts:
+Use only the items relevant to the requested command or review. An item becomes
+blocking only when the current change would otherwise be incorrect, unsafe, or
+unusable; unexplored items are not failed gates.
 
-1. flags and raw JSON produce the same typed request;
-2. mixing raw JSON with request flags is rejected;
-3. help, parser behavior, and `schema` or `describe` agree;
-4. JSON and NDJSON validate against their published schemas;
-5. pagination, projections, truncation notices, and cancellation behave deterministically;
-6. dry runs perform no mutations and label server-dependent checks accurately;
-7. interrupted retries remain idempotent or fail on an explicit state fence;
-8. hostile identifiers and control characters fail closed;
-9. remote text cannot emit active terminal escapes or masquerade as CLI instructions;
-10. TTY and non-TTY detection is exercised using real process boundaries, not only mocked handlers.
-
-## Review checklist
-
-- Does one typed registry drive parsing, help, validation, and introspection?
-- Can the installed CLI describe its exact contract offline?
-- Are common flags ergonomic and complex requests representable as full-fidelity JSON?
-- Are ambiguous input combinations rejected?
-- Are non-secret prerequisites validated before secrets?
-- Can automated execution complete without prompts, browsers, or shared human sessions?
-- Are stdout, stderr, output schemas, and exit codes stable?
-- Are large results bounded, projectable, pageable, and never silently truncated?
-- Does every mutation support meaningful preflight and dry-run behavior?
-- Are retries idempotent or protected by expected-state fencing?
-- Are identifiers encoded once at the transport boundary and tested adversarially?
-- Is remote text rendered as untrusted data?
-- Do transcript and end-to-end tests exercise actual process behavior?
-- Does `--help` match the parser and machine-readable schema?
+- Are the touched parsing, help, validation, introspection, and output surfaces consistent?
+- Do interactive and automated paths preserve their documented prompt, stdout/stderr, and exit contracts?
+- Are secret handling, target resolution, preflight, retry, and dry-run controls proportional to the changed command's risk?
+- Are large or untrusted inputs bounded and rendered safely where the command accepts them?
+- Does the focused test exercise the real process boundary when in-process tests cannot prove the behavior?

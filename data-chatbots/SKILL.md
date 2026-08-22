@@ -16,9 +16,21 @@ description: >-
 
 Copilots over **authoritative structured state** (schedules, CRMs, configs) should **draft** changes and **apply** only after explicit human approval. Treat the model as a planner, not a writer.
 
-## Battle scars (production incidents — read before you ship)
+Apply this guidance to the requested copilot surface and the data risks it
+creates. Draft-before-apply, apply-equals-review, authorization, and prevention
+of silent destructive replacement are invariants when the workflow can mutate
+authoritative data. The remaining incidents, layers, telemetry, caching, email,
+and advanced harness patterns are risk-triggered guidance or opportunities, not
+a mandate to implement the entire platform. Stop when the requested workflow is
+correctly proposed/applied and focused tests cover its plausible integrity
+failure; report unrelated hardening as follow-up.
 
-Real failures from running aiebot against live data. Each one shipped, bit us, and is now a permanent check in the test matrix + quick checklist below. If you build a draft→apply copilot you **will** hit these — wire the guardrail before the incident, not after.
+## Battle scars (select those matching the touched risk)
+
+These are real failures from running aiebot against live data. Each is a
+permanent check for the surface that can reproduce it, not a universal gate for
+every copilot change. Select the incidents whose preconditions exist in the
+requested workflow and wire those guardrails before shipping that risk.
 
 1. **Silent apply-time overwrite (TOCTOU) — caught in prod, almost lost a real talk.** A human approved a plain `assignment_create` ("place this talk into the 11:10 **open** slot"). Between draft (slot empty) and Apply ~7 min later, that slot got filled by another talk. The apply path **re-derived occupancy from live state and silently lowered the placement into `batch[cancel occupant, place new]`**, cancelling a real talk **nobody approved**. Only the immutable audit log revealed it. **Guardrail: what you APPLY must equal what was REVIEWED — never synthesize a more-destructive op at apply time.** See *Apply == review* below + test §5.10. The version guard does **not** save you (it matched).
 2. **Unique external/import id → can't insert, must reactivate.** A `*_create` re-linking an already-used `cfp_proposal_id` died at apply with `UNIQUE constraint failed` — including *soft-deleted* rows that still own the key. Dry-run modelled occupancy but not external-id uniqueness, so it "passed review, failed apply." **Guardrail: dry-run every DB invariant; deterministic create→move/reactivate guard at the apply choke point.** See *External / import ID uniqueness*.

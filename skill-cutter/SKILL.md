@@ -22,7 +22,18 @@ Read the complete `SKILL.md`, its UI metadata, and only the directly relevant
 resources. Identify the concrete tasks that should trigger it and the decisions
 an otherwise capable agent would get wrong without it.
 
-Classify material before cutting:
+Classify material before cutting. Use acceptance force as well as content class
+so useful advice does not survive as accidental governance:
+
+| Acceptance force | Treatment |
+| --- | --- |
+| Invariant | Keep explicit and narrow. |
+| Action-required | Keep only for the named task type. |
+| Risk-triggered gate | Name the triggering risk and proportional proof. |
+| Recommendation | Label or phrase as non-blocking; condense when useful. |
+| Opportunity | Move out of the critical path or delete. |
+
+Then classify its content:
 
 | Class | Default treatment |
 | --- | --- |
@@ -37,6 +48,19 @@ Classify material before cutting:
 
 Report which class justified every material keep, move, or deletion. Do not hide
 subjective policy behind claims that a provider or tool requires it.
+
+Use this acceptance model when auditing a skill:
+
+```text
+User outcome + higher-level invariants + risks created by the action
+= blocking acceptance criteria. Everything else is advice or follow-up.
+```
+
+Flag checklist language that silently promotes recommendations, asks a broken
+subsystem to approve its own repair, coordinates unrelated or read-only work,
+or keeps gathering proof after the requested outcome is established. For a
+bounded task, more than one or two skill-added gates needs a direct correctness,
+privacy, security, data-integrity, or irreversible-action justification.
 
 ## Cut trigger aggression
 
@@ -70,6 +94,12 @@ Remove:
 - repeated summaries, principles, checklists, and completion language; and
 - historical justification that does not change future execution.
 
+Also remove or reclassify adjacent improvements presented as prerequisites,
+global coordination without a concrete shared mutation surface, and exhaustive
+verification whose result cannot change acceptance of the requested outcome.
+Preserve exact-target, authorization, privacy, secret, user-data, migration,
+rollback, and irreversible-action controls where the named risk exists.
+
 Do not preserve text merely because it is correct. Do not replace readable
 instructions with dense slogans, and do not move bulk into references simply to
 make `SKILL.md` look shorter. Do not delete scripts, assets, or operational
@@ -91,6 +121,10 @@ Report:
 - trigger changes and exclusions;
 - validation performed; and
 - uncertain material deliberately left untouched.
+
+For acceptance-model audits, also report the stop condition, any skill-added
+blocking criteria, and why each remaining gate is action-required or
+risk-triggered.
 
 A successful cut is smaller and less eager to trigger while still changing the
 agent's behavior in every case the skill was created to handle.
