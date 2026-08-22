@@ -161,6 +161,69 @@ the current Alpha. Treat preview URLs as unlisted and `noindex`, not private;
 do not put secrets or private data in them. Public-source eligibility, Alpha
 access, project enablement, and the current service terms may all gate hosting.
 
+## Choose a release lane proportional to the change
+
+Forge-managed release remains the normal path for customer applications. Forge
+infrastructure has a separate operator break-glass path because its own release
+or control plane must not be required to approve or deploy its repair.
+
+```text
+Is this a customer/app deployment?
+  yes → use Forge Deploy
+  no  → is Forge's release path healthy and proportionate?
+          yes → use the canonical infrastructure lane
+          no  → use direct Wrangler break-glass
+```
+
+Use direct Wrangler only for an authorized Forge operator repairing Forge
+infrastructure when the normal lane is unavailable, unhealthy, implicated in
+the incident, or materially obstructs the bounded repair. This is not an
+application-promotion shortcut and must not silently bypass a customer
+application's release ledger.
+
+Keep the break-glass dossier short. Before deploying, record:
+
+- the exact source commit and affected component;
+- the authoritative currently deployed version and a retained rollback version
+  or command;
+- any migrations or binding changes, explicitly saying when there are none;
+- confirmation that unrelated components and user data are outside scope.
+
+Then deploy only that component and require this proportional proof:
+
+- the expected worker/version receives traffic;
+- component health and dependencies are green;
+- one bounded reproduction of the original failure or success path passes;
+- rollback remains available.
+
+Minimal runbook:
+
+```text
+inspect current version
+record rollback target
+deploy one exact component with Wrangler
+check health/dependencies
+reproduce the original request once
+rollback if unhealthy
+```
+
+Do not make unrelated Sites or preview systems, customer application gates,
+portfolio-wide reconciliation, or exhaustive release proof prerequisites for a
+bounded infrastructure repair. Coordinate production mutation only with an
+active task that can mutate the same component or schema. Read-only tasks,
+source-only work, customer repositories, and unrelated workers do not need
+continuous coordination messages.
+
+Exact-SHA evidence makes a release understandable and reversible; it is not an
+ever-expanding promotion criterion. Stop after the requested repair and the
+proof above. Record residual or unrelated problems as follow-ups instead of
+silently expanding scope.
+
+Skills are advisory constraints and risk lenses. They do not create additional
+release gates unless a gate mitigates a concrete risk in the user-requested
+change. This does not weaken authorization boundaries or protections for
+secrets, private data, migrations, destructive actions, or user-data deletion.
+
 ## Troubleshoot without hiding state
 
 Use the status/readiness workflow and the release record before retries. State
@@ -175,9 +238,11 @@ When a release is blocked or ambiguous:
 2. Read the targeted diagnostic reference rather than blindly rebuilding or
    re-promoting. A retry may be safe only when Forge reports the same immutable
    target and its idempotency conditions.
-3. Do not use a direct provider deploy as a normal workaround. Cloudflare is
-   the independent break-glass layer, but bypassing Forge changes the release
-   evidence and can cause the next Forge activation to fail closed.
+3. For a customer application, do not use a direct provider deploy as a normal
+   workaround: bypassing Forge changes the release evidence and can cause the
+   next Forge activation to fail closed. For Forge infrastructure, choose the
+   release lane above; direct Wrangler is the authorized operator break-glass
+   path when the canonical lane is broken or disproportionate to the repair.
 
 ## References
 
