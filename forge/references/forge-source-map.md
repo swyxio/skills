@@ -53,7 +53,5 @@ npx smolforge deploy check
 Use command-specific `--help` before constructing mutations. A repository-scoped
 Git PAT may be sufficient for Git but insufficient for account-level Deploy
 control; do not broaden scopes or bypass the signed-in control plane merely to
-avoid an authorization boundary. This customer/application rule is distinct
-from an authorized Forge operator's direct-Wrangler break-glass repair of Forge
-infrastructure; use the release-lane decision and bounded dossier in
-`../SKILL.md` for that case.
+avoid an authorization boundary. For Forge infrastructure break-glass, use the
+release-lane decision in `../SKILL.md`.

@@ -1,3 +1,3 @@
 interface:
   display_name: "Forge"
-  short_description: "Help with Forge tasks and workflows"
+  short_description: "Operate SmolForge repositories and Deploy/Sites"
