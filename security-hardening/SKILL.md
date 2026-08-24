@@ -1,6 +1,6 @@
 ---
 name: security-hardening
-description: Audit or harden a software repository against a defined application-security threat surface. Use only when the user explicitly asks for an appsec or security review, a repository-wide security hardening pass, a threat-focused auth or permission audit, or when security posture is the primary task. Do not trigger for an ordinary auth bug, adding one rate limit or validation rule, routine dependency updates, generic production readiness, or unrelated implementation work that merely has security implications.
+description: Audit or harden a defined application-security attack surface when the user explicitly requests a security audit, vulnerability investigation, or scoped security-hardening pass. Do not trigger for routine authentication changes, role design, scoped permissions, ordinary authorization bugs, dependency updates, generic production readiness, or feature implementation with incidental security implications.
 ---
 
 # Security Hardening

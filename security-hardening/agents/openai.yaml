@@ -1,4 +1,4 @@
 interface:
   display_name: "Security Hardening"
   short_description: "Review a defined appsec threat surface"
-  default_prompt: "Use $security-hardening to map the concrete threat surface, reuse existing defenses, fix only reachable material risks, and report scoped residual risk without compliance theater."
+  default_prompt: "Use $security-hardening for an explicitly requested security audit, vulnerability investigation, or scoped hardening pass; fix only reachable material risks."
