@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long Running Operation UX"
+  short_description: "Right-sized progress UX for slow async work"
+  default_prompt: "Use $long-running-operation-ux to select the lowest sufficient maturity profile and add proportional progress, result handoff, safety, and verification."
