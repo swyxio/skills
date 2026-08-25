@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research-Grounded Writing"
+  short_description: "Write evidence-backed, person-centered profiles"
+  default_prompt: "Use $research-grounded-writing to research, draft, and tighten a source-grounded biography."
