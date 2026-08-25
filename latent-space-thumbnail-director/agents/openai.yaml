@@ -1,0 +1,4 @@
+interface:
+  display_name: "Latent Space Thumbnail Director"
+  short_description: "Create and QA branded Latent Space and FDE YouTube thumbnails"
+  default_prompt: "Create or revise a Latent Space or FDE YouTube thumbnail using the saved preferences, resources, and examples."
