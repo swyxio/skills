@@ -1,0 +1,7 @@
+interface:
+  display_name: "Generalize"
+  short_description: "Turn specific fixes into durable improvements"
+  default_prompt: "Use $generalize to identify the underlying pattern and compare evidence-backed fixes at increasing levels of scope."
+
+policy:
+  allow_implicit_invocation: false
