@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Media Studio Workflows"
+  short_description: "Design multi-candidate media studio workflows"
+  default_prompt: "Use $media-heavy-workflows for a media studio with candidate history, reference attachment, provider capabilities, or draft-to-publish behavior."
