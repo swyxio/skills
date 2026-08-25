@@ -183,7 +183,6 @@ Choose by actual need; installed availability is not permission and does not mak
 - `google-drive:google-drive` or connected document tools: specifically authorized internal source documents, photo records, or attendee rosters; preserve the source's privacy level.
 - `youtube-api`, `aie-event-transcripts`, `conference-transcribe`, `transcribe-anything`, `multimodal-extraction`, and `thumbnail-extraction`: bounded video/recording evidence when useful.
 - `twitter-x-scraping` or `download-x-video`: a specifically relevant public timeline or authorized social video.
-- `solstice-programmatic`: structured, bounded model-assisted source discovery or evidence synthesis only when the user requests that model/workflow and deterministic ordinary retrieval is insufficient.
 - `ai-engineering` and `live-ai-pipelines`: relevant only if the requested workflow truly requires multi-request reliability, rates/cost controls, visible progress, or durable resumability.
 - `visual-playtest`: useful when the requested work includes actual UI/gallery visual validation.
 - `rg`, repository scripts, exact production datasets, existing tests, and targeted browser inspection: normally cheaper than introducing a new service or broad agent orchestration.
