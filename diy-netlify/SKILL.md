@@ -57,6 +57,14 @@ runner-provided browsers, caching, and tighter timeouts are optional techniques,
 not required architecture; exercise every affected matrix target after changing
 checkout or dependency boundaries.
 
+For Cloudflare-backed previews, consider provider-native hot paths before
+starting Wrangler once per item: direct R2 REST uploads with an existing
+preview-scoped token or an R2 binding, D1 batches, KV bulk writes, Queue
+`sendBatch()`, and direct Workers API readbacks. Use bounded concurrency and
+retries; preserve immutable identities, publication ordering, and preview-only
+credentials. Do not add S3 credentials or broaden permissions merely to upload
+objects.
+
 Keep production independent: deploy the exact merged SHA through the existing
 release authority, then verify provider identity and the owning live hostname.
 Pair with `cloudflare-production-builder` when changing production traffic,

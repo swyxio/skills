@@ -48,6 +48,22 @@ Traffic publication and rollback should switch one recorded immutable pointer
 when the topology supports it; build-time artifact preparation stays outside
 that publication path.
 
+## Prefer provider-native hot paths
+
+For a measured Cloudflare bottleneck, identify the existing binding, bulk API,
+or authenticated REST operation before starting Wrangler or making a network
+round trip per item. Consider R2 bindings or direct REST uploads with an
+existing scoped token, D1 `batch()` or set-based SQL, KV bulk writes, Queue
+`sendBatch()`, direct Workers version/deployment readbacks, content-addressed
+asset reuse, and coalesced Durable Object writes when semantics permit.
+
+Keep concurrency and transient retries bounded; preserve credential scope,
+provider limits, metadata, immutable verification, publication ordering, and
+rollback. Do not introduce S3 credentials, broader permissions, or a new
+service merely to optimize transport. Keep Wrangler for infrequent complex
+deployment mutations unless a supported API preserves every safety invariant;
+verify provider response schemas with a real canary.
+
 ## Proportional workflow
 
 1. Inspect current code and provisioned state for the touched surface. Resolve
