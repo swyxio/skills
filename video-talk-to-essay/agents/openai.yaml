@@ -1,4 +1,4 @@
 interface:
   display_name: "Video Talk to Essay"
-  short_description: "Turn video talks into illustrated timestamped essays"
-  default_prompt: "Use $video-talk-to-essay to turn this recorded talk and timestamped transcript into a grounded illustrated essay with distinctive section screenshots."
+  short_description: "Grounded technical articles to read alongside talks"
+  default_prompt: "Use $video-talk-to-essay to turn this talk and transcript into a chronological technical article with verified references and useful code or visuals, then review the assembled result."
