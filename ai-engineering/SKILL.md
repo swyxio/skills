@@ -32,9 +32,7 @@ Find the client wrapper, parser/schema, fan-out helper, cache, retry loop, and t
 
 ### 2. Shape the request before scaling it
 
-Bound arrays, quotes, prose sections, and nesting to a response size the model can finish. Validate syntax, schema, source references, and any domain invariants that make the result usable.
-
-**Do not use “please return JSON” + a local parser as the primary structured-output mechanism.** In a dense long-form extraction workload, that pattern produced roughly 47–52% retries despite HTTP 200 responses: it conflated malformed text, empty final content, mid-stream errors, and `finish_reason=length` with ordinary JSON parsing. Treat that as an unacceptable calibration result, not a universal percentage. Use native schema-constrained output first; still validate the completed object locally, because syntax/schema conformance does not establish source grounding or semantic correctness.
+Budget each request so the model can finish; split or continue long work while preserving required coverage. Do not turn token budgets into arbitrary section/item ceilings that omit substantive source material. Validate schema, source references and domain invariants; native structured output does not establish semantic completeness.
 
 For an expensive or broad fan-out, run a small sparse/typical/dense sample first. Use the result to tune per-class input and output budgets. Long-form requests benefit from a bounded evidence packet: deduplicate, rank representative support, preserve conflicts, and keep stable locators. Global synthesis should receive normalized IDs and compact summaries rather than the raw corpus plus every intermediate artifact.
 
@@ -46,7 +44,7 @@ Start with modest in-flight concurrency. Pace requests and tokens separately, ho
 
 ### 4. Repair by failure class
 
-Retry transient network failures through the same limiter. When a structured response is truncated or invalid, change something relevant—split the source, reduce the declared response shape, or make an allowed repair/continuation request—instead of replaying the same contract. For a changed fallback, link the new request to the parent and expose any coverage loss.
+Retry transient failures through the same limiter. For truncated/invalid output, fix the relevant cause: split the source, compact intermediate detail or continue within authorization, without dropping required coverage. Route metadata, renderer and review mistakes to those layers rather than regenerating good prose. Use deterministic fixes for unambiguous syntax/formatting defects; reserve model repairs for semantic changes. Record any fallback's coverage loss.
 
 See [failure matrix](references/failure-matrix.md) for practical actions and lightweight attempt fields.
 

@@ -28,7 +28,7 @@ Obtain the source video URL or local video, transcript, and any authoritative ti
 
 ## Code, equations and research
 
-- Prefer real code in the demonstrated language when a faithful, useful example can be verified. Reconstructed code need not be a verbatim quotation. Include enough imports, inputs and outputs to understand or run it; verify APIs and test the behavior in a safe, appropriately scoped environment. Distinguish syntax/type checks from execution. Never relabel pseudocode as Python or claim an untested listing runs.
+- Prefer useful real code in the demonstrated language. Verify the API and the behavior the article claims; safely execute self-contained examples when practical. Reuse checks for unchanged snippets, and report unavailable execution rather than building unrelated infrastructure. Distinguish syntax/type checks from execution; never relabel pseudocode as Python or claim an untested listing runs.
 - Keep language-neutral algorithms as pseudocode when that is the clearest explanation. Token alignments may simply be text; a JSON proposal may be all an example needs. Do not force every talk into runnable code. Render actual formulae with LaTeX and highlight language-specific code using the host's existing libraries.
 - Research first-party project pages, papers, repositories, speaker profiles and company posts to resolve references. Link verified speaker pages and named work at their first meaningful mention; do not guess identities or URL slugs. A concise related-resources section should explain each resource's relevance, not repeat a generic link dump.
 - Separate work mentioned in the talk from related reading discovered later. Keep current documentation/API changes distinct from the recorded version, and external clarifications distinct from the speaker's claims. Use researched material to illuminate the talk, not replace it.
@@ -43,13 +43,17 @@ For authored visuals, follow one concrete example through a visible change: a ro
 - Read [references/frame-selection.md](references/frame-selection.md) when selecting, extracting or laying out source screenshots.
 - Read [references/visual-review.md](references/visual-review.md) when creating or revising diagrams, interactive examples, or a rendered article with visuals.
 
-## End-to-end workflow
+## Workflow and stopping rule
 
-1. Verify source identity, segment timing and offsets. Assemble the transcript, verified research and independently inspected frame inventory; keep raw sources separate from editorial corrections.
-2. Plan the chronological article and allocate explanatory work across prose, code and media. For a shared example, identify the source facts, any constructed teaching details, the changing object and what must remain unchanged. Do not render every planning noun as its own panel.
-3. Draft and assemble the actual reading order. Put media beside the passage it supports; preserve the talk's technical closing material. Review the complete article and its actual visual code together, including helper constants and state transitions—not isolated paragraphs or an obsolete design description.
-4. Check grounding, chronology, reference identity, code and formula correctness. Then inspect the rendered article in a real browser at desktop and mobile sizes. Exercise meaningful states and reset, check media loading and errors, and assess whether the prose and visuals teach one coherent explanation. Passing a schema, code test or model review is not visual QA.
-5. Repair the smallest faulty unit and recheck affected dependencies. Bind review evidence to the exact article/component revision. Preserve accepted work and immutable raw responses; do not silently replace an earlier edition. Keep drafted, source-reviewed, browser-reviewed, user-approved and published states distinct. Test a bounded new sample before scaling; approval of a preview does not authorize corpus-wide generation or publication.
+Verify source identity and timing, plan full chronological coverage, then assemble prose and useful media in reading order. Preserve the technical ending. Keep source facts distinct from constructed teaching details; shared examples must agree across prose, code and visuals.
+
+Choose review scope; explicit user requirements take precedence:
+
+- **Pilot or new component:** review the complete explanation and actual visual implementation, then inspect desktop/mobile and meaningful interaction states. Calibrate on a bounded sample before authorized scaling.
+- **Routine batch:** run structural/privacy/render checks and one grounding/coverage review per article. Deep-inspect new or changed visuals, flagged pages and a representative desktop/mobile sample. Reuse checks of unchanged shared components; record which pages were individually inspected versus sampled.
+- **Small patch:** verify only the affected claim, code or rendered state. A deterministic label, punctuation or formatting fix does not require another whole-article model review. A changed mechanism or source example needs the corresponding substantive checks.
+
+Stop when required checks pass and no material grounding, coverage, technical, privacy or readability defect remains. Optional polish is not a blocker. Repair the smallest faulty unit, recheck its dependencies and let independent articles proceed; do not restart a batch or re-prove unrelated accepted work. Keep source-reviewed, browser-reviewed, user-approved and published states distinct without inventing approval gates.
 
 Read [references/output-contract.md](references/output-contract.md) when implementing structured outputs, validation, or resumable batch generation. Reuse an existing pipeline rather than inventing a new framework for each correction.
 

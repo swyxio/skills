@@ -25,14 +25,10 @@ These are examples, not mandatory archetypes. A static matrix, code diff, equati
 
 ## Review the real composition
 
-Source/code review and browser inspection answer different questions. Review the actual component plus the data, helpers and reducers it uses; a provisional plan is not an authority that can overrule a correct source-grounded repair.
+Use the pilot/batch/patch scope in `SKILL.md`. For a new or materially changed visual, read its actual code and state data with the adjacent prose, then inspect desktop and narrow-phone rendering. A plan cannot overrule a correct implementation.
 
-Inspect the rendered article at a representative desktop width and a narrow phone width:
+- Check the initial state, decisive consequence and reset where present. Verify fixed inputs and changing outputs; static comparisons need no invented interaction checklist.
+- Inspect legibility, contrast, reading order, overflow and affected controls' focus/keyboard behavior. Internal scrolling for long code is acceptable; page-wide overflow is not.
+- Check decoded images against captions, visible errors and affected timestamp/player behavior. Do not retest unchanged player controls for a prose-only edit.
 
-1. Read the setup, visual and following passage together. Can the reader explain the mechanism without an extra concluding paragraph? Does the visual add something rather than duplicate adjacent bullets?
-2. Capture and inspect initial and consequential states. Verify inputs that must stay fixed, results that must change, approval/permission boundaries, retained work and reset. For static comparisons, check the mapping and both sides; do not invent controls just to satisfy an interaction checklist.
-3. Check code/labels, contrast, focus and keyboard behavior, responsive layout and horizontal overflow. Internal scrolling for a long code line can be appropriate; page-wide overflow is not. Give multicolumn procedures or event histories unambiguous reading order.
-4. Verify images decode with nonzero natural dimensions, captions match the visible frame, and screenshots remain useful at their rendered size. Inspect console/page errors and hydration failures. Preserve and check timestamp/player behavior when affected.
-5. Record the article and component revision, viewports, screenshots, exercised states, observed failures and unresolved limits. If code or layout changes, recheck the affected states and update the evidence; do not reuse a screenshot as proof of a different revision.
-
-Keep the evidence private. Report actual observations separately from automated checks and things not tested. Visual review belongs in the generation/revision workflow, not as a cosmetic audit after publication.
+Keep a compact record of the reviewed revision, viewports, meaningful states, screenshots and defects. Reuse unaffected component checks, but do not claim a new page or state was visually inspected from old screenshots. No screenshot-count quota or duplicate independent review is required. Stop once the explanation works and material defects are resolved; distinguish observed, automated and untested results.
