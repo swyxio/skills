@@ -124,6 +124,22 @@ The [h3.c README](https://github.com/antirez/h3.c) primarily informs
 Do not import h3.c's specialist vocabulary or turn a narrative article into an
 operator manual.
 
+## Sentence-level pacing
+
+Illustrative edit, not a sourced anecdote:
+
+> **Before:** The immutability of the initial configuration introduced
+> significant migration complexity once the system had active users.
+>
+> **After:** We picked the wrong setting. By the time we noticed, we had users.
+> Fixing it meant moving their accounts.
+
+The revision turns abstractions into actions and lets the mistake, discovery,
+and cost arrive in sequence. Preserve the actual facts when applying this
+technique: the revised wording is appropriate only if the source establishes
+who chose the setting, when they noticed, and what the fix required. Simpler
+wording must not invent a more specific history.
+
 ## Final human-interest test
 
 Keep a passage in the main story when it supplies at least one of:
@@ -131,6 +147,8 @@ Keep a passage in the main story when it supplies at least one of:
 - a real job, disagreement, cost, or decision;
 - a concrete object that makes the mechanism graspable;
 - an authentic surprise, mistake, reversal, or failed alternative;
+- voice, pacing, or emotional recognition that helps the reader stay with the
+  story;
 - evidence that changes the scope or credibility of the conclusion;
 - a useful objection or limitation;
 - a sentence that compresses a true model the reader can reuse.
@@ -138,5 +156,6 @@ Keep a passage in the main story when it supplies at least one of:
 Move or cut passages that supply only taxonomy, delivery ceremony, exhaustive
 inventory, repeated proof, or a second phrasing of the same conclusion.
 
-Ask of every candidate memorable line: would it still be useful if the cadence
-were removed? If not, it is decoration.
+A sentence can contribute information, voice, pacing, or emotional recognition.
+Cut empty flourish and duplicated meaning, but don't remove a line merely
+because its contribution depends on rhythm.

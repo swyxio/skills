@@ -195,10 +195,33 @@ because a fixed number of paragraphs elapsed.
 ## Sound like a thoughtful person
 
 Use plain technical prose: concrete subjects, active verbs, consistent terms,
-and one main idea per sentence. Analogy, contrast, parallelism, humor, and
-first-person reaction are welcome when they clarify a real mechanism and the
-evidence supports the voice. Remove them when they merely decorate the prose or
-widen the claim.
+and one main idea per sentence. Humor, analogy, fragments, and first-person
+reactions may earn their place by clarifying an idea, revealing the author's
+judgment, establishing rapport, or controlling pace. Keep firsthand experiences
+and reactions grounded in supplied material. Don't manufacture personality or
+let rhetoric widen the claim.
+
+**Make sentences easy to read once.** Use ordinary words for actions, even when
+the subject is technical. Prefer `we couldn't change the setting` to `the
+configuration lacked mutability`. Keep technical terms when they name something
+precisely; don't make the surrounding language technical by association.
+
+Give the reader one manageable thought at a time. State what happened before
+attaching qualifications. When a sentence contains an event, a reaction, and a
+consequence, consider letting them arrive separately.
+
+Let sentence length follow its job. Longer sentences can establish circumstances
+or explain a mechanism. Short sentences can land a discovery, judgment, or
+consequence. Fragments can carry an authentic afterthought. Don't alternate
+lengths mechanically or make every sentence punchy.
+
+Use paragraph breaks where the reader should pause. Don't immediately explain
+away a sentence that already landed. Prefer simple connections—`but`, `so`,
+`because`, `when`—when they express the actual relationship. Read the paragraph
+aloud: it should sound like someone explaining something they understand, not
+delivering prepared conclusions. See the
+[line-edit example](references/human-writing-review.md#sentence-level-pacing)
+for how wording and pacing work together.
 
 Preserve what Forge and OverGrid do well: empirical honesty, real limitations,
 unfavorable measurements, exact artifacts, and corrected assumptions. Tone
@@ -248,7 +271,10 @@ central claim available in accessible text.
    visual vocabulary in the planning and editorial prompts.
 3. **Line:** check concrete verbs, sentence rhythm, noun piles, repeated
    antithesis, duplicated conclusions, ordinary proofreading, and title/deck
-   accuracy. As the final step, sharpen the thesis, minimum-model, and
+   accuracy. Ask where the reader must reread or mentally translate a sentence,
+   which abstract phrases could become a person or system doing something, and
+   where the rhythm becomes monotonous or an explanation continues after its
+   point has landed. As the final step, sharpen the thesis, minimum-model, and
    consequence sentences where they can become easier to remember without
    becoming less true.
 
