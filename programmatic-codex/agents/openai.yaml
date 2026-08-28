@@ -1,0 +1,4 @@
+interface:
+  display_name: "Programmatic Codex"
+  short_description: "Run Codex models through CLI and SDK workflows"
+  default_prompt: "Use $programmatic-codex to build a safe, authenticated Codex automation for this task."
