@@ -72,8 +72,11 @@ hex value that becomes inaccessible.
 
 ## Organize before styling
 
-Pick the smallest organization that answers the question:
+Choose during outlining, before prose makes the representation an afterthought. Pick the smallest organization that answers the question:
 
+- **Span timeline:** overlapping operations, parent/child structure and waiting on a shared time axis. Show parentage separately; adding overlapping durations does not give elapsed time.
+- **Token or memory schematic:** stable objects across computation steps; distinguish cached state, new work and recomputation. Growing boxes alone do not explain reuse.
+- **Matrix, distribution or tradeoff plot:** pairwise relationships, tails or competing constraints. Use verified observations or explicitly constructed teaching data, with named axes, units and scales.
 - **Flowchart:** one-way authority, ownership, or transformation pipeline.
 - **Swimlanes:** handoffs among actors or systems over time. This is the default
   for release, incident, and operational stories.
@@ -84,6 +87,8 @@ Pick the smallest organization that answers the question:
   separation. Nest only real boundaries.
 - **Before/after:** architectural simplification or changed responsibility. Use
   matched alignment so readers can compare without hunting.
+
+Default to static explanation with an inspectable conclusion. Add interaction only when varying an input reveals a meaningful regime change or competing effects; a simple curve with a movable point does not earn controls. Quizzes are a separate assessment form, not a way to make a weak visual useful.
 
 If a diagram needs more than roughly twelve visible nodes, first split it into
 an overview and one detail figure. Keep a stable reading axis across both.
@@ -267,7 +272,7 @@ flowchart LR
 
 ## Review the result
 
-At rendered desktop and mobile sizes, verify:
+Before visual QA, check whether a central relationship is still hidden in prose; the existence of a diagram elsewhere does not resolve that omission. At rendered desktop and mobile sizes, verify:
 
 - the answer is visible without reading the surrounding paragraph;
 - the dominant path is visually obvious and follows one axis;

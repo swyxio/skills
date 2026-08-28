@@ -185,6 +185,8 @@ fixture that gains detail over several disconnected examples. Before a command,
 code excerpt, table, transcript, or screenshot, tell the reader what question
 it answers; afterward, interpret what matters.
 
+While outlining a mechanism, ask: **What should the reader be able to see that is hard to understand from sentences?** Plan the representation alongside the explanation, using [the visual-language reference](references/visual-language.md). Do not postpone this decision until presentation polish.
+
 Build a private causal outline that connects the starting condition, mechanism,
 consequence, evidence, objection, and limitation. Let the selected story mode
 determine the public section order. Add a heading when the argument turns, not
@@ -227,8 +229,7 @@ angle. Give readers prerequisites, expected results, and safe cleanup when
 reproducibility is part of the value. Never dump a full transcript or
 implementation inventory into the story merely because it exists.
 
-Use a visual only when it answers an important question faster than prose.
-Plan it around the relationship being explained, not decoration. Before
+Use a visual when it makes an important relationship easier to inspect or understand. Plan it around timing, topology, data movement, state or a comparison—not decoration. Tables and numbered text boxes are not substitutes for showing those relationships. Separate static explanation, interactive exploration and assessment; rejecting low-value controls is not a reason to omit a useful static diagram. Before
 producing or reviewing article visuals, read
 [the visual-language reference](references/visual-language.md). Generated
 pixels may illustrate an idea but never establish technical evidence. Keep the
@@ -241,7 +242,10 @@ central claim available in accessible text.
    earns its lesson.
 2. **Explanatory:** check assumed knowledge, undefined nouns, jargon, missing
    causal steps, the recurring example, artifacts without interpretation, and
-   concepts introduced too late.
+   concepts introduced too late. Ask whether any central relationship remains
+   buried in prose and whether each visual actually reveals it. Do not use a
+   figure quota. In generation pipelines, include this check and the relevant
+   visual vocabulary in the planning and editorial prompts.
 3. **Line:** check concrete verbs, sentence rhythm, noun piles, repeated
    antithesis, duplicated conclusions, ordinary proofreading, and title/deck
    accuracy. As the final step, sharpen the thesis, minimum-model, and

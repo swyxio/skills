@@ -2,6 +2,26 @@
 
 Use this guidance for authored diagrams, interactions and their placement in an article. The goal is explanatory value, not a particular component style or a quota of interactive elements.
 
+## Choose the representation during outlining
+
+Match the form to the relationship, not to a desire for visual variety:
+
+| Relationship the reader needs to see | Useful form | Essential distinction |
+| --- | --- | --- |
+| Overlapping work and request latency | Span timeline | Shared time axis; parentage is not overlap; summed durations are not elapsed time |
+| Calls, returns and handoffs | Sequence diagram or swimlanes | Actors, message direction and ordering; spacing need not encode duration |
+| Branches, retries and termination | Flowchart | Conditions on edges and concrete exits, not paragraphs connected by arrows |
+| Legal changes to an object | State-transition diagram | States versus events; guards and rejected transitions |
+| Information moving through a system | Data-path or boundary diagram | Labeled data and transformations; distinguish control from data flow |
+| Reuse, recomputation and allocation | Token/memory schematic | Stable identities across steps; show which work is retained or repeated |
+| Pairwise relationships or concentration | Matrix/heatmap | Named axes, scale and missing/masked values |
+| Tails or competing constraints | Distribution or tradeoff plot | Evidence, units and comparable populations; clearly label constructed examples |
+| A controlled change | Aligned before/after or small multiples | Hold context and scales fixed so the difference is visible |
+
+These are eligible forms, not automatic approval of an instance or a required quota. Prefer a static figure when the insight is visible without interaction. An interactive should reveal a meaningful regime change, competing effects, or a hypothesis the reader can investigate; a slider moving one point along a simple curve is not enough. Keep the useful initial state visible.
+
+Assessments are separate. When requested, use low-friction multiple choice with immediate feedback and an explicit correct answer after a mistake. Progress difficulty through application, diagnosis and combined constraints; more arithmetic, longer wording or extra clicks do not establish greater difficulty. Plausible alternatives should require the chapter's concepts to distinguish them.
+
 ## Start with the example, not the controls
 
 Identify the question the visual should answer, its actual objects and the decisive dependency or change. Keep a compact private record of source facts, constructed teaching inputs, expected outcomes and invariants. Adjacent prose, code and images should use the same example or make the transition explicit.
@@ -24,6 +44,8 @@ These are examples, not mandatory archetypes. A static matrix, code diff, equati
 - Introduce a constructed example naturally once. Do not repeat “illustrative,” “synthetic local simulation,” or “not the speaker's exact code” around every object. Retain consequential boundaries such as pending tests, hypothetical outcomes or unexecuted external actions without implying a real API call occurred.
 
 ## Review the real composition
+
+First check for missing visuals: can the reader inspect the central temporal, spatial, causal or state relationship, or only read a verbal description? Do not count tables or text cards as resolving that gap. Conversely, remove a figure that merely repeats prose without revealing the relationship.
 
 Use the pilot/batch/patch scope in `SKILL.md`. For a new or materially changed visual, read its actual code and state data with the adjacent prose, then inspect desktop and narrow-phone rendering. A plan cannot overrule a correct implementation.
 

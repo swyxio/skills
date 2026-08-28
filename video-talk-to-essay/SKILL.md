@@ -38,7 +38,11 @@ Use available video descriptions and metadata to seed research, especially proje
 
 ## Images and explanatory visuals
 
+During outlining, ask for each central mechanism: **What should the reader be able to see that is hard to understand from sentences?** Identify the relationship and choose prose or an explanatory visual before drafting. Read [references/visual-review.md](references/visual-review.md) at this point, not only after deciding to add graphics.
+
 Choose media for its contribution to the explanation, not to fill a template. Use source frames where a slide, code listing, chart or demo provides evidence. Add a diagram or interaction where it exposes a mechanism more clearly; neither a thesis image nor a screenshot in every section is mandatory.
+
+Distinguish static explanatory diagrams, interactive exploration, and assessment questions. Rejecting a trivial interactive does not reject static visuals. Tables and numbered prose boxes do not satisfy a need to show timing, topology, state, or data movement. A visual may be worthwhile because it makes a relationship inspectable, even when prose could describe it.
 
 For authored visuals, follow one concrete example through a visible change: a row appears, a proposal changes before execution, or cached values remain while new work is added. Keep inputs and identities consistent across the prose, code and visual. Static comparisons are often better than controls that only change highlighting or explanatory text. Apply the user's visual preferences contextually; do not turn one styling correction into a blanket ban on useful shapes, color or motion.
 
@@ -54,6 +58,8 @@ Choose review scope; explicit user requirements take precedence:
 - **Pilot or new component:** review the complete explanation and actual visual implementation, then inspect desktop/mobile and meaningful interaction states. Calibrate on a bounded sample before authorized scaling.
 - **Routine batch:** use lightweight checks needed for source integrity, privacy and readable rendering, plus one grounding/coverage review per article. Do not treat illustrative-code correctness as a blocker. Deep-inspect new or changed visuals, flagged pages and a representative desktop/mobile sample. Reuse checks of unchanged shared components; record which pages were individually inspected versus sampled.
 - **Small patch:** verify only the affected claim, code or rendered state. A deterministic label, punctuation or formatting fix does not require another whole-article model review. A changed mechanism or source example needs the corresponding substantive checks.
+
+During explanatory review, check for mechanisms buried in prose that a diagram would make clear. Judge what the reader can infer from the representation, not the presence of a figure or an image count. When implementing a generation pipeline, carry this check and the relevant visual vocabulary into its planning and editorial prompts; renderer support alone does not influence authoring.
 
 Stop when the article is grounded, readable and safe to display, and any explicitly requested checks pass. Optional polish and illustrative-code correctness are not blockers. Repair the smallest faulty unit, recheck its affected dependencies and let independent articles proceed; do not restart a batch or re-prove unrelated accepted work. Keep source-reviewed, browser-reviewed, user-approved and published states distinct without inventing approval gates.
 
