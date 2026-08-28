@@ -22,13 +22,14 @@ For provider-specific API behavior, read [provider operation notes](references/p
 - Treat workers as an in-flight limit, not as a request-rate setting.
 - When a fallback changes coverage or semantics, record that difference rather than silently treating it as the richer result.
 - Keep provider delivery separate from domain or human acceptance; a valid artifact URL does not establish that an image, video, or other subjective output is usable.
+- Match validation to the deliverable. A machine-consumed article envelope may need a schema; illustrative code inside it is reader-facing text, not software to compile or certify unless the user explicitly requests that.
 - Keep enough redacted telemetry to answer what happened, what it cost, and what may safely resume.
 
 ## Workflow
 
 ### 1. Inspect the boundary
 
-Find the client wrapper, parser/schema, fan-out helper, cache, retry loop, and telemetry sink before changing behavior. Establish what the code currently calls a request, attempt, cache hit, and completed item. Preserve valid artifacts and keep credentials or sensitive source text out of logs.
+Find the first boundary that changed or rejected the artifact: provider delivery, local redaction, parsing, validation or rendering. Do not assume malformed local output means the model failed. Inspect the relevant wrapper and retained evidence before changing prompts or retrying; preserve valid work and keep sensitive source text out of logs.
 
 ### 2. Shape the request before scaling it
 
@@ -44,7 +45,7 @@ Start with modest in-flight concurrency. Pace requests and tokens separately, ho
 
 ### 4. Repair by failure class
 
-Retry transient failures through the same limiter. For truncated/invalid output, fix the relevant cause: split the source, compact intermediate detail or continue within authorization, without dropping required coverage. Route metadata, renderer and review mistakes to those layers rather than regenerating good prose. Use deterministic fixes for unambiguous syntax/formatting defects; reserve model repairs for semantic changes. Record any fallback's coverage loss.
+Recover a completed response before considering another request. Retry genuinely incomplete transient failures through the same limiter; distinguish provider failure from host interruption, controller deadline and explicit cancellation. Fix validator/redactor/renderer mistakes locally, without asking the model to satisfy a broken check. For genuine truncation, compact intermediate detail or continue without dropping required coverage. For a content repair, request only the affected fields or blocks and assemble them against the saved base; do not regenerate the whole artifact for a small edit. Record any fallback's coverage loss.
 
 See [failure matrix](references/failure-matrix.md) for practical actions and lightweight attempt fields.
 

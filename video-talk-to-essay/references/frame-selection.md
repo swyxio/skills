@@ -6,9 +6,9 @@ Choose frames that provide evidence or explain something the adjacent prose need
 
 If a known timestamp shows a relevant readable slide or demo, extract it, inspect it and place it. No model selection, scoring pass or candidate inventory is needed. Reuse an inspected frame when its source identity, capture time and relevant content are unchanged.
 
-When the right frame is unclear, search cited segments or nearby slide changes. Phrases such as “on the screen,” “chart,” “code” and “here is the demo” are useful cues; introductions and applause usually are not. Stay within the passage's verified audiovisual range.
+Prefer a meaningful opening-problem or introduction frame within the first two minutes when available; this is a nudge, not a quota. Completeness and relevance beat an early timestamp. For other frames, use the existing outline, cited passages and nearby slide changes; do not make another full-transcript planning call solely to choose screenshots. Bind the frame to its own exact recording time, not an assumed prose-citation boundary.
 
-For a large ambiguous pool, optional model selection should return known section/candidate IDs and a short rationale. Reject unknown IDs, accidental duplicates and mismatched source ranges. A model's expected caption is not proof of image content.
+When selection is ambiguous, inspect a small chronological candidate set, batching useful windows into one visual-selection call where practical. Return known candidate IDs, placement and a caption supported by the pixels. Keep source identity and capture time exact; reject unknown IDs. Reuse recordings and candidates across prose revisions, and extract selected frames at publication resolution.
 
 ## Extraction
 
@@ -21,7 +21,7 @@ cwebp -q 78 frame.jpg -o section.webp
 
 Use the precise downloaded filename and verified offsets. Preserve aspect ratio and slide edges; do not automatically crop every recording to 16:9. Resize according to the content and intended display. If `yt-dlp` receives HTTP 403, inspect its version and use an authorized supported path; do not weaken access controls. If FFmpeg lacks a WebP encoder, use `cwebp`.
 
-If the first frame is blurred or mid-transition, try nearby moments, initially ±2 seconds. Broaden the search only if the image would materially help. A frame can occur anywhere in the cited interval, not just its start. Leave missing optional media out rather than indefinitely retrying or substituting an unrelated image.
+For progressive slides, inspect later reveals across the sequence and select the completed relevant build—not automatically the latest, earliest or most text-heavy frame. A tiny ±2-second search can miss the completed slide. For demos, a before/after pair may explain better. Allow a bounded follow-up window when needed; otherwise skip or flag unsuitable optional media rather than indefinitely retrying or substituting an unrelated image.
 
 ## Scoring and distinctiveness
 
