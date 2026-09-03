@@ -1,120 +1,82 @@
 ---
 name: next-steps
-description: Review the full available conversation context, infer the user's underlying outcome from their explicit asks, corrections, preferences, constraints, and accepted or rejected proposals, concisely reconcile progress, and recommend prioritized groups of next-step options. Use when the user invokes $next-steps or /next-steps, asks what to do next, wants a holistic recap and recommendation, or needs research, review, action, verification, and monitoring options ranked after a substantial or winding thread.
+description: Turn an ongoing task or conversation into evidence-informed opportunities and an actionable decision workspace. Use when the user asks what next, invokes $next-steps, or wants to explore, compare, combine, and prioritize possible directions. Adapt from a short conversational recommendation to a richer interactive exploration when the decision warrants it.
 ---
 
 # Next Steps
 
-Turn a conversation's accumulated context into a concise, judgment-rich menu of what should happen next. Organize options around the user's goals rather than forcing every thread into one linear plan.
+Do the useful thinking before presenting the menu. Help the user discover and choose opportunities, not merely maintain a task queue. Lead with a point of view about the outcome and what could move it forward.
 
-## Reconstruct the outcome
+## Orient without reciting the conversation
 
-1. Read the full available thread, while respecting explicit conversation boundaries and newer instructions that supersede older ones.
-2. Distinguish:
-   - the active explicit request;
-   - the underlying outcome suggested by repeated preferences, corrections, and choices;
-   - constraints, non-goals, rejected paths, and authorization limits;
-   - assumptions or missing context that reduce confidence.
-3. State one concise intent hypothesis and its confidence. If two interpretations would materially change the recommendations, present both instead of silently choosing one.
-4. Do not reactivate stale tasks merely because they appear earlier in the thread. Do not expose private chain-of-thought; summarize only conclusions and supporting evidence.
+Use the available context to recover the user's outcome, corrections, accepted choices, constraints, and unresolved questions. Newer decisions supersede older proposals. Do not reactivate abandoned work or ask the user to reconfirm settled preferences.
 
-## Reconcile progress
+Keep completed work, user-reported changes, verified live state, proposals, and blockers distinct. Put routine operational status in a short line or expandable detail; let it dominate only when it genuinely blocks progress or presents material risk. Avoid ritual intent/confidence statements and repeated recaps.
 
-Build a delta-first status view. Identify what is:
+## Discover before recommending
 
-- completed and evidenced;
-- in progress;
-- blocked or awaiting a decision;
-- implemented but unverified;
-- superseded or no longer relevant.
+Do a bounded read-only evidence pass when it could change the options or their ranking. Inspect readily available project data; browse relevant current primary sources, credible practitioner examples, or competing approaches where useful. Bring back an actual finding, example, or comparison instead of turning every answer into a proposal to research later.
 
-Keep distinct proof layers separate when relevant, such as source changes, merge state, deployment state, live behavior, and downstream measurement. Label material claims as observed, inferred, or unavailable rather than presenting inference as fact.
+Bound the pass around the decision: what uncertainty would change our next move? Stop when sufficient evidence exists to choose a useful next action. Larger investigations can themselves become options with a defined question and deliverable. Respect access, metering, privacy, and paid-call constraints.
 
-## Perform bounded discovery
+Distinguish sourced patterns, observed results, inferences, and speculative ideas. Cite research close to the claims it supports. If discovery is unavailable, show the uncertainty rather than filling it with plausible facts.
 
-Use lightweight read-only discovery only when it could materially change the option set or priority. Prefer readily available thread, task, repository, or live-state evidence. Do not turn every invocation into deep research, and do not mutate state unless the user separately asks for execution.
+## Generate genuinely different opportunities
 
-## Generate adaptive option groups
+Explore different mechanisms, not several labels for the same administrative work. Depending on the task, consider a dependable improvement, an ambitious bet, and an adjacent or surprising opportunity. These are lenses, not mandatory slots; do not pad the answer with weak ideas.
 
-Create two to five goal-oriented groups that fit the thread. Number group headings sequentially from `1` so each option has a stable shorthand such as `1A` or `2B`. Examples include product direction, technical work, evidence gaps, rollout, operations, growth, or follow-up. Do not use fixed categories when they distort the actual decision.
+For each serious candidate, make clear:
 
-Within each group, provide up to three ranked options. For each option include:
+- The opportunity or hypothesis and why it fits this user now.
+- The supporting evidence and the strongest uncertainty or counterargument.
+- A concrete output and first move: a draft, comparison, experiment, implementation, or decision.
+- What success would look like, and what would falsify the idea or stop the work.
+- Material effort, spend, risk, dependencies, or permissions.
 
-- a rank within its group;
-- a priority: **Now**, **Soon**, **Later**, or **Optional**;
-- a type tag such as **Research**, **Review**, **Decision**, **Action**, **Verification**, or **Monitoring**;
-- a short, action-led title using consistent verb-object wording, such as **Verify the production rollout** or **Freeze further homepage changes**;
-- one concise judgment explaining why it belongs there and what outcome it produces;
-- effort, risk, reversibility, or dependencies only when they materially affect the choice.
+Use the subset needed to choose; keep implementation detail expandable or deferred until selection. Rank by judgment and explain the important tradeoff. Avoid fabricated impact scores or numeric confidence. Include holding steady or stopping when that is genuinely the best choice, without allowing one waiting experiment to block independent opportunities.
 
-Treat the group number plus option letter as the stable option ID. A user may
-reply with shorthand such as `1A` or `2B`; interpret it against the most recent
-next-steps output. When referring back to an option in the response, pair its ID
-with the repeated short title, such as **1A — Verify the production rollout**,
-instead of ambiguous wording such as “Rollout A” or “Protect A.”
+## Quantify honestly
 
-Format each option as one compact heading line followed by one or two indented
-bullets. Put the judgment and outcome in a **Why** bullet. Add a second bullet
-for dependencies, effort, risk, or reversibility only when materially useful.
-This nested structure should make the groups easy to scan without flattening
-all details into dense paragraphs.
+Use dated baselines and explicit units, denominators, and comparable windows. Separate attribution from causation and measured outcomes from proxies. Missing coverage is unavailable, not zero.
 
-Rank with judgment rather than a synthetic numeric score. Consider expected impact, urgency, uncertainty reduction, ability to unblock other work, dependency order, risk, reversibility, and fit with the user's demonstrated intent.
+Where helpful, size the opportunity with simple scenario or break-even math. Show the formula, assumptions, and sensitivity; use ranges when justified. A scenario is not a forecast, and a chosen threshold is not an industry benchmark. Do not invent data to make the answer feel quantitative.
 
-Interpret priorities consistently:
+## Choose the presentation for the decision
 
-- **Now**: blocks the outcome, prevents a material risk, is time-sensitive, or unlocks several valuable paths.
-- **Soon**: high-value follow-through that should happen after current blockers or evidence gaps.
-- **Later**: worthwhile but not currently decisive.
-- **Optional**: exploratory, marginal, or preference-dependent.
+There is no mandatory heading hierarchy, tag stack, nested Why bullet, or repeated recommendation section.
 
-Include a monitor-or-stop option when taking no further action is legitimately strong. Do not manufacture research tasks when existing evidence is sufficient. Allow parallel and mutually exclusive options; do not force them into a false sequence.
+- **Small decision:** a conversational recommendation and a few distinct options in chat.
+- **Several comparable options:** a compact table or opportunity cards showing the dimensions that change the choice.
+- **Substantial exploration:** an interactive decision workspace when selection, scenarios, or evidence drill-down materially improve the decision. Use available visualization skills for actual artifacts, not decorative dashboards.
 
-## Recommend a portfolio
+Lead with the insight and recommended direction. Keep the overview scannable, usually three to five strong opportunities rather than an exhaustive backlog. Put detailed evidence, caveats, and implementation notes behind disclosure when the surface supports it.
 
-After the grouped options, recommend a small portfolio of complementary moves, normally one to three. Identify each selected option with its stable ID and repeat its exact short title. Use a short numbered or bulleted list with nested bullets for ordering or concurrency. Distinguish alternatives from complements and note any necessary order, but do not collapse the whole answer into a single mandatory sequence.
+Useful interactions include selecting or combining ideas, expanding evidence, filtering by effort or goal, and changing scenario assumptions. Recompute scenario outputs transparently and label them as estimates. Implement real controls when creating an artifact; do not imply Markdown labels are working buttons. Check rendered controls and responsive behavior. If an artifact is not warranted or tools are unavailable, offer the equivalent conversation in plain text.
 
-Recommendations are not authorization to execute. If the user asks only what comes next, remain non-mutating.
+## Make the conversation composable
 
-## Output format
+Assign short stable IDs when offering multiple selectable options: A/B/C, or 1A/2A only when grouping genuinely helps. Pair an ID with its short title when referring back. Preserve IDs and selected/rejected/deferred state across follow-ups; do not silently remap an existing ID. Keep continuity in the conversation or authorized task artifact, not unsolicited memory writes.
 
-Stay compact by default and expand only for consequential, ambiguous, or complex threads.
+Make useful follow-ups natural: "research B," "combine A+C," "make C bolder," or "show the cheaper version." Offer one relevant invitation, not a generic questionnaire. Ask only a question whose answer materially changes the direction; otherwise give a recommendation with stated assumptions.
 
-```markdown
-## What you appear to want
+Selection means assemble or pursue the selected scope as requested. It does not automatically authorize spending, publishing, changing access, or other consequential external effects. Do not hide mutations behind interactive controls or treat a brainstorming request as execution approval.
 
-<One-sentence intent hypothesis and confidence.>
+## Turn choices into parallel work
 
-## Where things stand
+Show which moves are independent, which are alternatives, and which have a real prerequisite. A lightweight statement such as "A gathers evidence while B produces the draft; C waits for the result" often suffices. Use a dependency visual only when the relationships are hard to follow in prose.
 
-- <Up to five delta-first bullets.>
+Recommend a small complementary portfolio without repeating every option verbatim. Identify the output of each track and the decision where results reconverge. Parallelizable does not mean automatically spawning agents: delegate only when authorized and when independent ownership and expected time savings justify it.
 
-## 1. <Adaptive goal area>
+On execution follow-ups, carry forward the selected options and approvals, take the first safe in-scope steps, and report outputs and remaining decisions rather than generating another menu.
 
-A. **Now · Verification — Verify the production rollout**
-   - **Why:** <Concise judgment and outcome.>
-   - **Dependency:** <Only when materially useful.>
+## Final quality check
 
-B. **Soon · Action — Freeze further homepage changes**
-   - **Why:** <Concise judgment and outcome.>
+Before answering, ask:
 
-## 2. <Another adaptive goal area>
+- Is there an insight or opportunity here beyond verify, monitor, and wait?
+- Did evidence shape the choices, or did I just attach numbers to generic advice?
+- Can the user tell what each choice produces and combine independent work?
+- Does the presentation help a decision without duplicating text or adding ceremony?
+- Are uncertainty, permissions, and the distinction between proposed and completed work clear?
 
-A. **Now · Decision — Choose the measurement window**
-   - **Why:** <Concise judgment and outcome.>
-
-## Recommended portfolio
-
-1. **1A — Verify the production rollout**
-   - Do this first because it unlocks reliable live evidence.
-2. **1B — Freeze further homepage changes**
-   - Run this in parallel to protect the experiment.
-3. **2A — Choose the measurement window**
-   - Do this after live verification.
-
-## Decision needed
-
-<Up to two questions only when answers materially change the path.>
-```
-
-Omit empty sections. Number groups sequentially and use letters within each group, resetting at `A`, to create stable IDs such as `1A` and `2B`. Keep option titles short, action-led, and repeated verbatim with their IDs wherever referenced. Use nested bullets consistently, but omit empty metadata bullets. Keep the default response to one intent paragraph, no more than five progress bullets, two to five groups, up to three options per group, one portfolio recommendation, and at most two decision-critical questions.
+Richness means better thinking and useful interaction, not more words or more agents.
