@@ -13,7 +13,7 @@ let schemaPath;
 let inputPath;
 
 before(() => {
-  temporaryDirectory = mkdtempSync(join(tmpdir(), "programmatic-codex-test-"));
+  temporaryDirectory = mkdtempSync(join(tmpdir(), "programmatic-agents-test-"));
   fakeCodex = join(temporaryDirectory, "fake-codex.mjs");
   schemaPath = join(temporaryDirectory, "schema.json");
   inputPath = join(temporaryDirectory, "source.txt");

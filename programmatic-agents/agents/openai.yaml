@@ -1,0 +1,4 @@
+interface:
+  display_name: "Programmatic Agents"
+  short_description: "Run coding-agent CLIs with reusable execution telemetry"
+  default_prompt: "Use $programmatic-agents to run the selected coding-agent CLI with authentication, bounded execution, and telemetry."
