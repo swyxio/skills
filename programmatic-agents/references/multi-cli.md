@@ -112,3 +112,6 @@ References: [DeepSeek integration](https://api-docs.deepseek.com/quick_start/age
 ## Mistral Vibe Code
 
 Use `cli: "vibe"` and an explicit hosted model name (tested `mistral-vibe-cli-latest`). See [setup notes](setup.md#mistral-vibe-code) for authentication and the moving-alias limitation. The adapter uses plan mode, disables all tools, caps turns with `maxTurns` (default 4), and captures completed-history JSON lines. `reasoning` maps to native thinking (default off). Native metadata is matched by full session ID and used to check configured model identity and normalize token stats. This does not establish an independently observed served-model revision. `cliConfiguredCost` preserves Vibe's local estimate separately from reported billing and user-supplied pricing. Logging must remain enabled for metadata verification. Reading session metadata is automatic for Vibe, as native exports are for Devin; it does not require `localEvidence:true`.
+
+
+Muse default: omitting `model` for `cli: "muse"` selects `muse-spark-1.3-contributor`, per the owner’s explicit data-sharing preference. Other CLIs still require a model. Explicit Muse model selections are preserved. `dataSharingTier` records Contributor versus Standard; full local traces remain independently opt-in.

@@ -22,6 +22,7 @@ export function classify(message, httpStatus) {
   return 'execution';
 }
 export function command(c, prompt) {
+  if(c.cli === 'muse' && c.model == null) c={...c,model:'muse-spark-1.3-contributor'};
   if (!['codex','cursor','antigravity','muse','deepcode','zcode','devin','vibe'].includes(c.cli)) throw Error('Unsupported cli');
   if (!c.model || typeof c.model !== 'string') throw Error('An exact model is required');
   const local = name => existsSync(join(homedir(), '.local/bin', name)) ? join(homedir(), '.local/bin', name) : name;
@@ -165,6 +166,7 @@ export function decode(cli, e, state) {
 
 export async function run(config, prompt) {
   const c={timeoutSeconds:180,maxOutputBytes:16*1024*1024,captureContent:false,...config};
+  if(c.cli === 'muse' && c.model == null) c.model='muse-spark-1.3-contributor';
   if (!Number.isFinite(c.timeoutSeconds) || c.timeoutSeconds<=0) throw Error('timeoutSeconds must be positive');
   if (!Number.isFinite(c.maxOutputBytes) || c.maxOutputBytes<=0) throw Error('maxOutputBytes must be positive');
   if (typeof prompt !== 'string' || !prompt.trim()) throw Error('Nonempty prompt required');
@@ -222,7 +224,7 @@ export async function run(config, prompt) {
   if(!state.error && (exitCode !== 0 || signal))state.error={category:classify(stderr),message:redact(stderr || `Process exited ${exitCode}/${signal}`),httpStatus:state.lastHttpStatus};
   if(!state.error && state.observedModel && state.observedModel !== c.model)state.error={category:'model_mismatch',message:'Reported model differs from requested model',httpStatus:null};
   if(!state.error && !state.output)state.error={category:'invalid_output',message:'No supported assistant result found',httpStatus:null};
-  const result={schemaVersion:1,adapterVersion:4,runId,traceId:runId,parentRunId:c.parentRunId ?? null,logicalItemId:c.logicalItemId ?? null,attempt:c.attempt ?? 1,tags:c.tags ?? {},configHash:hash(JSON.stringify(c)),settings:{timeoutSeconds:c.timeoutSeconds,maxOutputBytes:c.maxOutputBytes,trustWorkspace:c.trustWorkspace === true,captureContent:c.captureContent,wrapperRetries:0,retainLocalSession:c.retainLocalSession === true,localEvidence:c.localEvidence === true},startedAt,endedAt:new Date().toISOString(),cli:c.cli,cliVersion:version,binary:cmd.bin,platform:process.platform,nodeVersion:process.version,requestedModel:c.model,reasoningSetting:c.reasoning ?? null,executionMode:c.cli === 'cursor'?'ask':['antigravity','zcode','vibe'].includes(c.cli)?'plan':c.cli === 'devin'?'auto+sandbox':c.cli === 'deepcode'?'askAll':'read-only',cwd:resolve(c.cwd || process.cwd()),promptHash:hash(prompt),promptBytes:Buffer.byteLength(prompt),status:state.error?'error':'success',...state,latency:{wallMs:performance.now()-start,processMs:performance.now()-spawnAt,firstStdoutMs,firstAnswerEventMs,ttftMs:null},cost:{reported:state.reportedCost,estimated:estimate(state.usage,c.pricing)},exitCode,signal,parseErrors,stdoutBytes:bytes,outputHash:state.output?hash(state.output):null,logDir:dir};
+  const result={schemaVersion:1,adapterVersion:4,runId,traceId:runId,parentRunId:c.parentRunId ?? null,logicalItemId:c.logicalItemId ?? null,attempt:c.attempt ?? 1,tags:c.tags ?? {},configHash:hash(JSON.stringify(c)),settings:{timeoutSeconds:c.timeoutSeconds,maxOutputBytes:c.maxOutputBytes,trustWorkspace:c.trustWorkspace === true,captureContent:c.captureContent,wrapperRetries:0,retainLocalSession:c.retainLocalSession === true,localEvidence:c.localEvidence === true},startedAt,endedAt:new Date().toISOString(),cli:c.cli,cliVersion:version,binary:cmd.bin,platform:process.platform,nodeVersion:process.version,requestedModel:c.model,dataSharingTier:c.cli === 'muse'?(c.model.endsWith('-contributor')?'contributor':'standard'):null,reasoningSetting:c.reasoning ?? null,executionMode:c.cli === 'cursor'?'ask':['antigravity','zcode','vibe'].includes(c.cli)?'plan':c.cli === 'devin'?'auto+sandbox':c.cli === 'deepcode'?'askAll':'read-only',cwd:resolve(c.cwd || process.cwd()),promptHash:hash(prompt),promptBytes:Buffer.byteLength(prompt),status:state.error?'error':'success',...state,latency:{wallMs:performance.now()-start,processMs:performance.now()-spawnAt,firstStdoutMs,firstAnswerEventMs,ttftMs:null},cost:{reported:state.reportedCost,estimated:estimate(state.usage,c.pricing)},exitCode,signal,parseErrors,stdoutBytes:bytes,outputHash:state.output?hash(state.output):null,logDir:dir};
   if(c.localEvidence === true && state.sessionId && ['codex','cursor','antigravity','muse'].includes(c.cli)){
     try {result.localEvidence=JSON.parse(execFileSync(c.pythonBinary || 'python3',[fileURLToPath(new URL('./local-evidence.py',import.meta.url)),'--cli',c.cli,'--session',state.sessionId],{encoding:'utf8',timeout:10000,maxBuffer:4*1024*1024,stdio:['ignore','pipe','ignore']}));}
     catch {result.localEvidence={status:'unavailable',reason:'Local reader failed or timed out'};}

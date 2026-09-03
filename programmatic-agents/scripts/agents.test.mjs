@@ -80,3 +80,9 @@ test('Vibe ignores user and unfinished messages, keeps completed assistant conte
  const cmd=command({cli:'vibe',model:'test-model'},'p');assert.ok(cmd.args.includes('plan'));assert.equal(cmd.args[cmd.args.indexOf('--disabled-tools')+1],'*');
 });
 test('Provider camel-case total and reasoning counts are preserved',()=>{const u=usage({totalTokens:42,reasoningTokens:0});assert.equal(u.totalTokens,42);assert.equal(u.reasoningTokens,0);});
+
+test('Muse defaults to Contributor only when no explicit model is selected',()=>{
+ const defaults=command({cli:'muse'},'p');assert.equal(defaults.args[defaults.args.indexOf('--model')+1],'muse-spark-1.3-contributor');
+ const explicit=command({cli:'muse',model:'muse-spark-1.3'},'p');assert.equal(explicit.args[explicit.args.indexOf('--model')+1],'muse-spark-1.3');
+ assert.throws(()=>command({cli:'cursor'},'p'));
+});

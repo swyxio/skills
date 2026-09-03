@@ -61,6 +61,10 @@ Use [scripts/agents.mjs](scripts/agents.mjs) for a common invocation and telemet
 
 The adapter records failed attempts as well as successes, never substitutes models, does not automatically retry, and keeps unknown costs/usage null. Full content traces are opt-in. CLI output formats, sandbox/tool behavior, and reasoning settings differ: compare model-plus-CLI configurations and record those differences.
 
+## Muse default preference
+
+The owner explicitly prefers Muse Spark’s cheaper Contributor data-sharing tier. For Muse runs without a model specified, the shared adapter defaults to `muse-spark-1.3-contributor`. Contributor permits Meta to use submitted inputs and outputs for model improvement. Preserve an explicitly requested model, including the standard tier; do not silently rewrite it. This preference is specific to Muse and does not change other providers’ data-sharing settings.
+
 ## Preserve task contracts
 
 - **Summarization and classification:** Supply authoritative metadata separately from untrusted source content; preserve technical names and unknowns.

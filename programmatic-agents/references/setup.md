@@ -20,6 +20,8 @@ Executable `agy`. Complete its browser login and CLI onboarding; optional intera
 
 Executable `muse`. Meta account login, developer registration, CLI authorization, and billing are separate steps. Developer registration includes Model API/Muse Code agreements. A working login with HTTP 402 means billing is still needed, not that the model slug should be changed. Once the user's payment method was added, Muse Spark 1.3 passed using Muse 1.0.2. Stop rather than repeatedly retrying billing errors. The adapter disables shell/write/web tools and foreign personal context; local session persistence is separately opt-in.
 
+The owner has opted into the cheaper Contributor data-sharing tier as the default for Muse. Use `muse-spark-1.3-contributor`; the shared runner selects it when Muse’s model field is omitted. This is a model-tier selection, not a change to local trace retention. Explicit model selections still win. The run records the selected tier; do not treat historical standard-tier smoke tests as Contributor tests.
+
 ## DeepSeek / Deep Code
 
 DeepSeek recommends the third-party `@vegamo/deepcode-cli` package maintained by lessweb. Install with `npm install -g @vegamo/deepcode-cli` (tested 0.3.1). Browser login alone does not configure CLI credentials. Create a dedicated key in the DeepSeek Platform API Keys screen; its full value is shown only once. Use `~/.deepcode/settings.json` with an `env.API_KEY` value or the `DEEPCODE_API_KEY` environment variable. `DEEPCODE_*` environment variables take precedence over project and user settings.
