@@ -33,6 +33,7 @@ persists the exact reviewed action, applies it once, and verifies the result.
 | Download captions or generate summaries, chapters, clips, quotes, and titles | [references/transcripts.md](references/transcripts.md) |
 | Measure performance after title, thumbnail, description, or playlist changes | [references/analytics-experiments.md](references/analytics-experiments.md) |
 | Reconcile paid reach, organic lift, subscriber quality, and Google Ads evidence | [references/analytics-experiments.md](references/analytics-experiments.md) |
+| Run recurring canonical-link, event, sponsor, or other description/comment CTA campaigns | [references/cta-campaigns.md](references/cta-campaigns.md) |
 | Build or review the test matrix | [references/test-cases.md](references/test-cases.md) |
 
 Do not load every reference automatically.
@@ -121,6 +122,7 @@ Promote frequently repeated operations into domain workflows:
 - scheduled-release batch for already uploaded unpublished videos;
 - caption download and transcript-derived summary/chapter/clip/quote package;
 - comment moderation and reply queue;
+- canonical-link and time-bounded CTA campaign;
 - live broadcast setup and operations;
 - before/after analytics checkpoints.
 
