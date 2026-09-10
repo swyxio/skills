@@ -24,6 +24,22 @@ Give one batch of 2–10 numbered questions. For every question:
 
 Keep the questions compact, specific to the task, and answerable without specialist knowledge. Do not manufacture filler questions. If fewer than two material ambiguities exist, ask only the meaningful question or state the assumptions and proceed.
 
+### Make the choices visible
+
+Put the complete question batch in the final user-facing response, including every option, its tradeoff, and the recommendation. The user must be able to decide from that response alone. Do not leave the choices only in commentary, a tool call, or an asynchronous picker and then finish with unexplained codes such as `1A, 2A, 3A`.
+
+Native pickers may supplement the visible batch when available and permitted; they should not be the only record of the choices. Follow higher-priority interface constraints if they restrict text options, and avoid an approval shorthand whose choices are not visible in the supported interface.
+
+For example:
+
+**1. How broad should the research be?**
+
+- **A — Distribution first:** improve packaging and promotion; keep editorial changes as optional bets. **Recommended** for near-term action.
+- **B — Challenge the format too:** include episode length, cadence and guest selection; broader conclusions, more disruption.
+- **C — Promotion only:** hold editorial and packaging fixed; narrower but immediately operational.
+
+Before sending, check: can the user understand every recommended code without opening another message or panel?
+
 Finish with an aggregate default such as:
 
 > Reply **approve all** to accept `1A, 2C, 3B`, or give changes such as `2A, 3C`.
