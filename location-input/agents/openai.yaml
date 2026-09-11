@@ -1,0 +1,4 @@
+interface:
+  display_name: "Location Input"
+  short_description: "City autocomplete and browser location UX"
+  default_prompt: "Use $location-input to improve this city/country field with autocomplete and optional browser location."
