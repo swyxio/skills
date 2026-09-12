@@ -7,6 +7,11 @@ description: Transcribe long-form audio, YouTube videos, podcasts, interviews, o
 
 Use this skill for podcast or interview publishing workflows.
 
+Apply `swyx-writing` to summaries, titles, descriptions, show notes, newsletter
+blurbs, and social copy. Do not apply it to verbatim transcripts or speaker
+labels. This skill owns transcription, timing, chapter, and publishing-pack
+requirements.
+
 ## Core rules
 
 - Prefer source audio over platform captions.

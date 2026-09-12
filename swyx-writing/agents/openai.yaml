@@ -1,0 +1,4 @@
+interface:
+  display_name: "swyx Writing"
+  short_description: "Write and edit prose in swyx's style"
+  default_prompt: "Use $swyx-writing to draft or revise this prose in my preferred voice and editorial style."

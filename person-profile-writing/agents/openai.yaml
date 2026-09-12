@@ -1,0 +1,4 @@
+interface:
+  display_name: "Person Profile Writing"
+  short_description: "Research and write accurate person profiles"
+  default_prompt: "Use $person-profile-writing to research and write a source-grounded profile of this person."

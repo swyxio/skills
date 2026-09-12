@@ -14,10 +14,12 @@ Use this order of attention:
 > route the genre → align with the reader → choose the angle → explain →
 > support with evidence → edit → cold-read → present → publish
 
-For substantial work, read
-[the human-writing review](references/human-writing-review.md) and
-[the story modes](references/story-modes.md) before proposing an angle. Use
-these writers as structural inspiration, not as personas to imitate.
+Apply `swyx-writing` as the shared voice and editing layer. For substantial
+public technical writing, read its
+[technical-writer influences](../swyx-writing/references/technical-writer-influences.md)
+and [the story modes](references/story-modes.md) before proposing an angle.
+Apply `research-grounded-writing` when the post requires external research or
+source-backed claims.
 
 Use `blog-system-design` with this skill when the task changes the shared blog
 index, taxonomy, article shell, typography, navigation, search, responsive
@@ -101,7 +103,9 @@ title variants.
 
 ## Establish the evidence boundary
 
-Reconstruct the work before writing:
+Apply `research-grounded-writing` for general source selection, attribution,
+uncertainty, and claim verification. For a technical field report, also
+reconstruct the work itself:
 
 1. Inspect the relevant source, diff, issue, transcript, experiment, incident,
    or primary external research.
@@ -124,12 +128,6 @@ failed assumption, and decision sequence. Match a thread by commit, file,
 command, and timestamp before using keyword similarity. Private threads may
 inform causality, but quote or screenshot them only after checking disclosure,
 secrets, identities, private paths, customer data, and internal architecture.
-
-Use the minimum proof that changes a skeptical reader's mind. Judge evidence by
-fit, directness, scope, freshness, and explanatory value. Link exact source,
-official documentation, original issues or papers, tests, deployment records,
-and public results near the claim they support. Put exhaustive logs, methods,
-and provenance in a linked artifact or appendix.
 
 Do not promote a green build, HTTP 200, commit, upload, or public URL into proof
 of a different claim. Match numeric precision to the decision: round human
@@ -192,58 +190,6 @@ consequence, evidence, objection, and limitation. Let the selected story mode
 determine the public section order. Add a heading when the argument turns, not
 because a fixed number of paragraphs elapsed.
 
-## Sound like a thoughtful person
-
-Use plain technical prose: concrete subjects, active verbs, consistent terms,
-and one main idea per sentence. Humor, analogy, fragments, and first-person
-reactions may earn their place by clarifying an idea, revealing the author's
-judgment, establishing rapport, or controlling pace. Keep firsthand experiences
-and reactions grounded in supplied material. Don't manufacture personality or
-let rhetoric widen the claim.
-
-**Make sentences easy to read once.** Use ordinary words for actions, even when
-the subject is technical. Prefer `we couldn't change the setting` to `the
-configuration lacked mutability`. Keep technical terms when they name something
-precisely; don't make the surrounding language technical by association.
-
-Give the reader one manageable thought at a time. State what happened before
-attaching qualifications. When a sentence contains an event, a reaction, and a
-consequence, consider letting them arrive separately.
-
-Let sentence length follow its job. Longer sentences can establish circumstances
-or explain a mechanism. Short sentences can land a discovery, judgment, or
-consequence. Fragments can carry an authentic afterthought. Don't alternate
-lengths mechanically or make every sentence punchy.
-
-Use paragraph breaks where the reader should pause. Don't immediately explain
-away a sentence that already landed. Prefer simple connections—`but`, `so`,
-`because`, `when`—when they express the actual relationship. Read the paragraph
-aloud: it should sound like someone explaining something they understand, not
-delivering prepared conclusions. See the
-[line-edit example](references/human-writing-review.md#sentence-level-pacing)
-for how wording and pacing work together.
-
-Preserve what Forge and OverGrid do well: empirical honesty, real limitations,
-unfavorable measurements, exact artifacts, and corrected assumptions. Tone
-down their recurring AI-shaped habits:
-
-- internal nouns and architecture before the reader knows the concrete system;
-- repeated `not X, but Y`, `X is not Y`, and perfectly balanced reversals;
-- titles that default to `We`, a product name, a percentage, or a slogan;
-- `authority`, `boundary`, `contract`, `receipt`, `durable`, `surface`, and
-  `exact` used as atmosphere instead of necessary terms;
-- uniform triads, bold thesis restatements, symmetrical sections, and compulsory
-  recaps;
-- exhaustive evidence promoted into the main narrative;
-- every observation enlarged into a principle and every paragraph polished into
-  an aphorism;
-- a suspiciously clean causal history or a plan narrated as an accomplished
-  result.
-
-Prefer `the release controller deploys the Worker` to `authority flows through
-the release boundary`. Earn one or two memorable sentences by compressing a
-true and useful distinction. Do not impose a slogan quota.
-
 ## Make artifacts and visuals earn their place
 
 Use small exact code excerpts, focused diffs, authentic screenshots, commands,
@@ -260,26 +206,11 @@ central claim available in accessible text.
 
 ## Review in three editorial passes
 
-1. **Developmental:** check the angle, belief change, order, deliberate
-   omissions, strongest objection, elephant in the room, and whether the ending
-   earns its lesson.
-2. **Explanatory:** check assumed knowledge, undefined nouns, jargon, missing
-   causal steps, the recurring example, artifacts without interpretation, and
-   concepts introduced too late. Ask whether any central relationship remains
-   buried in prose and whether each visual actually reveals it. Do not use a
-   figure quota. In generation pipelines, include this check and the relevant
-   visual vocabulary in the planning and editorial prompts.
-3. **Line:** check concrete verbs, sentence rhythm, noun piles, repeated
-   antithesis, duplicated conclusions, ordinary proofreading, and title/deck
-   accuracy. Ask where the reader must reread or mentally translate a sentence,
-   which abstract phrases could become a person or system doing something, and
-   where the rhythm becomes monotonous or an explanation continues after its
-   point has landed. As the final step, sharpen the thesis, minimum-model, and
-   consequence sentences where they can become easier to remember without
-   becoming less true.
-
-Factual verification remains a separate evidence check, not a fourth editorial
-pass.
+Run the three passes in `swyx-writing`. During the developmental pass, also
+check the selected story mode, angle, deliberate omissions, title/deck promise,
+and interestingness gate. During the explanatory pass, check whether a central
+technical relationship remains buried in prose and whether each visual reveals
+it. Factual verification remains a separate evidence check.
 
 Then run a mandatory context-isolated cold read for every standard or feature
 post. Give a fresh subagent or uninvolved reader only the draft and public

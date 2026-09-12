@@ -7,6 +7,11 @@ description: Turn a recorded talk and transcript into a source-grounded technica
 
 Write a technical article people can read alongside the talk, not a polished report about what the speaker argued. Preserve the recording's progression, mechanisms and personality; improve the explanation without inventing evidence. Keep detailed provenance private and the reader experience uncluttered.
 
+Apply `swyx-writing` as the shared voice and editing layer and
+`research-grounded-writing` for external research, attribution, and claim
+verification. This skill owns the transcript, chronology, timestamp, code, and
+visual rules specific to recorded talks.
+
 ## Inputs and boundaries
 
 Obtain the source video URL or local video, transcript, and any authoritative title, speaker, event, and date metadata. Prefer timestamped segments containing `startMs`, `endMs`, speaker label, and text.

@@ -20,9 +20,11 @@ Combine two complementary habits:
   language, preserve surprise and uncertainty, and stop when the reader's job
   is complete.
 
-For substantial README work, read
-[the human-writing review](references/human-writing-review.md) before drafting
-and use it again during final review.
+Apply `swyx-writing` as the shared voice and editing layer. For substantial
+public README work, read its
+[technical-writer influences](../swyx-writing/references/technical-writer-influences.md).
+Apply `research-grounded-writing` when external claims or comparisons need
+support beyond the repository.
 
 ## Choose the README's job
 
@@ -162,32 +164,6 @@ When tradeoffs matter, use consistent language such as **reference**,
 the measured benefit, the test boundary, and how to restore the reference path.
 Introduce a second fixture only to test whether the lesson generalizes.
 
-## Explain without sounding generated
-
-Default to a smart adjacent engineer. Give plain behavior before a formal name
-or abbreviation. Define every project-specific noun on first use, break dense
-noun stacks, and avoid introducing several unfamiliar concepts in one sentence.
-A hyperlink can support an explanation; it cannot substitute for one.
-
-Use direct, natural technical language with varied rhythm. Analogy, contrast,
-humor, and first-person reaction are welcome when they arise from authentic
-notes, experiments, or project history and make the mechanism easier to retain.
-Do not invent a human opinion or experience for the repository.
-
-Tone down common AI habits:
-
-- repeated `not X, but Y` or `X is not Y` constructions;
-- a title, deck, and every heading competing to be an aphorism;
-- uniform three-item lists, symmetrical sections, and compulsory recaps;
-- audit vocabulary such as `evidence`, `receipt`, `boundary`, `contract`,
-  `durable`, and `exact` when ordinary words would be clearer;
-- exhaustive caveats in the main path, artificial drama, or fake certainty;
-- treating every available metric, feature, or implementation fact as part of
-  the reader's story.
-
-Prefer one real reason the project exists, one stable example, one surprising
-observation, and one honest limitation over ornamental polish.
-
 ## Use visuals only when they teach
 
 Use an authentic screenshot, compact diagram, measured comparison, or short
@@ -198,16 +174,12 @@ quickstart.
 
 ## Review in three passes
 
-1. **Developmental:** confirm one primary reader path, an explicit project
-   definition, progressive order, and a clear cut line between README material
-   and linked detail. Cut sections written mainly for a secondary reader and
-   justify any front-door README that grows beyond roughly 1,500 words.
-2. **Explanatory:** audit assumptions, jargon, missing expected results, causal
-   jumps, unexplained commands, and whether one example carries the mechanism.
-3. **Line:** improve concrete verbs, sentence rhythm, ambiguous references,
-   repeated conclusions, AI-favored antithesis, and noun stacks. As a final
-   step, sharpen the definition, mechanism, and limitation sentences when they
-   can become more memorable without becoming less exact.
+Run the three passes in `swyx-writing`. During the developmental pass, also
+confirm one primary reader path, an explicit project definition, progressive
+order, and a clear cut line between README material and linked detail. During
+the explanatory pass, check prerequisites, expected results, commands, and
+whether one example carries the mechanism. Justify a front-door README that
+grows beyond roughly 1,500 words.
 
 Then run a context-isolated cold-reader review for every substantial README.
 Give a fresh subagent only the approved reader beliefs and the rendered or

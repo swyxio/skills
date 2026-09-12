@@ -3,18 +3,21 @@ name: summarize-anything
 description: |
   Summarizes arbitrarily long text (1k-1M words) using recursive map-reduce with any LLM backend. Accepts raw text, markdown, transcripts, articles, codebases, or any plaintext input. Produces one or more output formats: executive summary, section headings with timestamps, YouTube description, Twitter/X posts, title options, thumbnail prompts, blog outlines, pull quotes, and more. Supports focus directives ("focus on the AI parts", "emphasize the business angle") to steer the summary. Pluggable backends: OpenRouter, Ollama, OpenAI, Anthropic, Gemini, or any OpenAI-compatible endpoint. Use this skill when someone says "summarize this", "give me a summary", "TL;DR", "make this shorter", "create a YouTube description", "write a tweet about this", "generate titles", "thumbnail ideas", or provides long text and wants any condensed output.
 license: MIT
-compatibility: |
-  Requires curl and one LLM backend. No local dependencies beyond shell tools. For local inference, Ollama must be running. For cloud backends, relevant API keys must be set.
 metadata:
   author: swyxio
   version: "1.0"
-  last-updated: "2026-03-28"
+  last-updated: "2026-09-11"
   primary-tools: curl, jq
 ---
 
 # Summarize Anything
 
 Recursive map-reduce summarization for arbitrarily long text, with pluggable LLM backends and a wide variety of output formats.
+
+When the requested output is reader-facing prose or publishing copy for swyx,
+apply `swyx-writing` after the factual reduction step. Keep extractive summaries,
+quotations, timestamps, and structured data faithful to the source rather than
+rewriting them into a voice.
 
 ## Setup
 
