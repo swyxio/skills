@@ -7,6 +7,8 @@ description: Elicit user preferences and resolve material ambiguity before a lon
 
 Pause before the long autonomous run and surface the choices that could materially change the outcome.
 
+**Output contract:** The deliverable is a self-contained questionnaire in the final answer: every numbered question, every lettered option with its consequence, and every recommendation. A tool call or a summary of decisions is not the deliverable.
+
 ## Prepare
 
 1. Inspect available context and perform lightweight, read-only discovery first.
@@ -24,11 +26,20 @@ Give one batch of 2–10 numbered questions. For every question:
 
 Keep the questions compact, specific to the task, and answerable without specialist knowledge. Do not manufacture filler questions. If fewer than two material ambiguities exist, ask only the meaningful question or state the assumptions and proceed.
 
-### Make the choices visible
+### Required final-answer output
 
-Put the complete question batch in the final user-facing response, including every option, its tradeoff, and the recommendation. The user must be able to decide from that response alone. Do not leave the choices only in commentary, a tool call, or an asynchronous picker and then finish with unexplained codes such as `1A, 2A, 3A`.
+Write the complete question batch directly in the final user-facing response as ordinary Markdown. Include every option, its tradeoff, and the recommendation. The user must be able to answer by reading that response alone, without expanding activity, opening a panel, inspecting tool arguments, or finding another message. Put the questionnaire before any extended explanation or implementation plan.
 
-Native pickers may supplement the visible batch when available and permitted; they should not be the only record of the choices. Follow higher-priority interface constraints if they restrict text options, and avoid an approval shorthand whose choices are not visible in the supported interface.
+Default to text only for this skill. Do not call a native question tool or asynchronous picker merely because one is available. Codex may show question titles while hiding the option payload; a tool response saying `accepted: true` confirms submission, not that the user can see or answer the options.
+
+If a picker is explicitly requested or required by higher-priority instructions, use it only as permitted. Still reproduce the complete batch in the final answer whenever text options are permitted. If higher-priority instructions prohibit text options, respect that restriction: include the full alternatives and consequences in the tool's visible question text when permitted, and explain the output limitation plainly. Never ask the user to approve codes whose definitions are missing from the visible interface.
+
+These are incomplete outputs and must be rewritten before sending:
+
+- “I've sent six alignment choices” followed by a summary or default codes.
+- Question titles with recommendations but no alternative options.
+- “See the picker / activity above” in place of the questionnaire.
+- An `approve all` prompt whose referenced options appear only in tool arguments.
 
 For example:
 
@@ -38,7 +49,15 @@ For example:
 - **B — Challenge the format too:** include episode length, cadence and guest selection; broader conclusions, more disruption.
 - **C — Promotion only:** hold editorial and packaging fixed; narrower but immediately operational.
 
-Before sending, check: can the user understand every recommended code without opening another message or panel?
+Before sending the final answer, check the answer text itself:
+
+- Every numbered decision includes all of its lettered options, not just the recommended one.
+- Every option states a concrete consequence or tradeoff.
+- Every decision ends with a recommendation and its reason.
+- Every code in the aggregate default maps to an option printed in this answer.
+- The answer remains usable if all commentary, tools, and pickers are hidden.
+
+If any check fails, repair the final answer before sending. Do not shorten the answer by removing the choices; shorten background explanation instead. If text options are prohibited by higher-priority instructions, explain that limitation rather than claiming these checks passed.
 
 Finish with an aggregate default such as:
 
