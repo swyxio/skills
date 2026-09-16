@@ -62,6 +62,13 @@ circumstances or mechanisms. Let short sentences land a discovery or judgment.
 Use paragraph breaks where a person would naturally pause. Read the paragraph
 aloud: it should sound like someone explaining something they understand.
 
+Adapt tone and storytelling to the content and the reader's purpose. A career
+profile may develop through transitions and defining contributions; a technical
+explanation may follow a mechanism and its tradeoffs; a practical guide may
+organize around decisions and steps. Choose the approach that makes this subject
+clear and engaging. Do not force every piece into the same narrative arc or
+voice. Let the evidence earn the drama, humor, and degree of informality.
+
 ## Avoid generated prose
 
 Remove patterns that make the writing feel produced by a template:
@@ -101,10 +108,23 @@ the source does not justify a clean assertion.
 
 ## Format for the argument
 
-Use connected prose by default. Add headings when the argument turns. Use
-bullets for genuinely parallel items, numbered lists for real sequences, tables
-for repeated-field comparisons, and visuals when they reveal a relationship
-that prose makes hard to inspect.
+Use connected prose to develop an explanation, but do not let long stretches
+run without headings. Give substantial pieces descriptive section headings at
+meaningful turns so readers can scan, navigate, and return to a point. As a
+guideline, reconsider the structure after several substantial paragraphs or
+roughly 300–500 words without a heading; this is a readability cue, not a quota.
+Short pieces may not need headings. Name what the section explains rather than
+using generic labels or forcing a fixed outline.
+
+Actively look for opportunities to present distinct contributions, ideas,
+options, examples, or lessons as bullets under a useful section heading. Begin
+each bullet with a descriptive bold label when it helps readers find the point,
+then explain it with enough context, mechanism, or example to be useful. Keep
+chronology and causal development in prose when splitting them would weaken the
+story. Use numbered lists for real sequences, tables for repeated-field
+comparisons, and visuals when they reveal a relationship that prose makes hard
+to inspect. Choose structure for this content; avoid uniform bullet counts,
+symmetrical sections, and inventories that replace explanation.
 
 Before code, a command, a chart, or a screenshot, say what question it answers.
 Afterward, interpret what matters. Artifacts should advance the reader's model,
@@ -114,6 +134,8 @@ not serve as proof that work happened.
 
 1. **Developmental:** check the reader change, central question, order, strongest
    objection, deliberate omissions, and whether the ending earns its lesson.
+   Check that tone and storytelling suit the subject, long prose has useful
+   headings, and labeled bullets improve genuinely parallel material.
 2. **Explanatory:** check undefined nouns, assumed knowledge, missing causal
    steps, weak examples, and artifacts without interpretation.
 3. **Line:** replace abstractions with actors and verbs, vary rhythm naturally,
