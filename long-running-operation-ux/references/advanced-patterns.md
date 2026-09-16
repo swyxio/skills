@@ -14,27 +14,42 @@ export const OPERATION_PROFILES = {
     label: "Filling character fields",
     estimateMs: 55000,
     stalledMs: 110000,
-    phases: ["Searching for inspiration", "Building the card", "Seeding memory", "Filling the form"]
+    expectedStages: ["Searching for inspiration", "Building the card", "Seeding memory", "Filling the form"]
   },
   retry: {
     label: "Regenerating reply",
     estimateMs: 42000,
     stalledMs: 80000,
-    phases: ["Rebuilding context", "Trying a fresh angle", "Streaming variant", "Saving variation"]
+    expectedStages: ["Rebuilding context", "Trying a fresh angle", "Streaming variant", "Saving variation"]
   }
 };
 
-export function operationProgress({ startedAt, now = Date.now(), estimateMs, phases }) {
+export function operationProgress({
+  startedAt, now = Date.now(), status, latestStage,
+  completedUnits, expectedUnits, estimatedFinishAt
+}) {
   const elapsedMs = Math.max(0, now - (startedAt ?? now));
-  const ratio = elapsedMs / Math.max(1000, estimateMs || 30000);
+  const counted = Number.isInteger(completedUnits) && completedUnits >= 0 &&
+    Number.isInteger(expectedUnits) && expectedUnits > 0 && completedUnits <= expectedUnits;
+  const estimated = Number.isFinite(estimatedFinishAt);
+  const active = ["queued", "running", "cancelling"].includes(status);
   return {
     elapsedMs,
-    percent: Math.max(4, Math.min(96, Math.round((1 - Math.exp(-ratio * 1.65)) * 100))),
-    phase: phases?.[Math.min((phases.length || 1) - 1, Math.floor(Math.min(ratio, 0.999) * (phases.length || 1)))] || "Working",
-    overEstimate: ratio > 1
+    percent: counted
+      ? Math.min(status === "completed" ? 100 : 99, Math.floor(100 * completedUnits / expectedUnits))
+      : null,
+    phase: latestStage?.label || "Waiting for status",
+    remainingMs: active && estimated && estimatedFinishAt > now ? estimatedFinishAt - now : null,
+    overEstimate: active && estimated && now >= estimatedFinishAt
   };
 }
 ```
+
+Expected stages describe the plan; only actual workflow events may set
+`latestStage`. A null percentage means progress is indeterminate. Count stage
+completion separately from usable outputs, and keep the last usable result
+visible. The caller supplies `estimatedFinishAt` from measured work and its
+dependencies, not a timer-driven progress curve.
 
 In UI code, prefer a single operation object over several local booleans:
 
@@ -57,8 +72,11 @@ Render a progress component from the snapshot. It should include:
 
 - A clear verb phrase: `Generating avatar`, `Regenerating reply`, `Filling character fields`.
 - Elapsed and rough estimate: `22s / ~55s`.
-- A bounded progress meter that never reaches 100% until completion.
-- A phase line and a stale line when `elapsedMs > stalledMs`.
+- A progress meter based on observed completed units, or an indeterminate
+  state when units are unknown. It never reaches 100% before usable completion.
+- The latest observed stage, a separate status-refresh timestamp, and a stale
+  snapshot warning when polling/subscriptions stop succeeding. A long wait
+  without a workflow event is not by itself proof of a failed connection.
 - A cancel button for foreground tasks that can be aborted without corrupting state.
 - The latest operation stage inline.
 - A clickable stage history with elapsed timestamps and preview snippets.
@@ -70,6 +88,25 @@ Keep the app responsive while work runs. Disable only the controls that would cr
 Cancel should feel like a first-class outcome. On cancel, abort the network request or provider job when possible, remove pending assistant/media/form placeholders or restore the previous version, clear busy flags, and leave the user in the same flow. Do not show cancellation as an error banner unless the user needs to know cleanup failed.
 
 Use honest estimates. Do not imply exact provider progress unless the provider exposes real job status. For LLM streams, switch phase on first token or reasoning delta when available. For queue-based media, phase labels should say that the provider queue is being waited on.
+
+### ETA for staged batches
+
+Use successful admitted-call durations from comparable model, reasoning,
+stage and budget settings. Keep queue time separate; exclude cancelled,
+failed and interrupted calls and controller downtime from calibration.
+Label the estimate approximate and show its sample basis or say that timing
+history is unavailable. A declared cold-start estimate may be used if clearly
+distinguished from measurements.
+
+Account for both shared slots and dependency chains. Remaining call work
+divided by slots is only a lower bound: writers cannot start until their
+research prerequisites finish. Estimate remaining time by scheduling ready
+stages and their dependent stages, updating when calls finish or the live
+limit changes. Do not assume increasing slots makes every planned call ready.
+When an active stage exceeds its estimated duration, show "Taking longer than
+estimated" and widen/recalibrate the range rather than promising zero time
+remaining. A fresh successful poll proves snapshot freshness, not work
+advancement or provider activity.
 
 Keep placeholders alive. Assistant messages, generated media blocks, import rows, and form panels should show the same operation status instead of empty disabled states.
 

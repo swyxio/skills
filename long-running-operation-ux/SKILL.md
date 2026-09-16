@@ -1,12 +1,20 @@
 ---
 name: long-running-operation-ux
-description: Diagnose or improve user-visible progress, cancellation, result handoff, or reliability for an existing slow asynchronous action, model call, media job, queue, or multi-step workflow. Select the lowest maturity profile justified by the user's request and existing architecture. Do not activate for ordinary fast requests, backend-only work, or unrelated AI features merely because they call a model.
+description: Build or improve progress, cancellation, result handoff, and reliability when creating or changing a user-facing slow asynchronous action, model call, media job, queue, or multi-step workflow. Applies to batch size, concurrency, and rerun changes affecting the visible wait; do not wait for a stuck-action complaint. Exclude ordinary fast requests and backend-only changes with no user-facing operation affected.
 ---
 
 # Long-Running Operation UX
 
 Match the solution to the actual user problem. Preserve accumulated workflow
 lessons and the preferred stack without making advanced architecture mandatory.
+
+## Activation
+
+Apply this skill when creating or materially changing a user-facing action
+that launches noticeable asynchronous work, including batch size, concurrency,
+reruns and result handoff. Do not wait for the user to report that it looks
+stuck. A backend change affecting a visible operation is in scope; a model
+call with no user-facing wait is not sufficient by itself.
 
 ## Maturity profiles
 
@@ -85,6 +93,13 @@ multi-source fanout can justify L4.
   fetches when the changed operation handles external content or URLs.
 - For real batches, report expected versus completed coverage; for fanout,
   apply explicit concurrency bounds and deterministic merge rules.
+- Polling is transport, not proof of visible progress. Surface intermediate
+  work before the first usable result. Distinguish a fresh status response
+  from an actual workflow update.
+- Progress percentages use observed completed units. ETA uses compatible
+  successful stage durations and accounts for concurrency and dependencies;
+  unavailable estimates remain explicitly unavailable. Never advance progress
+  or change stages solely because time passed.
 
 ## Preferred stack and advanced guidance
 
@@ -111,6 +126,21 @@ blanket requirements preserved in that reference.
 
 Exercise the actual user action and verify immediate feedback, visible terminal
 success/error, correct result selection, and relevant duplicate/privacy guards.
+
+For a batch or staged operation, verify the waiting interval before the first
+finished result, not just submission and completion. The visible UI must
+distinguish expected outputs from calls/stages, active work from queued work
+and work waiting on dependencies, and saved intermediate stages from usable
+finished results. Show material branch failures, elapsed time, latest observed
+update, and an approximate ETA or why an estimate is unavailable. A compact
+per-pipeline summary is sufficient; no new transport or framework is required.
+
+Verify that polling/subscriptions visibly update this state without losing
+focused inputs, drafts or expanded results. Failed polling and stale snapshots
+must remain visible without implying the underlying job stopped. When an
+estimate is exceeded, say it is taking longer than estimated rather than
+showing zero time remaining or invented progress.
+
 Test cancellation, streaming, retries, fanout, resume, provider adapters, or
 mobile input focus only when the requested change touches them.
 
