@@ -1,99 +1,72 @@
 ---
 name: babysit-runs
-description: Operate long-running, detached, parallel or failure-prone jobs using existing runners and temporary monitoring. Use when asked to babysit a run, keep slots saturated, recover failures overnight, manage concurrency, or monitor progress and ETA until completion.
+description: Babysit an unattended, long-running or parallel job through completion using existing runners and temporary monitoring. Use when asked to keep a run progressing overnight, saturate available slots, recover failures, and maintain progress reports and ETAs. Not for a one-time status check or concurrency advice alone.
 ---
 
 # Babysit Runs
 
-Keep authorized work progressing unattended, at the agreed quality, with the shortest useful path to a verified outcome. Operate existing runners; do not introduce another scheduler or rewrite the pipeline to supervise it. Prefer simplicity and targeted repairs.
+Operate existing runners toward the authorized outcome at the agreed quality. Prefer targeted repairs over a new scheduler or pipeline rewrite. Use the selected provider/runtime skill when invocation or access needs troubleshooting; use `live-ai-pipelines` only when recovery architecture needs implementation.
 
-Use `live-ai-pipelines` when durable stages or recovery architecture actually need implementation. Use the selected provider/runtime skill for model invocation or access troubleshooting. Babysitting neither changes the requested model nor expands the task's permissions.
+## Adopt, detach and schedule
 
-## Establish the run once
+Inspect actual processes, owners, logs and retained results. Adopt a matching live run rather than launch a duplicate. Discover routine facts from existing metadata and task history instead of re-interviewing the user.
 
-Inspect the current runner, actual processes/owners, logs, retained results and adjacent task history before starting anything. If a matching run exists, adopt it instead of launching a duplicate. Use past transcripts, accepted samples and receipts as judgment evidence; current user instructions and effective contracts take precedence over stale operational instructions.
+Keep a compact continuation brief in the existing run metadata or monitor prompt:
 
-Discover routine facts rather than interviewing the user again. Establish a compact run brief in existing run metadata or the monitor prompt:
+- Goal, scope, checkout, command, owner and run/log/artifact locations.
+- Requested model/provider, shared concurrency ceiling, independent transfer limits and applicable resource/cost bounds.
+- Agreed quality references, authorized repairs, completion evidence and release or handoff boundary.
+- Current progress, retry state, next recovery time and monitoring/reporting cadence.
 
-- Goal, exact subjects/scope, working checkout, runner command, run/artifact locations and owner.
-- Requested model/provider, concurrency ceiling, separate transfer/media/provider limits and any existing cost/resource constraints.
-- Agreed quality and accepted examples; required completion evidence; publication/deployment authority or handoff boundary.
-- Recovery behavior, progress timestamps, elapsed timings, monitor identity and reporting cadence.
+Check changed or uncertain dependencies before submitting work: launcher permissions, authentication/model access, actual tool configuration and capacity. Reuse recent comparable successful evidence. Record the effective rules and versions where acceptance or replay depends on them; stale historical instructions must not override the current authorized contract. Do not silently substitute models.
 
-Freeze the effective editorial, schema, validation, review and execution rules together when those affect acceptance or replay. Bind relevant inputs and implementation versions using existing receipts. Remove obsolete repair instructions and compression targets from evidence packets. A frozen historical contract preserves provenance; it must not silently dictate a newly authorized run.
+Detach substantial runs using the existing manager or simplest reliable mechanism. Verify that execution survives the launching shell/tool and logs remain discoverable.
 
-Perform a small, proportional preflight: launcher permissions, applicable authentication/model access, actual tool configuration, available capacity, ownership and one representative output path. Reuse recent comparable successful evidence where sufficient. Do not turn preflight into a repeated broad gate or silently fall back to another model. Keep requested model separate from independently observed model.
-
-## Detach and monitor by default
-
-Most substantial runs should outlive the current conversational turn. Use the existing process manager or simplest reliable detachment supported by the environment. Verify the job survives the launching shell/tool and that its logs, owner and results remain discoverable. A successful launch command alone does not prove detachment.
-
-Create or update one temporary monitor for the task. In Codex, use the automation tool and a thread heartbeat by default, usually every five minutes; inspect existing matching automations before creating one. Use a standalone scheduled job only when requested or appropriate to the selected scheduler. If scheduling is unavailable, disclose that rather than promising future check-ins.
-
-The saved monitor must be self-contained: include the run brief, current authoritative location, quality references, permitted repairs, recovery rules, completion/handoff conditions and notification cadence. Update it after run continuation or location changes. Persist decisions in the run's existing journal/status so another wakeup can resume correctly. Do not rely on a foreground promise, stale process ID or conversation memory alone.
+Create or update one temporary monitor. In Codex, use the automation tool and a thread heartbeat, normally every five minutes; reuse a matching automation. Use another scheduler when requested or appropriate. Disclose unavailable scheduling rather than promise future check-ins. Make the saved prompt self-contained using the continuation brief, and update it when the run moves or resumes. Persist decisions so wakeups do not depend on conversation memory or a stale PID.
 
 ## Saturate useful work
 
-LLM calls and data transfer are common bottlenecks. Measure which one currently limits accepted throughput and schedule independent preparation, transfer, writing, review and assembly concurrently where dependencies allow.
+Fill slots with ready work and advance independent items without whole-batch barriers. Parallelize preparation, LLM calls, transfers and downstream stages where dependencies permit. Do not add inference or busywork merely to occupy capacity.
 
-- One shared pool owns the concurrency allowance across mixed stages. Multiple runners must not each receive the full allowance.
-- Fill available slots with ready work. Begin each item's next stage immediately; do not wait for an entire batch when items are independent. Do not create busywork or extra inference to occupy slots.
-- Use the user's ceiling and retain established healthy concurrency. Avoid repeating conservative ramp experiments for comparable runs already calibrated.
-- Adjust concurrency using comparable accepted throughput, latency, failures, throttling and resource pressure. Downshift when useful performance degrades, then recover capacity promptly when healthy. Maximum active calls is not the objective if they mostly retry or wait on transfers.
-- Preserve independently justified transfer/media/provider caps. Increase the demonstrated bottleneck within authorized capacity instead of increasing every worker count indiscriminately.
+Apply the allowance across all runners sharing the same constrained resource, rather than giving each runner the full ceiling. Keep independently justified transfer/media/provider caps. Retain established healthy concurrency instead of repeating ramp experiments on every resume.
 
-## Inspect, recover and repair
+Identify the current bottleneck, commonly LLM calls or data transfer. Adjust parallelism using comparable accepted throughput, latency, retries, throttling and resource pressure. Downshift when useful performance degrades and recover capacity when healthy. Increase capacity at the demonstrated bottleneck; active-call count alone is not success.
 
-At each check, inspect ownership/process liveness, accepted and remaining items, active/queued stages, oldest work, new logs, retained deliveries, retry history and resource/provider state. Compare with the previous observation. Quiet output is not itself a stall: judge against representative stage durations and other signs of progress.
+## Recover without losing successful work
 
-Keep independent work moving when one item or surface fails. Before restarting, reconcile its results and owner. Cancel or fence a genuinely stale worker before replacement; never leave two owners active. Drain active work before activating incompatible runner changes. Preserve successful stages and repair only the affected dimension.
+Each check compares accepted/remaining counts, active/queued stages, oldest work, ownership, recent logs, deliveries and retry state with the previous observation. Quiet logs alone do not establish a stall; use representative durations and other progress signals.
 
-Classify failures from their evidence:
+Isolate failed items or surfaces while independent work continues. Before replacement, reconcile retained results and cancel or fence a stale owner. Drain affected active work before activating incompatible runner changes. Preserve successful stages and repair only the failed dimension.
 
-- **Known intermittent transport/provider rejection:** retry automatically with bounded backoff and jitter. A status such as 403 alone is not proof of quota exhaustion. If the user identifies periodic 403s, recover them without repeated permission requests or permanently stopping the shared pool.
-- **Explicit entitlement/quota denial or invalid authentication:** isolate the affected surface; use authorized normal refresh/recovery, without model substitution or new spend. Report a concrete external action if required.
-- **Unknown delivery:** check retained output, request IDs and provider status/idempotency before resubmission. Preserve the original attempt; do not turn missing local output into permission for duplicate inference or publication.
-- **Launcher, lifecycle or stalled-process failure:** fix the demonstrated local issue, retain its error and resume unfinished work.
-- **Content failure:** repair the specific unsupported claim, attribution conflict or loss of substantive coverage rather than regenerate accepted material.
+- **Established intermittent failure:** recover automatically with bounded backoff and jitter. A status code alone does not establish quota exhaustion or permanent denial.
+- **Explicit authentication, entitlement or quota failure:** isolate the affected surface and use normal authorized recovery. If external action is needed, report the concrete requirement.
+- **Unknown delivery:** inspect retained output, request IDs and available provider status/idempotency before resubmission. Preserve attempt history; missing local output does not establish that no result was produced.
+- **Runner or content defect:** fix the demonstrated cause and resume unfinished work, rather than regenerate accepted results.
 
-Use a bounded immediate retry window, then a longer cooldown/heartbeat recovery for a known periodic outage. Respect existing time/cost limits. If repeated recovery yields no useful progress, report the evidence and reduce or pause affected work for diagnosis; do not spend the night in a hot retry loop. Record attempts and next recovery time so wakeups do not reset the retry history. Recoverable failures should not wake the user for routine approval.
+Use bounded immediate retries, followed by persisted cooldowns for periodic outages. Respect existing budgets. Wakeups must not reset retry history. When repeated recovery produces no useful progress, diagnose or pause the affected work and report evidence instead of maintaining a hot retry loop. Routine recoverable failures should not require another approval interruption.
 
-## Hold quality constant; remove accidental blockers
+## Preserve quality; remove accidental gates
 
-Local repairs within the authorized goal include runner bugs, inconsistent stage rules, performance problems, metadata and rendering issues. Use agreed examples and task history to decide what quality means. Do not trade away research depth, factual support or substantive explanation for throughput.
+Use agreed examples and past transcripts to judge quality and unnecessary blockers. Local repairs may address runner bugs, contradictory stage rules, performance and finishing defects within the authorized goal. Throughput improvements must preserve substantive quality.
 
-Calibrate with a representative pilot when models, prompts or writing behavior materially change. Reuse accepted comparable calibration otherwise. Keep existing useful per-item review; do not add duplicate review layers or require a new pilot on every resume.
+Separate content acceptance, execution validity and metadata completeness. Suggestions and model self-check flags do not become blockers without evidence of a defect. Retain required blockers for demonstrated unsupported claims, identity conflicts or substantive loss where those affect the task. Declared tool access should match actual execution; do not allow normal tool use and reject it downstream.
 
-Separate content approval, execution validity and metadata completeness. Reviews should distinguish **blockers** from **suggestions**; approval and completion depend on required blockers, not optional notes. Formatting quotas and model-generated self-check flags are warnings or not applicable unless they demonstrate a real defect. Proven identity conflicts, unsupported attribution and substantive loss remain content blockers. Security, privacy and release boundaries are not formatting checks to relax.
+Sample after changes that could materially affect agreed quality, using existing accepted calibration when sufficient. Test the affected interaction when a repair risks acceptance, replay or output integrity. Neither sampling nor broad verification is a prerequisite for every resume. Stop gathering proof once the relevant risk and authorized outcome are resolved. Preserve applicable privacy, security and release boundaries.
 
-Check that declared tool access matches the executable configuration before submitting work. Do not enable a tool and reject its normal use afterward. Use established parsers for supported formatting rather than brittle regex restrictions. Reconcile separate source lists automatically from verified inline destinations when available; never assume every generated URL is verified.
+## Log performance and forecast variance
 
-Test a small complete path when repairing interacting contracts: output validation → review-result handling → export → actual renderer, including flexible lengths, inline links and nonblocking suggestions. Verify recovery/replay without duplicate inference when relevant. Stop optional testing once the demonstrated risk is resolved.
+Use existing structured logs/status artifacts, not a new telemetry service. Where available, record run/item/stage/attempt IDs, model/provider, input size, concurrency, queue/start/end timestamps, outcome, retry reason and output receipt. For transfers, record bytes and duration. Exclude credentials and unnecessary source content. Missing optional instrumentation should not stop useful work.
 
-## Log execution and monitor performance
+Retain initial stage estimates separately from revised forecasts. Track estimated versus actual duration, absolute and percentage variance, remaining work and accepted throughput. Separate queue wait, service/transfer time, retries/backoff and external waits; do not double-count overlapping intervals. Compare similar stages, input sizes, models and concurrency. Use median/p90 when samples support them and label sparse or unmeasured estimates.
 
-Use existing structured logs and status artifacts rather than introducing a telemetry service. Persist enough information to explain where elapsed time went: run/item/stage and attempt IDs, model/provider, input size, concurrency, queued/start/end timestamps, outcome, retry/cooldown reason and output receipt. Record transfers in bytes and duration where available. Keep credentials and unnecessary source content out of logs.
+Diagnose the largest unexpected delay on the critical path: slow calls, starvation, transfers, repairs or gating. Record performance changes with their hypothesis and before/after useful throughput. Variance is a diagnostic signal, not an automatic blocker.
 
-Freeze the initial stage estimates as a baseline; retain updated forecasts separately. Compare representative completions with both the original estimate and the latest forecast rather than overwriting away prediction errors. For each stage, track:
+Normally inspect every five minutes and report meaningful progress at most every fifteen minutes; report completion or required action promptly and stay quiet when unchanged. Include accepted/total, remaining, active/queued work, concurrency, failures/repairs, elapsed timings, bottleneck and updated ETA. Distinguish generated, accepted and released output.
 
-- Estimated versus observed wall time, absolute and percentage variance; elapsed and remaining work.
-- Queue wait versus active service time, transfer time, retries/backoff and external approval/outage waits. Separate overlapping intervals so totals do not double-count parallel work.
-- Accepted items per minute, failure/retry rate and comparable duration distributions, usually median and p90 when sample size supports them. Label sparse samples and compare similar stages/input sizes/models/concurrency levels.
+Forecast from observed comparable work, current capacity and parallel dependencies. Explain material drift against the original estimate, including its causes. Separate execution, outage and approval waits; acknowledge unknown recovery time. At completion, retain a compact estimated-versus-actual stage breakdown for future calibration.
 
-At each check, identify the largest unexpected delay on the critical path. Distinguish slow individual calls, queue starvation, transfer bottlenecks, repeated repairs and excessive gating before changing concurrency. Record the change, hypothesis and before/after useful throughput; retain changes that improve time to accepted output without reducing quality. A variance is a diagnosis signal, not an automatic blocker.
+## Stop and hand off
 
-Update remaining-stage estimates from observed comparable work and current capacity. Reports should explain material forecast drift with evidence, for example: “Review: 18 min versus 10 min estimated (+8 min, +80%); 6 min in backoff; revised completion 25–35 min.” At completion, retain a compact estimated-versus-actual stage breakdown and the main causes of variance for the next comparable run. Keep logging proportional; do not add per-token tracing or costly profiling unless needed to diagnose a demonstrated issue.
+Completion is the authorized outcome: validated outputs for generation, or deployment/live evidence when shipping was authorized. Optional unavailable checks are disclosed; a blocked required dependency receives a precise incomplete handoff.
 
-## Report progress and ETA
-
-Default to five-minute inspections and meaningful progress updates at most every fifteen minutes, with actionable failures, required user decisions and completion reported promptly. Stay quiet when unchanged. Persist detailed execution logs even when notifications are quiet.
-
-Report accepted/total and remaining counts, active/queued calls, current concurrency, failures/retries and repairs, elapsed time, comparable useful throughput, current critical path and refreshed ETA. Separate generated, reviewed, rendered and published results. Give concrete stage/batch timings rather than vague progress claims.
-
-Derive ETA from observed comparable durations and remaining work along the critical path, allowing for parallel overlap, transfers and recent retries. Label unmeasured ranges. Distinguish execution time from outage and approval waits; if recovery time is unknown, say so rather than supplying a false deadline.
-
-## Finish and cleanly hand off
-
-Completion means the authorized outcome: validated outputs/previews for a generation task; deployment and live verification when shipping was authorized. Optional unavailable checks are disclosed, not automatically promoted into blockers. A blocked required check needs a precise handoff, not a completion claim or repeated forbidden workaround.
-
-Provide outcome links, coverage and remaining qualifications. Pause the temporary monitor after verified completion, or at an explicit external/user handoff with the run's incomplete status recorded. Preserve receipts and reusable work; clean only known disposable run resources. Do not leave duplicate monitors or orphaned workers. Further scaling or release follows the user's existing authorization, not the fact that a babysitting cycle finished.
+Link outcomes and remaining qualifications. Pause the monitor after verified completion or explicit external handoff. Preserve reusable results and receipts; clean known disposable resources and avoid orphaned workers or duplicate monitors. Babysitting does not itself authorize additional scope or publication.
