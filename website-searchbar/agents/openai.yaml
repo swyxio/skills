@@ -1,0 +1,4 @@
+interface:
+  display_name: "Website Searchbar"
+  short_description: "Universal search UX with minimal infrastructure"
+  default_prompt: "Use $website-searchbar to build or improve a shared website search experience with responsive UX and minimal infrastructure."
