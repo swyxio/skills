@@ -1,0 +1,4 @@
+interface:
+  display_name: "Provision Model Keys"
+  short_description: "Scoped app keys, saved grants, and starter budgets"
+  default_prompt: "Use $provision-model-keys to provision a named app key within my saved authorization and starter budget."
