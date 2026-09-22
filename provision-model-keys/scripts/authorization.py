@@ -59,7 +59,8 @@ def evaluate(policy, ledger, request):
     require(request["environment"] in grant["environments"], "Environment outside grant")
     require({"provider": request["provider"], "account_id": request["account_id"]}
             in grant["providers"], "Provider/account outside grant")
-    require(request["provider"] in ("openai", "anthropic", "openrouter"), "Unsupported provider")
+    require(request["provider"] in ("openai", "anthropic", "openrouter", "elevenlabs", "fal"),
+            "Unsupported provider")
     destinations = list(grant["destinations"])
     for template in grant.get("destination_templates", []):
         require(isinstance(template, str), "Invalid destination template")

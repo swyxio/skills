@@ -1,6 +1,6 @@
 ---
 name: provision-model-keys
-description: Provision app-specific Claude, OpenAI or OpenRouter API keys, install secrets, rotate keys or adjust their budgets using saved authorization. Use for credential setup and lifecycle requests, not ordinary model/API implementation.
+description: Provision app-specific Claude, OpenAI, OpenRouter, ElevenLabs or fal.ai API keys, install secrets, rotate keys or adjust their budgets using saved authorization. Use for credential setup and lifecycle requests, not ordinary model/API implementation.
 ---
 
 # Provision model keys
@@ -19,11 +19,11 @@ Use `<app>-<env>-<provider>`, e.g. `notes-dev-openai`. Add purpose when it disti
 
 Give runtime keys the endpoints/models needed for the app's intended features, including necessary writes. Expand within those approved features without another permission ceremony. Keep administration, billing and unrelated resources outside the runtime key. Prefer dedicated app/environment scope over shared keys.
 
-Install into the deployment secret store and, when needed, a private Git-ignored local file (0600); Keychain is optional. Preserve the app's existing server secret name, otherwise use `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `OPENROUTER_API_KEY`. Keep admin/management credentials in a separate secret store. Capture one-time secrets directly; never print raw creation responses or put keys in source, frontend variables, chat or command arguments.
+Install into the deployment secret store and, when needed, a private Git-ignored local file (0600); Keychain is optional. Preserve the app's existing server secret name, otherwise use `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `ELEVENLABS_API_KEY` or `FAL_KEY`. Keep admin/management credentials in a separate secret store. Capture one-time secrets directly; never print raw creation responses or put keys in source, frontend variables, chat or command arguments.
 
 ## Setup and limits
 
-Read the selected provider reference: [OpenAI](references/openai.md), [OpenRouter](references/openrouter.md), or [Claude](references/anthropic.md). Verify the exact provider account and runtime target. Reconcile existing inventory before creating; inspect inventory after an ambiguous timeout instead of blindly creating twice.
+Read the selected provider reference: [OpenAI](references/openai.md), [OpenRouter](references/openrouter.md), [Claude](references/anthropic.md), [ElevenLabs](references/elevenlabs.md) or [fal.ai](references/fal.md). Verify the exact provider account and runtime target. Reconcile existing inventory before creating; inspect inventory after an ambiguous timeout instead of blindly creating twice.
 
 Reserve the app's recurring allocation with `scripts/authorization.py reserve`. These commitments persist across months; provider usage resets, allocation capacity does not. Divide the app allowance across its keys/environments so they cannot each obtain a fresh USD 5 budget.
 

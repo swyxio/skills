@@ -48,6 +48,32 @@ class AuthorizationTests(unittest.TestCase):
         with self.assertRaises(Denied):
             evaluate(self.policy, self.ledger, self.request)
 
+    def test_provider_support_requires_exact_grant_and_account(self):
+        for provider in ('anthropic', 'openai', 'openrouter', 'elevenlabs', 'fal'):
+            with self.subTest(provider=provider):
+                policy = copy.deepcopy(self.policy)
+                policy['grants'][0]['providers'] = [{'provider': provider, 'account_id': 'acct'}]
+                request = {**self.request, 'provider': provider}
+                self.assertTrue(evaluate(policy, self.ledger, request)[0]['allowed'])
+                with self.assertRaises(Denied):
+                    evaluate(policy, self.ledger, {**request, 'account_id': 'wrong'})
+                if provider != 'openrouter':
+                    with self.assertRaises(Denied):
+                        evaluate(self.policy, self.ledger, request)
+        policy = copy.deepcopy(self.policy)
+        policy['grants'][0]['providers'] = [{'provider': 'unknown', 'account_id': 'acct'}]
+        with self.assertRaisesRegex(Denied, 'Unsupported provider'):
+            evaluate(policy, self.ledger, {**self.request, 'provider': 'unknown'})
+
+    def test_new_providers_share_existing_app_allowance(self):
+        self.ledger['reservations'] = [self.request]
+        for provider in ('elevenlabs', 'fal'):
+            with self.subTest(provider=provider):
+                self.grant['providers'].append({'provider': provider, 'account_id': 'acct'})
+                request = {**self.request, 'provider': provider, 'reservation_id': provider}
+                with self.assertRaisesRegex(Denied, 'Monthly per-app ceiling'):
+                    evaluate(self.policy, self.ledger, request)
+
     def test_retry_and_conflicting_id(self):
         self.ledger["reservations"] = [self.request]
         result, fresh = evaluate(self.policy, self.ledger, self.request)

@@ -30,6 +30,8 @@ Record an active grant only after the user approves concrete provider/account ID
 
 `repos: ["*"]` covers future apps the user asks to build under the one exact owner; otherwise list exact repo names. Provider/account and environment match exactly. Destination templates substitute only `{app}` (canonical repo name) and `{environment}` (allowlisted); store/account/secret remain fixed. Verify the rendered resource belongs to the approved account. App feature permissions follow the requested product; admin credentials stay separate.
 
+Canonical provider IDs are `anthropic`, `openai`, `openrouter`, `elevenlabs` and `fal` (fal.ai). New provider support does not expand existing grants: each needs its approved workspace/account identity. For fal, retain the exact personal/team account username; for ElevenLabs, retain workspace and service-account/user IDs in the receipt.
+
 Request example:
 
 ```json
