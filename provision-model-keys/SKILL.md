@@ -21,6 +21,10 @@ Give runtime keys the endpoints/models needed for the app's intended features, i
 
 Install into the deployment secret store and, when needed, a private Git-ignored local file (0600); Keychain is optional. Preserve the app's existing server secret name, otherwise use `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `ELEVENLABS_API_KEY` or `FAL_KEY`. Keep admin/management credentials in a separate secret store. Capture one-time secrets directly; never print raw creation responses or put keys in source, frontend variables, chat or command arguments.
 
+Redact credential headers and secret fields from logs, traces and errors; disable shell tracing during secret handling and remove temporary secret files afterward. Send credentials only to verified provider HTTPS endpoints, never in URLs or forwarded across origins.
+
+Before enabling paid traffic, verify caller authorization and bounded request size/concurrency in the app's server paths; intentionally public features need abuse limits. Keep upstream endpoints/models server-controlled so the app cannot become an unrestricted paid proxy.
+
 ## Setup and limits
 
 Read the selected provider reference: [OpenAI](references/openai.md), [OpenRouter](references/openrouter.md), [Claude](references/anthropic.md), [ElevenLabs](references/elevenlabs.md) or [fal.ai](references/fal.md). Verify the exact provider account and runtime target. Reconcile existing inventory before creating; inspect inventory after an ambiguous timeout instead of blindly creating twice.
@@ -32,3 +36,5 @@ Choose budget controls in order: **provider hard limit → alerts/monitoring →
 Read back installed scope, permissions and budget settings; run one small synthetic test within the allowance. Stop once the app works and the selected control/warning path is verified. Save a compact secret-free receipt with grant, repo, provider IDs, destination, monthly allocation, enforcement type and result. Keep partial receipts for reconciliation; deactivate only newly created unusable keys when setup fails.
 
 Rotation preserves current-month usage and the recurring allocation. For an approved raise from USD 5 to USD 20/month, reserve USD 15/month additional capacity and apply a new USD 20 cap. Do not clear usage on rotation, retry or deployment. Grant revocation stops future provisioning; disabling an existing key is a separate exact-target action.
+
+For a known exposed/compromised key covered by an active rotation grant, revoke that exact key immediately, then replace it; this overrides the routine replacement-before-revocation order in provider references. Confirm revocation and record the incident without the secret; if authority does not cover that key, report exposure and request exact-key revocation approval.
