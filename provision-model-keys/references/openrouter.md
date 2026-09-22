@@ -1,12 +1,10 @@
 # OpenRouter
 
-Official references checked 2026-09-22; refresh before execution:
+Checked 2026-09-22; verify current fields when executing:
 
 - [Management keys](https://openrouter.ai/docs/guides/overview/auth/management-api-keys)
 - [Create runtime key](https://openrouter.ai/docs/api/api-reference/api-keys/create-a-new-api-key)
 
-Use an approved management credential. Management keys administer account keys and cannot call completions. Hold them in a separate secret store with expiry, never in the app.
+Use an approved management credential separately from the app's runtime key. `POST https://openrouter.ai/api/v1/keys` accepts name, USD limit, reset period, BYOK inclusion, expiry and workspace ID. For a USD 5/month allocation use `limit: 5`, `limit_reset: "monthly"`, and `include_byok_in_limit: true`, with approved scope/expiry. Verify BYOK coverage for the actual routing.
 
-With the management key in the Authorization header, `POST https://openrouter.ai/api/v1/keys` accepts `name`, `limit` (USD), `limit_reset` (`null`, `daily`, `weekly`, `monthly`), `include_byok_in_limit`, `expires_at`, and `workspace_id`. For an approved USD 5 lifetime allowance use `limit: 5`, `limit_reset: null`, `include_byok_in_limit: true`, plus approved workspace/expiry. Resets authorize recurring spending. Verify BYOK billing coverage for the actual routing.
-
-Creation returns the one-time `key` and `data.hash`. Capture privately; retain IDs/hash in the receipt. Verify name, workspace, usage and limits through `GET /api/v1/keys/{hash}`. Reconcile timeouts using paginated inventory; secrets cannot be fetched again. Use `PATCH /api/v1/keys/{hash}` for an approved cap change or disable; refresh its schema first. Rotation must not reset the shared app allowance.
+Creation returns one-time `key` and `data.hash`; capture privately and retain only IDs/hash. Read back limits, workspace and monthly usage through `GET /api/v1/keys/{hash}`. Reconcile timeouts through inventory; secrets cannot be fetched again. Use the documented PATCH resource for approved cap changes/disable. Split allowance across simultaneous keys; rotation must preserve the current month's remaining balance. Configure provider or existing app warnings; never auto-purchase credits.

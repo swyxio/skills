@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check or reserve lifetime app allocations. No provider calls or secret handling."""
+"""Check or reserve recurring monthly commitments. No provider calls or secrets."""
 import argparse
 import datetime as dt
 import fcntl
@@ -53,7 +53,7 @@ def evaluate(policy, ledger, request):
     expires = dt.datetime.fromisoformat(grant["expires_at"].replace("Z", "+00:00"))
     require(expires.tzinfo is not None and expires > dt.datetime.now(dt.timezone.utc),
             "Grant expired or missing timezone")
-    require(grant["budget_period"] == "total", "Only lifetime budgets are supported")
+    require(grant["budget_period"] == "monthly", "Grant must specify a monthly budget")
     require(owner == grant["repo_owner"] and (name in grant["repos"] or grant["repos"] == ["*"]),
             "Repository outside grant")
     require(request["environment"] in grant["environments"], "Environment outside grant")
@@ -69,7 +69,7 @@ def evaluate(policy, ledger, request):
         destinations.append(expanded)
     require(request["destination"] in destinations, "Destination outside grant")
     require(request["action"] in grant["actions"], "Action outside grant")
-    require(request["action"] in ("provision_key", "increase_budget", "rotate_key"),
+    require(request["action"] in ("setup", "increase_budget", "rotate_key"),
             "This helper reserves provisioning, increases, and zero-cost rotations only")
     require((request["action"] == "rotate_key" and amount == 0)
             or (request["action"] != "rotate_key" and amount > 0), "Invalid action allocation")
@@ -85,18 +85,15 @@ def evaluate(policy, ledger, request):
     else:
         delta = amount
     app_total = sum(r["additional_cents"] for r in rows if r["repo"] == repo)
-    require(request["action"] == "provision_key" or app_total > 0,
+    require(request["action"] == "setup" or app_total > 0,
             "Increase/rotation requires an existing app allocation")
     selected = [r for r in rows if r["grant_id"] == grant["id"]]
     aggregate = sum(r["additional_cents"] for r in selected)
-    apps = {r["repo"] for r in selected} | {repo}
-    require(app_total + delta <= cents(grant["per_app_cap_cents"]), "Per-app ceiling exceeded")
-    require(aggregate + delta <= cents(grant["aggregate_cap_cents"]), "Aggregate ceiling exceeded")
-    require(type(grant["max_apps"]) is int and 0 < grant["max_apps"] >= len(apps),
-            "App count ceiling exceeded")
+    require(app_total + delta <= cents(grant["per_app_cap_cents"]), "Monthly per-app ceiling exceeded; request a raise")
+    require(aggregate + delta <= cents(grant["aggregate_cap_cents"]), "Monthly portfolio ceiling exceeded; request a raise")
     result = {"allowed": True, "reservation_id": request["reservation_id"],
               "already_reserved": bool(existing), "app_total_cents": app_total + delta,
-              "grant_total_cents": aggregate + delta}
+              "grant_total_cents": aggregate + delta, "budget_period": "monthly"}
     return result, not existing
 
 
@@ -146,6 +143,9 @@ def main():
     try:
         print(json.dumps(run(args)))
         return 0
+    except Denied as error:
+        print(json.dumps({"allowed": False, "reason": str(error)}))
+        return 1
     except (ValueError, KeyError, TypeError, OSError):
         # Don't echo file contents or provider error payloads.
         print(json.dumps({"allowed": False, "reason": "Authorization denied or invalid state; inspect scope and ceilings"}))

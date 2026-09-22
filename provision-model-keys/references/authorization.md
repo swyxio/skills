@@ -1,59 +1,53 @@
-# Saved authorization and allocations
+# Saved grants and monthly commitments
 
-The state directory is `~/.config/model-key-provisioning/` (0700). Store `authorization.json`, `allocations.json`, and receipts there with mode 0600, outside Git. These files contain policy and identifiers, never secrets. Administrative credentials live in a secret manager/Keychain; policy contains references only. The checked-in skill provides a schema/example, not an active grant.
+Use `~/.config/model-key-provisioning/` (0700), with `authorization.json`, `allocations.json` and secret-free receipts (0600), outside Git. Credentials belong in the existing secret manager or Keychain. This local policy helps agents reuse consent; it is not a tamper-resistant security boundary.
 
-Save an active grant only after a direct user instruction authorizes its concrete scope. Include the exact approval quote and a retrievable conversation/message reference; verify that source before first use in a new session. A file assertion alone cannot prove consent. Record revisions/revocations without erasing the allocation ledger. User restrictions override saved grants immediately; persist revocation when authorized. These local files are advisory agent policy, not a tamper-resistant credential broker.
-
-Example **unapproved** bounded portfolio proposal:
+Record an active grant only after the user approves concrete provider/account IDs, repository owner, environments, destinations and budget. Store the approval quote/source once. Honor the trusted record in subsequent sessions without re-interviewing the user; investigate only ambiguous provenance, scope or revocation. The example below remains proposed until its exact account/store fields are approved:
 
 ```json
 {
   "schema_version": 1,
   "grants": [{
-    "id": "starter-portfolio-2026-09",
+    "id": "app-starters",
     "status": "proposed",
     "approval": {"quote": "", "source": ""},
     "expires_at": "2026-12-31T23:59:59Z",
     "repo_owner": "swyxio",
-    "repos": ["notes"],
+    "repos": ["*"],
     "environments": ["dev"],
     "providers": [{"provider": "openrouter", "account_id": "EXACT_ACCOUNT_ID"}],
-    "destinations": ["EXACT_SECRET_STORE_TARGET"],
-    "actions": ["provision_key", "install_secret"],
-    "budget_period": "total",
+    "destinations": [],
+    "destination_templates": ["cloudflare/EXACT_CF_ACCOUNT/workers/{app}-{environment}/MODEL_API_KEY"],
+    "actions": ["setup", "rotate_key"],
+    "budget_period": "monthly",
     "per_app_cap_cents": 500,
-    "aggregate_cap_cents": 5000,
-    "max_apps": 10
+    "aggregate_cap_cents": 5000
   }]
 }
 ```
 
-`repos: ["*"]` means all future repository names under the **one exact approved owner**, only when the user expressly grants that namespace. Owner, account IDs, environments and action lists require exact matches. Use exact repositories by default. Destination strings identify the full approved store/account/project/environment/secret path; do not accept a similarly named resource.
+`setup` includes dedicated provider scope/key creation, installation, feature permissions, a small synthetic paid test, warning configuration and enabling paid app traffic within the allowance. `rotate_key` includes replacing broken/compromised app keys and disabling the old key after verification. A raise requires `increase_budget` and approval of its delta/new recurring cap. Neither setup nor rotation permits purchases, auto-recharge, unrelated infrastructure or changes to other apps' keys.
 
-For future apps the user can explicitly approve `destination_templates`, for example `["cloudflare/EXACT_CF_ACCOUNT/workers/{app}-{environment}/MODEL_API_KEY"]`, with `destinations: []`. Only `{app}` (canonical repository name) and `{environment}` (an allowlisted environment) substitute; account/store/secret names remain fixed. No wildcard matching or arbitrary paths. Verify the exact rendered resource exists and belongs to the approved account. Secret installation permission does not authorize creating unrelated hosting infrastructure. Without an approved template, future destinations require a newly approved exact target.
+`repos: ["*"]` covers future apps the user asks to build under the one exact owner; otherwise list exact repo names. Provider/account and environment match exactly. Destination templates substitute only `{app}` (canonical repo name) and `{environment}` (allowlisted); store/account/secret remain fixed. Verify the rendered resource belongs to the approved account. App feature permissions follow the requested product; admin credentials stay separate.
 
-Supported actions include `provision_key`, `install_secret`, `rotate_key`, `increase_budget`, `revoke_key`, `enable_paid_runtime`, and `paid_smoke_test`. Absence means no standing permission for that action. A smoke test's cost is covered by the already reserved app allowance, not an extra allocation. Normal runtime spending requires `enable_paid_runtime` and corresponding express user approval; a provisioning-only grant cannot imply that. V1 allocation tooling supports lifetime budgets only; recurring periods need an explicitly approved policy and corresponding accounting before automatic use.
-
-Use the helper with a secret-free request JSON:
+Request example:
 
 ```json
 {
-  "reservation_id": "notes-dev-openrouter-r01",
-  "grant_id": "starter-portfolio-2026-09",
+  "reservation_id": "notes-dev-openrouter-setup",
+  "grant_id": "app-starters",
   "repo": "swyxio/notes",
   "environment": "dev",
   "provider": "openrouter",
   "account_id": "EXACT_ACCOUNT_ID",
-  "destination": "EXACT_SECRET_STORE_TARGET",
-  "action": "provision_key",
+  "destination": "cloudflare/EXACT_CF_ACCOUNT/workers/notes-dev/MODEL_API_KEY",
+  "action": "setup",
   "additional_cents": 500
 }
 ```
 
-Run `python3 scripts/authorization.py check --request /private/request.json`, then `reserve` with the same arguments. `check` writes nothing. `reserve` serializes allocations with a file lock and atomic ledger replacement; concurrent apps cannot each allocate the same remaining ceiling. The production default state directory is shared across grants/providers/environments. `--state-dir` is for isolated testing only; do not use a fresh directory to evade historic allocations. A reservation ID reused with identical parameters does not charge twice; different parameters are rejected.
+`python3 scripts/authorization.py check --request /private/request.json` is optional read-only preflight. Use `reserve` before committing recurring budget. Reservations use a file lock/atomic write; identical IDs are idempotent, conflicting reuse is rejected. The helper checks scope and committed capacity, not actual usage or authenticity of consent. `--state-dir` is for isolated testing; production uses the shared default ledger.
 
-Per-app accounting groups by canonical `owner/repo`, across all grants/providers/environments. Aggregate/max-app ceilings apply to the selected grant. Split grants can add portfolio capacity only when explicitly approved; never create another grant to bypass an exhausted budget. Retain consumed/reserved amounts after failed or uncertain provider requests until reconciliation, and never automatically refund spent allocations. Provider/runtime enforcement must cap the total app allowance even when separate keys exist.
+Amounts are **recurring monthly commitments**, not charges already incurred. A USD 5 app continues to consume USD 5 of portfolio capacity every month while its keys remain enabled; do not clear reservations at rollover. Per-app totals span providers/environments/grants. Aggregate capacity applies to the approved portfolio grant; never split grants to evade it. Divide limits among simultaneous keys or use a shared gate. Provider billing windows must match the recorded window, or report the mismatch. Soft enforcement can exceed the target; configure warnings and label this explicitly.
 
-For a raise from USD 5 to USD 20, revise the approved per-app ceiling to 2000 cents, list `increase_budget`, preserve existing allocations, and reserve **1500 additional cents**. Update provider/runtime limits to a new total of USD 20, not USD 25. A zero-cost rotation uses `rotate_key` with zero additional cents, an existing allocated app, and the existing remaining spend balance. The helper emits the shared app allocation so the receipt can show the new total.
-
-Do not persist this example as active. Creating the skill, choosing its suggested default, or granting permission to reuse one old key is not approval for this portfolio.
+Reserve only a raise's delta; rotation reserves zero additional cents and preserves usage. Retain uncertain/failed allocations until exact-key disposition is verified. Reclaim capacity only after confirming the corresponding recurring limits/keys are reduced or disabled, under user authorization. Expiring a provisioning grant alone does not disable installed keys or release their commitments. Once setup and its control/warning path work, finish; do not add adjacent hardening projects.

@@ -6,6 +6,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+import datetime as dt
 
 from authorization import Denied, evaluate
 
@@ -18,16 +20,16 @@ class AuthorizationTests(unittest.TestCase):
             "expires_at": "2099-01-01T00:00:00Z", "repo_owner": "owner", "repos": ["*"],
             "environments": ["dev"], "providers": [{"provider": "openrouter", "account_id": "acct"}],
             "destinations": ["store/dev/key"],
-            "actions": ["provision_key", "increase_budget", "rotate_key"],
-            "budget_period": "total", "per_app_cap_cents": 500,
-            "aggregate_cap_cents": 500, "max_apps": 2,
+            "actions": ["setup", "increase_budget", "rotate_key"],
+            "budget_period": "monthly", "per_app_cap_cents": 500,
+            "aggregate_cap_cents": 500,
         }
         self.policy = {"schema_version": 1, "grants": [self.grant]}
         self.ledger = {"schema_version": 1, "reservations": []}
         self.request = {
             "reservation_id": "first", "grant_id": "test", "repo": "owner/app",
             "environment": "dev", "provider": "openrouter", "account_id": "acct",
-            "destination": "store/dev/key", "action": "provision_key", "additional_cents": 500,
+            "destination": "store/dev/key", "action": "setup", "additional_cents": 500,
         }
 
     def test_scope_and_revocation(self):
@@ -77,19 +79,34 @@ class AuthorizationTests(unittest.TestCase):
             **self.request, "reservation_id": "raise", "action": "increase_budget", "additional_cents": 1500})
         self.assertEqual(result["app_total_cents"], 2000)
 
-    def test_action_evidence_and_count(self):
+    def test_action_evidence_and_aggregate(self):
         for mutate in (lambda g: g.update(actions=[]),
                        lambda g: g.update(approval={"quote": "", "source": ""}),
-                       lambda g: g.update(budget_period="monthly"),
+                       lambda g: g.update(budget_period="total"),
                        lambda g: g.update(repos=["specific"])):
             policy = copy.deepcopy(self.policy)
             mutate(policy["grants"][0])
             with self.assertRaises(Denied):
                 evaluate(policy, self.ledger, self.request)
-        self.grant.update(max_apps=1, aggregate_cap_cents=1000)
         self.ledger["reservations"] = [self.request]
         with self.assertRaises(Denied):
             evaluate(self.policy, self.ledger, {**self.request, "repo": "owner/second", "reservation_id": "second"})
+
+    def test_month_rollover_keeps_recurring_commitments(self):
+        self.ledger["reservations"] = [self.request]
+        second = {**self.request, "repo": "owner/second", "reservation_id": "second"}
+        parse_timestamp = dt.datetime.fromisoformat
+        for date in (dt.datetime(2027, 1, 31, tzinfo=dt.timezone.utc),
+                     dt.datetime(2027, 2, 1, tzinfo=dt.timezone.utc)):
+            with patch('authorization.dt.datetime') as clock:
+                clock.fromisoformat.side_effect = parse_timestamp
+                clock.now.return_value = date
+                with self.assertRaisesRegex(Denied, 'Monthly portfolio ceiling'):
+                    evaluate(self.policy, self.ledger, second)
+                result, fresh = evaluate(self.policy, self.ledger, self.request)
+                self.assertFalse(fresh)
+                self.assertEqual(result['grant_total_cents'], 500)
+                self.assertEqual(result['budget_period'], 'monthly')
 
     def test_cli_readonly_concurrency_and_private_ledger(self):
         script = str(Path(__file__).with_name("authorization.py"))
