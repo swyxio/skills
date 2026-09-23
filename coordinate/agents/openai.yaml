@@ -1,0 +1,6 @@
+interface:
+  display_name: "Coordinate"
+  short_description: "Use Luna helpers and Astra advisers"
+  default_prompt: "Use $coordinate to complete this task with focused Luna helpers and Astra advice where useful."
+policy:
+  allow_implicit_invocation: false
