@@ -18,6 +18,7 @@ Inspect `assets/design-loop-reference.png` when a compact reminder of the loop i
 ### 1. Audit the real interface
 
 - Inspect routes, components, state owners, persisted contracts, current screenshots, and existing responsive behavior.
+- Map active screen routes within the requested scope to their shared layout owners. Record signed-in pages that bypass navigation, workspace selection, or account controls; check mobile navigation and loading/error/empty states. Separate deliberate public or fullscreen views from accidental shell omissions. Treat the existing app shell as an invariant unless its replacement is explicitly selected; use the shared-layout defaults in [design-preferences](../design-preferences/SKILL.md).
 - Inventory every user-visible capability, including settings, nested menus, account or permission surfaces, destructive actions, help, imports and exports, and developer or audit tools.
 - Record loading, empty, success, error, disabled, offline, retry, confirmation, and maximum-density states.
 - Separate non-negotiable data, safety, and behavioral invariants from visual and product-behavior questions that are open to proposals.
@@ -112,6 +113,7 @@ Which direction and numbered options should I implement? Example: `C, 1B, 2A`.
 - Prefer semantic tokens and reusable primitives over scattered one-off styling.
 - Keep every audited capability reachable; move secondary controls into clear nested surfaces rather than deleting or hiding them.
 - Run focused behavior tests, responsive visual checks, and the real user flow after integration.
+- Recheck the scoped route/layout inventory after integration, including direct URLs, recovery states, mobile navigation, and exits from public or focus views. Confirm that cleaner screens still retain applicable account and navigation access.
 - Commit and merge only after implementation and visual validation pass, following the repository's source-control and deployment rules.
 
 ## Preserve design history
