@@ -3,16 +3,18 @@ name: slackbot-builder
 description: >
  Design or harden Slack bot transport and interaction architecture: signed Events
  API ingress, fast acknowledgement, idempotency, causal thread context, Block Kit
- actions, durable agent execution, multi-workspace operation, or Slack-specific
+ actions, message rendering correctness (Markdown, rich text, links and citations),
+ durable agent execution, multi-workspace operation, or Slack-specific
  delivery of typed follow-up controls and privacy-bounded execution receipts. Use
  for new Slack bots, broad Slack architecture audits, or changes to these Slack
- contracts. Do not use for deployment or visual testing, cosmetic copy/layout,
+ contracts. Do not use for deployment, standalone visual testing, unrelated
+ copywriting or visual design,
  general answer quality, channel-agnostic transcript or receipt schemas, core
  suggestion generation, or merely operating Slack.
 license: MIT
 metadata:
  author: swyx
- version: "2.9"
+ version: "2.10"
  category: "slack"
  compatibility: Slack Events API, Slack Web API, serverless or long-running workers
  tags: "slack, bot, events-api, block-kit, modals, file-uploads, image-generation, durable-execution, workflows, cloudflare-workers, hono, kv, observability, tracing, agents"
@@ -50,6 +52,7 @@ delegate application behavior to a channel-agnostic core.
 
 | Specialized contract | Reference |
 |---|---|
+| Message formatting, Markdown conversion, clickable links, or citation rendering | [message-formatting.md](message-formatting.md) |
 | Slack search, files, PDFs, or requester-scoped retrieval | [search-and-retrieval.md](search-and-retrieval.md) |
 | Native charts/tables or hosted analytical artifacts | [analytical-visualizations.md](analytical-visualizations.md) |
 | Mixed Slack evidence plus deterministic application/provider data | Read both [search-and-retrieval.md](search-and-retrieval.md) and [analytical-visualizations.md](analytical-visualizations.md) |
@@ -80,7 +83,9 @@ their level files so they load only when needed):
   cards and reactions are presentation, not authority.
 - Construct Block Kit from validated typed data. Keep top-level message text
   useful for notifications and accessibility; use native table blocks rather
-  than Markdown tables.
+  than Markdown tables. For text rendering, choose an explicit supported format
+  and follow [message-formatting.md](message-formatting.md); model Markdown is
+  not interchangeable with Slack `mrkdwn`.
 - Disable both link and media unfurls when replies should not generate previews.
 - Treat cosmetic enrichment such as reactions and status updates as best
   effort. Fail closed when identity, authorization, or required evidence cannot
