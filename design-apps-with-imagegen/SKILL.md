@@ -1,6 +1,6 @@
 ---
 name: design-apps-with-imagegen
-description: Design, reskin, or improve apps and sites through a user-confirmed image-first product loop. Use when Codex should audit an existing interface, generate four materially different visual and behavioral directions including a wildcard, present numbered visual and product-behavior decisions for user approval, implement the selected direction with code and generated assets where appropriate, candidly compare matched screenshots across mobile, tablet, and desktop, repair visual drift, and integrate the proven result.
+description: Design, reskin, or improve apps and sites through a user-confirmed image-first product loop. Use when an agent should audit an existing interface, generate four materially different visual and behavioral directions including a wildcard, present numbered visual and product-behavior decisions for user approval, implement the selected direction with code and generated assets where appropriate, candidly compare matched screenshots across mobile, tablet, and desktop, repair visual drift, and integrate the proven result.
 ---
 
 # Design Apps with ImageGen

@@ -33,18 +33,15 @@ current official API surface for the exact operation.
 
 ## Browser Automation Constraints
 
-Chrome/Browser Playwright `evaluate(...)` in Codex can read DOM state, but in
-prior Sessionize runs it could not access:
+Use the current browser adapter's documented capabilities and restrictions. In
+prior Codex browser runs, `evaluate(...)` could read DOM state but could not access
+page globals, `fetch`, `XMLHttpRequest`, or `javascript:` execution. Those are
+adapter-specific observations, not Sessionize restrictions or limits on other agents.
 
-- page globals such as `vm`, `$`, or `jQuery`
-- `fetch`
-- `XMLHttpRequest`
-- `javascript:` URL execution
-
-Do not spend time trying to route around those limits. If fast same-origin POSTs
-are needed, generate a dry-run-first page-console runner for the user to paste
-into the actual Sessionize page console, or use visible page controls through
-Chrome automation.
+When the current adapter imposes these limits, do not route around them. Use
+visible page controls, or prepare a dry-run-first page-console runner for the
+user when appropriate. If the adapter supports authorized same-origin requests,
+use its documented interface and verify the saved result.
 
 ## Discovery Workflow
 

@@ -1,6 +1,6 @@
 ---
 name: ai-readme
-description: Create or substantially revise repository README files that help a specific reader understand a technical project, reach a verified first result, and progress into realistic use, evaluation, debugging, or contribution. Use for project landing READMEs, CLI and library quickstarts, experimental or research repositories, executable engineering notebooks, and contributor-facing repository guides when Codex should reconstruct behavior from code, tests, commands, examples, and history rather than write generic documentation.
+description: Create or substantially revise repository README files that help a specific reader understand a technical project, reach a verified first result, and progress into realistic use, evaluation, debugging, or contribution. Use for project landing READMEs, CLI and library quickstarts, experimental or research repositories, executable engineering notebooks, and contributor-facing repository guides when an agent should reconstruct behavior from code, tests, commands, examples, and history rather than write generic documentation.
 ---
 
 # AI README

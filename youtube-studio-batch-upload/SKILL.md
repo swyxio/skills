@@ -1,6 +1,6 @@
 ---
 name: youtube-studio-batch-upload
-description: Batch YouTube Studio upload workflow for videos sourced from Airtable, Google Drive, Loom, YouTube, or local files. Use when Codex needs to download many submitted videos, stage filenames, build YouTube titles/descriptions from table fields, upload through Chrome/Computer Use, set videos Unlisted, add a playlist, save each upload before moving on, track links, and report incomplete or blocked source rows.
+description: Batch YouTube Studio upload workflow for videos sourced from Airtable, Google Drive, Loom, YouTube, or local files. Use when an agent needs to download many submitted videos, stage filenames, build YouTube titles/descriptions from table fields, upload through Chrome/Computer Use, set videos Unlisted, add a playlist, save each upload before moving on, track links, and report incomplete or blocked source rows.
 ---
 
 # YouTube Studio Batch Upload

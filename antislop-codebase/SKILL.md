@@ -57,7 +57,7 @@ Produce a plan that can evolve, but is complete enough for another agent to exec
 - Proportional verification for the changed behavior.
 - Concurrency and checkpoints only when the work is large enough to need them.
 
-Use `request_user_input` only for product tradeoffs that cannot be discovered from the repo.
+Ask the user only for product tradeoffs that cannot be discovered from the repo.
 
 ### 3. Build The Baseline Safety Net
 

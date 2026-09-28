@@ -14,6 +14,7 @@ For provider-specific API behavior, read [provider operation notes](references/p
 
 ## Useful defaults
 
+- Improve the established workflow before introducing another path. Do not turn implementation choices or temporary exceptions into user requirements.
 - Do not publish a malformed, partial, or schema-invalid result as complete.
 - For a machine-consumed structured artifact, use the selected model provider's documented native structured-output API with an explicit schema. Do **not** treat a free-form completion prompted with “return JSON” plus local `JSON.parse` as structured output.
 - Prefer the official provider API for schema-critical work. A router is acceptable only when its exact pinned endpoint advertises native structured-output support and a canary has verified the complete request/stream/validation path; otherwise call the provider directly.
@@ -33,6 +34,8 @@ Find the first boundary that changed or rejected the artifact: provider delivery
 
 ### 2. Shape the request before scaling it
 
+Normalize source material into a usable representation before model admission, preserving originals and required coverage. Repair unreadable or oversized inputs locally rather than silently truncating them.
+
 Budget each request so the model can finish; split or continue long work while preserving required coverage. Do not turn token budgets into arbitrary section/item ceilings that omit substantive source material. Validate schema, source references and domain invariants; native structured output does not establish semantic completeness.
 
 Before broad admission, run cheap deterministic checks across all selected packets:
@@ -49,6 +52,8 @@ For an unmeasured request class, start with modest in-flight concurrency. Preser
 a measured healthy setting on resume rather than restarting its ramp. Pace requests and tokens separately, honor `Retry-After`, and use provider headers when available. Raise concurrency only after measuring throughput, latency, retries, 429s, context size, and remaining headroom; high latency can be a context or generation bottleneck rather than a rate-limit problem.
 
 ### 4. Repair by failure class
+
+After a repair, rerun only work whose inputs or acceptance were affected; reuse valid independent results.
 
 Recover a completed response before considering another request. Retry genuinely incomplete transient failures through the same limiter; distinguish provider failure from host interruption, controller deadline and explicit cancellation. Fix validator/redactor/renderer mistakes locally, without asking the model to satisfy a broken check. For genuine truncation, compact intermediate detail or continue without dropping required coverage. For a content repair, request only the affected fields or blocks and assemble them against the saved base; do not regenerate the whole artifact for a small edit. Record any fallback's coverage loss.
 

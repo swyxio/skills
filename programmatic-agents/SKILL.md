@@ -1,65 +1,51 @@
 ---
 name: programmatic-agents
-description: Run Codex models and reusable Cursor, Antigravity, Muse, Deep Code, ZCode, Devin, or Mistral Vibe CLI adapters programmatically, with latency, error, usage, cost, and trace logging. Use for scripted summarization, structured extraction, classification, code generation, tool or installed-skill invocation, batch processing, or model comparisons when coding-agent CLI authentication and capabilities are required. Do not use when an ordinary interactive Codex turn is sufficient.
+description: Run a selected coding-agent CLI programmatically, with latency, error, usage, cost, and trace logging. Use the implemented shared adapters or a documented native interface as appropriate. Use for scripted summarization, structured extraction, classification, code generation, tool or installed-skill invocation, batch processing, or model comparisons when coding-agent CLI authentication and capabilities are required. Do not use when an ordinary interactive agent turn is sufficient.
 ---
 
 # Programmatic Agents
 
-Run the user-requested model through its selected coding-agent CLI without silently substituting another model. Treat Codex login, ChatGPT access, and OpenAI API project access as separate authorization surfaces.
+Run the user-requested model through its selected coding-agent CLI without silently substituting another model. Treat coding-agent login, subscription access, and provider API access as separate authorization surfaces.
 
-Special preview model identifiers must be supplied by the user for the current task. Do not name, suggest, hardcode, or infer preview identifiers from prior sessions or local availability. Keep reusable examples generic, using placeholders such as `$CODEX_MODEL_ID`.
+Special preview model identifiers must be supplied by the user for the current task. Do not name, suggest, hardcode, or infer preview identifiers from prior sessions or local availability. Keep reusable examples generic, using placeholders such as `$MODEL_ID`.
 
 ## Choose the execution surface
 
-1. Prefer the desktop-bundled Codex binary when available:
+Use the coding-agent CLI selected by the user or existing workflow. Check its
+installed capabilities, authentication, permissions, and output format; do not
+silently substitute another CLI or model.
 
-   ```bash
-   /Applications/ChatGPT.app/Contents/Resources/codex --version
-   /Applications/ChatGPT.app/Contents/Resources/codex login status
-   ```
+Use [scripts/agents.mjs](scripts/agents.mjs) for the implemented adapters: Codex,
+Cursor, Antigravity, Muse, Deep Code, ZCode, Devin, and Mistral Vibe. Read
+[references/multi-cli.md](references/multi-cli.md) for configuration and telemetry.
 
-   Otherwise use `codex --version` and `codex login status`. A stale global CLI may reject models supported by the installed desktop binary.
-
-2. Prefer `codex exec` for saved Codex authentication, JSON events, structured output, configured tools, and installed skills.
-
-3. Use `@openai/codex-sdk` or Python `openai-codex` for persistent threads only after checking the installed SDK's actual model and sandbox types.
-
-4. Use the standard OpenAI SDK only when the user's API project independently exposes the requested model. Never repurpose Codex login tokens as API keys.
-
-## Use the bundled runner
-
-Use [scripts/codex.mjs](scripts/codex.mjs). It prefers the desktop-bundled executable, defaults to ephemeral read-only execution, accepts any explicit Codex model identifier, can use the configured default when `--model` is omitted, validates local inputs, captures JSON events and usage, rejects an observed-model mismatch, redacts credentials from failures, and validates schema-constrained responses.
-
-```bash
-node /Users/swyx/.codex/skills/programmatic-agents/scripts/codex.mjs \
-  --model "$CODEX_MODEL_ID" \
-  --prompt 'Summarize the supplied content in five factual bullet points.' \
-  --input transcript.txt
-
-node /Users/swyx/.codex/skills/programmatic-agents/scripts/codex.mjs \
-  --prompt 'Extract the requested fields; use null for unknown values.' \
-  --input document.txt --schema output.schema.json --json
+```sh
+node /Users/swyx/Work/skills/programmatic-agents/scripts/agents.mjs run.json prompt.txt
 ```
 
-Omit `--model` only when intentionally using the user's configured Codex default. When model identity matters, pass the exact identifier and keep `requestedModel` distinct from independently reported `observedModel`.
+Claude Code and other CLIs can be used through their documented native interfaces,
+but are not implemented in this shared runner. Do not claim adapter support or
+pass an unsupported CLI name. Verify the selected CLI's actual capabilities before
+using it; common telemetry remains subject to what that interface exposes.
 
-Read [references/patterns.md](references/patterns.md) for concrete CLI/SDK, structured-output, tools, installed-skill, or batch-processing patterns.
+For Codex-specific native schema validation, use [scripts/codex.mjs](scripts/codex.mjs)
+and read [references/patterns.md](references/patterns.md). Those instructions apply
+only when Codex is the selected execution surface. For setup or access problems,
+read [references/setup.md](references/setup.md). For deeper event logging and native
+exports, read [references/telemetry-research.md](references/telemetry-research.md).
 
-Run the deterministic local suite without model calls or private inputs:
+Keep project-specific prompts and analysis in the consuming project. The shared
+adapter records successes and failures, does not automatically retry or substitute
+models, and leaves unavailable usage/cost null. Full content traces are opt-in.
+Compare model-plus-CLI configurations; similarly named permission or reasoning
+settings do not establish equivalent behavior.
 
-```bash
-node --test /Users/swyx/.codex/skills/programmatic-agents/scripts/codex.test.mjs
+Run deterministic adapter tests without inference or private inputs:
+
+```sh
+node --test /Users/swyx/Work/skills/programmatic-agents/scripts/agents.test.mjs
+node --test /Users/swyx/Work/skills/programmatic-agents/scripts/codex.test.mjs
 ```
-
-## Setup and account troubleshooting
-
-Read [references/setup.md](references/setup.md) before installing, authenticating, selecting account plans, or diagnosing provider access. It records supported entry points, configuration locations, verified setup pitfalls, and how to distinguish login from usable model access.
-
-## Cross-CLI runs and reusable telemetry
-
-Use [scripts/agents.mjs](scripts/agents.mjs) for a common invocation and telemetry contract across Codex, Cursor, Antigravity, Muse, Deep Code, ZCode, Devin, and Mistral Vibe. Read [references/multi-cli.md](references/multi-cli.md) for configuration, logging semantics, cost provenance, privacy, and validation. For deeper event logging, native exports, or session-scoped dotfile inspection, read [references/telemetry-research.md](references/telemetry-research.md). Keep project-specific prompts and analysis in the consuming project. Retain the original runner above when its Codex-native schema interface is needed.
-
-The adapter records failed attempts as well as successes, never substitutes models, does not automatically retry, and keeps unknown costs/usage null. Full content traces are opt-in. CLI output formats, sandbox/tool behavior, and reasoning settings differ: compare model-plus-CLI configurations and record those differences.
 
 ## Muse default preference
 
@@ -70,7 +56,7 @@ The owner explicitly prefers Muse Spark’s cheaper Contributor data-sharing tie
 - **Summarization and classification:** Supply authoritative metadata separately from untrusted source content; preserve technical names and unknowns.
 - **Structured extraction:** Require a strict root-object schema with explicit required fields and `additionalProperties: false`; validate returned values before using them.
 - **Code generation:** Default to `read-only`. Use `workspace-write` only when the user explicitly authorizes edits in the target project.
-- **Tools and skills:** Codex owns its configured tools. Scope the prompt to the authorized operation and inspect only necessary event metadata.
+- **Tools and skills:** The selected agent owns its configured tools. Scope the prompt to the authorized operation and inspect only necessary event metadata.
 - **Batch workflows:** Freeze model, prompt version, schema, reasoning effort, and source provenance; bound concurrency; checkpoint successes; retry only transient failures.
 
 ## Safety and measurement boundaries
@@ -85,10 +71,10 @@ The owner explicitly prefers Muse Spark’s cheaper Contributor data-sharing tie
 
 ## Diagnose execution failures
 
-- If nested Codex cannot write its local state database, run from an already-authorized normal terminal; do not redirect credentials or disable security.
+- If a nested agent cannot write its required local state, use an already-authorized supported execution surface; do not redirect credentials or disable security.
 - Correct missing, malformed, non-object, or non-strict schemas before launching a model request.
 - Reject duplicate options rather than letting later flags silently alter the model, sandbox, prompt, input, or reasoning settings.
-- If a global CLI rejects a model as too new, check the desktop-bundled executable before proposing an installation or update.
+- If a CLI rejects a requested model, check its version and any supported bundled executable before proposing an installation or update.
 - Audit tool events by type and status unless deeper output inspection is explicitly authorized. Redact bearer tokens and API keys from failures.
 
 ## Official references

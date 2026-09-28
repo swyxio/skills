@@ -1,6 +1,6 @@
 ---
 name: ai-devblog
-description: Turn coding, debugging, research, architecture, migration, deployment, or product work into a clear, evidence-backed technical post in an existing publishing system. Use when Codex should reconstruct primary evidence, decide whether the material deserves a note or article, align on the intended reader, choose among field-report, explainer, reversal, origin-story, hands-on, or evidence-led argument forms, write and edit the piece, inspect its rendered presentation, and publish it at the requested visibility. Pair with blog-system-design for changes to the shared blog system.
+description: Turn coding, debugging, research, architecture, migration, deployment, or product work into a clear, evidence-backed technical post in an existing publishing system. Use when an agent should reconstruct primary evidence, decide whether the material deserves a note or article, align on the intended reader, choose among field-report, explainer, reversal, origin-story, hands-on, or evidence-led argument forms, write and edit the piece, inspect its rendered presentation, and publish it at the requested visibility. Pair with blog-system-design for changes to the shared blog system.
 ---
 
 # AI Devblog

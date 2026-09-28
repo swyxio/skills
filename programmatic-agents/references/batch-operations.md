@@ -1,4 +1,4 @@
-# Sustained Codex runs
+# Sustained coding-agent runs
 
 Use an existing task runner when possible. These are operating decisions, not a requirement to build a queue framework, telemetry service or new approval system. Worker counts, observation intervals and stopping conditions come from the task, not one historical run.
 

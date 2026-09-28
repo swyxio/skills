@@ -30,7 +30,7 @@ Keep the questions compact, specific to the task, and answerable without special
 
 Write the complete question batch directly in the final user-facing response as ordinary Markdown. Include every option, its tradeoff, and the recommendation. The user must be able to answer by reading that response alone, without expanding activity, opening a panel, inspecting tool arguments, or finding another message. Put the questionnaire before any extended explanation or implementation plan.
 
-Default to text only for this skill. Do not call a native question tool or asynchronous picker merely because one is available. Codex may show question titles while hiding the option payload; a tool response saying `accepted: true` confirms submission, not that the user can see or answer the options.
+Default to text only for this skill. Do not call a native question tool or asynchronous picker merely because one is available. Some interfaces may show question titles while hiding the option payload; a tool response saying `accepted: true` confirms submission, not that the user can see or answer the options.
 
 If a picker is explicitly requested or required by higher-priority instructions, use it only as permitted. Still reproduce the complete batch in the final answer whenever text options are permitted. If higher-priority instructions prohibit text options, respect that restriction: include the full alternatives and consequences in the tool's visible question text when permitted, and explain the output limitation plainly. Never ask the user to approve codes whose definitions are missing from the visible interface.
 
