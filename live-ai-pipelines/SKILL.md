@@ -35,6 +35,13 @@ For a costly broad run, a small representative calibration and per-request-class
 
 For a simple local job, derive completion from validated result artifacts and idempotency keys. For a job that can outlive its caller or be resumed by another process, also maintain an item index, owner/lease, heartbeat, and explicit cancellation/detach policy. On cancellation, stop new admission, preserve valid work, and classify unfinished items so a later run can decide whether to retry them.
 
+Record which input fields invalidate which stages. A transcript change need not
+invalidate a biography; a prose change need not invalidate media. Reuse acceptance
+and validation evidence only when the relevant source, content, contract and
+artifact versions match. Preserve accepted content while replacements are held.
+For entity releases, use one completion ledger with receipts behind it rather than
+competing status systems. Reconcile ambiguous delivery before another submission.
+
 ### 4. Use one provider boundary
 
 Keep provider-specific streaming and request behavior inside an adapter that returns a validated result or an explicit failure. Record requested/actual provider/model and route when that information changes debugging, cost, privacy, or behavior.
@@ -49,7 +56,15 @@ Provide a status snapshot and a reconnectable event path when a UI needs live up
 
 ### 6. Publish and verify
 
-Render to a new snapshot, check the links and required artifacts, then switch the current pointer atomically. Test the failure paths that matter to the promised experience: interruption/restart, malformed model output, duplicate delivery, provider failure, and browser reconnect. Report coverage, elapsed time, retries/fallbacks, and artifact locations when the run is significant.
+Assemble one complete candidate. Reuse exact-tree validation and promote its verified
+artifact rather than rebuilding unchanged code. Immutable staging may overlap
+independent validation, but mutable publication waits for required prerequisites.
+Render to a new snapshot, check the links and required artifacts, then switch the
+current pointer conditionally against the observed prior version and persist readback.
+Invalidate affected caches and perform one combined live pass at the coverage
+required by the user or project. Bind proofs to content/frontend versions and
+viewports; a localized repair rechecks only affected proofs. Do not infer visual
+acceptance from a machine success flag. Test the failure paths that matter to the promised experience: interruption/restart, malformed model output, duplicate delivery, provider failure, and browser reconnect. Report coverage, elapsed time, retries/fallbacks, and artifact locations when the run is significant.
 
 ## References and scripts
 
