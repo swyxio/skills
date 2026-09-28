@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile Native"
+  short_description: "Personal native UX, iOS delivery pitfalls, and playtesting"
+  default_prompt: "Use $mobile-native for this native flow, iPad adaptation, notification choice, or iOS delivery/playtest task; apply my defaults and verify the requested outcome."
