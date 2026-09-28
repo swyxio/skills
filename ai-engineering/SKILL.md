@@ -35,13 +35,18 @@ Find the first boundary that changed or rejected the artifact: provider delivery
 
 Budget each request so the model can finish; split or continue long work while preserving required coverage. Do not turn token budgets into arbitrary section/item ceilings that omit substantive source material. Validate schema, source references and domain invariants; native structured output does not establish semantic completeness.
 
-For an expensive or broad fan-out, run a small sparse/typical/dense sample first. Use the result to tune per-class input and output budgets. Long-form requests benefit from a bounded evidence packet: deduplicate, rank representative support, preserve conflicts, and keep stable locators. Global synthesis should receive normalized IDs and compact summaries rather than the raw corpus plus every intermediate artifact.
+Before broad admission, run cheap deterministic checks across all selected packets:
+identity, required fields, canonical links, source locators and alias consistency.
+Do not spend model calls discovering a malformed packet. Calibrate unfamiliar
+request classes on a small sparse/typical/dense sample; reuse comparable successful
+calibration when its relevant inputs have not changed. Use the result to tune per-class input and output budgets. Long-form requests benefit from a bounded evidence packet: deduplicate, rank representative support, preserve conflicts, and keep stable locators. Global synthesis should receive normalized IDs and compact summaries rather than the raw corpus plus every intermediate artifact.
 
 For heterogeneous model fan-outs, define endpoint-specific capability and payload profiles. Include reference topology and ordering, supported parameters, safety-control fields, output schema, and fallback policy in the effective request. Do not send a universal parameter bundle or guessed provider controls.
 
 ### 3. Scale deliberately
 
-Start with modest in-flight concurrency. Pace requests and tokens separately, honor `Retry-After`, and use provider headers when available. Raise concurrency only after measuring throughput, latency, retries, 429s, context size, and remaining headroom; high latency can be a context or generation bottleneck rather than a rate-limit problem.
+For an unmeasured request class, start with modest in-flight concurrency. Preserve
+a measured healthy setting on resume rather than restarting its ramp. Pace requests and tokens separately, honor `Retry-After`, and use provider headers when available. Raise concurrency only after measuring throughput, latency, retries, 429s, context size, and remaining headroom; high latency can be a context or generation bottleneck rather than a rate-limit problem.
 
 ### 4. Repair by failure class
 
@@ -56,6 +61,11 @@ For a significant run, write complete artifacts atomically and maintain a status
 For subjective artifacts, persist provider completion and human adjudication independently. Support blind evaluation when requested: store artifact references and operational metadata without fetching, opening, classifying, or scoring the artifact, and leave acceptance to the named reviewer.
 
 If workers can outlive their caller or another runner may resume work, add explicit ownership, heartbeats, and cancellation behavior. A simple in-process job does not need a lease protocol.
+
+For publishing workflows, measure accepted changes delivered live per elapsed hour,
+not active slots or provider completions. Separate queue waits, useful execution,
+retry cooldowns, release waits and duplicated work; overlapping worker durations
+are not additive wall time. Missing timing or cost remains unavailable.
 
 ### 6. Verify the relevant unhappy paths
 

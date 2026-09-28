@@ -29,7 +29,10 @@ sources to reach a citation count.
 
 Before delivery, verify consequential factual claims and quotations against
 their sources, including quantities, dates, causal language, and link targets.
-Editing must not widen certainty beyond the evidence.
+Editing must not widen certainty beyond the evidence. Keep internal verification
+notes out of public prose unless the verification process is the subject. State
+supported facts directly; retain a concise qualification when uncertainty changes
+the reader’s understanding, rather than narrating every source limitation.
 
 Stop when the requested artifact is supported and material uncertainties are
 identified. Gather more evidence only when it could change a consequential

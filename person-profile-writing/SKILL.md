@@ -54,8 +54,17 @@ For a generation pipeline, calibrate on a sample spanning evidence-rich and
 evidence-poor subjects, disputed identities, varied careers, different source
 types, and formatting edge cases.
 
+When approved examples are supplied, compare complete profiles rather than their
+headings or length. Assess factual support and editorial usefulness separately:
+does the draft explain this person’s distinctive contributions and development,
+or merely recount the latest talk? Select useful mechanisms and examples without
+turning refinement into a transcript walkthrough. Source-poor brevity is valid;
+missing optional career details are not a reason to invent or demand a dossier.
+Repair substantive repetition, confusing selection or lost contributions locally;
+preferences about length or outline alone are not rejection grounds.
+
 Check identity fidelity, supported chronology, ownership and attribution,
 meaningful links, private-source exclusion, and destination rendering. Persist
 accepted evidence and revisions so retries do not repeat successful paid work.
-Keep research, synthesis, editorial compression, validation, and publication
+Keep research, synthesis, editorial development, validation, and publication
 separate when those boundaries improve the pipeline.

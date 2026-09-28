@@ -106,6 +106,14 @@ available evidence shows` unless the source itself is the subject. State the
 supported fact directly and link the useful words. Preserve uncertainty where
 the source does not justify a clean assertion.
 
+For example, prefer `X founded Y to build inference software` to `The conference
+biography identifies X as the founder of Y`, when the role is supported. A company
+profile explains its products and work; `the supplied recording does not establish
+broader archive coverage` belongs in an internal coverage note. A biography selects
+what a technical contribution reveals about the person; the presentation’s sequence
+of tuning steps belongs on the talk page. These are selection examples, not fixed
+sentence templates or permission to remove material uncertainty.
+
 ## Format for the argument
 
 Use connected prose to develop an explanation, but do not let long stretches

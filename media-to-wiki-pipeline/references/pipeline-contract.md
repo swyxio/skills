@@ -6,12 +6,12 @@ MP3/MP4 + recording/event metadata
   -> early recording/event/person/org resolution
        -> essay + selective figures -> accepted reader
        -> person research -> accepted bio
-       -> organization research -> accepted guide
-  -> rich-content enrollment -> immutable release + conditional pointers
-  -> affected cache invalidation -> sampled desktop/mobile checks -> ledger recap
+       -> organization research -> accepted company profile
+  -> accepted page assembly -> immutable release + conditional pointers
+  -> affected cache invalidation -> required desktop/mobile checks -> ledger recap
 ```
 
-The arrows describe dependencies, not serial scheduling. Metadata and research can start before media acquisition finishes. An unsupported org identity need not block a supported talk: retain the documented credit without inventing a canonical org link. Provisional entities stay private until their content and identity are accepted.
+The arrows describe dependencies, not serial scheduling. Metadata and research can start before media acquisition finishes. An unsupported org identity need not block a supported talk: retain the documented credit without inventing a canonical org link. Resolve authoritative identity and membership independently of prose. Ambiguous identities stay provisional; accepted identity alone does not establish a complete public page.
 
 ## Source and transcript
 
@@ -44,9 +44,9 @@ Give writers complete relevant current sources and any accepted content being re
 
 Readers preserve progression, mechanisms, examples, quantities, disagreements, and endings. Follow `video-talk-to-essay` for writing and review. Bind figures to media hash, original clock, caption, and reading-order position. Inspect new/changed visuals for unsupported associations or exposed redactions; reuse unchanged accepted visual evidence. Audio-only input does not establish slide contents.
 
-Person research supports chronology, contributions, authored work, projects, ideas, and dated roles; talks alone are not a full biography. Org guides establish exact identity and useful context for its work and the collection. Source-poor content should be concise, not padded with invented facts. Preserve approved photos, aliases, unrelated fields, and private/public boundaries.
+Person research supports chronology, contributions, authored work, projects, ideas, and dated roles; talks alone are not a full biography. Company profiles explain exact identity, products, users, distinctive work and useful history. A newly supplied talk is evidence, not the profile’s organizing subject. Archive guides are a separate, explicitly requested artifact. Use the project’s existing company contract and approved examples with research-grounded-writing and swyx-writing. Source-poor content should be concise, not padded with invented facts. Preserve approved photos, aliases, unrelated fields, and private/public boundaries.
 
-Accept rich new bios/guides before public enrollment; enrollment and content may ship together. Missing enrollment is an explicit error with a research/repair disposition, not silent success. Existing accepted pages remain visible while proposed replacements are held.
+Enroll authoritative identities and memberships during preparation. Accept new bios/company profiles before treating public pages as complete; enrollment and content may ship together. Missing enrollment is an explicit error with a research/repair disposition, not silent success. Existing accepted pages remain visible while proposed replacements are held.
 
 ## Incremental change rules
 
@@ -58,8 +58,8 @@ Accept rich new bios/guides before public enrollment; enrollment and content may
 | Recording/event credit | Identity, bylines, links, membership, caches; bio only if its claims change |
 | Current employment evidence | That field and affected prose; retain historical credit |
 | Canonical identity/alias | Identity proof and affected routes/links/membership |
-| Substantive bio/guide replacement | Replacement review; retain accepted prior content until publication |
-| Renderer/cache repair | Focused regression and live samples; no content regeneration |
+| Substantive bio/company replacement | Replacement review; retain accepted prior content until publication |
+| Renderer/cache repair | Focused regression and required live checks; no content regeneration |
 
 Review substantive new writing and changed meaning. Deterministic formatting or metadata repairs do not inherently require a whole-article model review. Repair the smallest faulty unit. A stale fingerprint schedules work; it does not suppress accepted content. Missing receipts do not establish missing writing or no execution.
 
@@ -83,6 +83,6 @@ Assemble immutable accepted snapshots with required enrollments, retaining unrel
 
 Invalidate affected page/data/directory caches as part of the release, including speaker/org membership. Repair failed invalidation without republishing accepted content.
 
-Sample desktop/mobile across distinct changed behaviors, new route types, and flagged risks. Check accepted visible text, bylines, dated affiliation distinctions, canonical/alias routes, speaker/org links and membership, figures, loaded images, overflow, and runtime errors. Inspect changed visuals; reuse unchanged component checks. Record inspected pages and sampling limits. Diagnose failures and perform bounded readonly rechecks rather than redelivery or blanket error suppression.
+Follow the user/project coverage contract: verify every changed page on desktop/mobile when required. If sampling is permitted, cover distinct changed behaviors, new route types and flagged risks. Check accepted visible text, bylines, dated affiliation distinctions, canonical/alias routes, speaker/org links and membership, figures, loaded images, overflow, and runtime errors. Inspect changed visuals; reuse unchanged component checks. Record inspected pages and sampling limits. Diagnose failures and perform bounded readonly rechecks rather than redelivery or blanket error suppression.
 
-Successful batch completion requires settled required work and passing sampled release checks. After bounded recovery, a batch with held/unreviewed/unpublished items is `finished with unresolved items`, not wholly completed. Report frozen scope, unchanged/amended/completed counts, transcript recoveries, entity changes, public versions/links, available actual costs, sampled coverage, and unresolved dispositions. Do not equate textual review with acoustic certification or a frozen batch with all newly arriving recordings.
+Successful batch completion requires settled required work and passing required release checks. After bounded recovery, a batch with held/unreviewed/unpublished items is `finished with unresolved items`, not wholly completed. Report frozen scope, unchanged/amended/completed counts, transcript recoveries, entity changes, public versions/links, available actual costs, sampled coverage, and unresolved dispositions. Do not equate textual review with acoustic certification or a frozen batch with all newly arriving recordings.
