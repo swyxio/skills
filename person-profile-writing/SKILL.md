@@ -54,6 +54,12 @@ For a generation pipeline, calibrate on a sample spanning evidence-rich and
 evidence-poor subjects, disputed identities, varied careers, different source
 types, and formatting edge cases.
 
+Evaluate usefulness without requiring a site-specific reference: the opening
+identifies this particular person, supported contributions are explained concretely,
+and the account develops coherently without repetition or generic career padding.
+Meaningful links and navigation help readers investigate the work. Examples from
+other corpora illustrate those qualities, not a required style, length or outline.
+
 When approved examples are supplied, compare complete profiles rather than their
 headings or length. Assess factual support and editorial usefulness separately:
 does the draft explain this person’s distinctive contributions and development,
