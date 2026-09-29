@@ -7,6 +7,15 @@ description: Operate desktop applications and browsers reliably through Computer
 
 Run UI automation as a repeated **observe → identify → act → re-observe → verify** loop. Never equate tool context with application reality: a lost binding, empty accessibility tree, or stale element index does not prove the app, window, tab, or user state disappeared.
 
+## Chrome default: bind to a tab
+
+The user keeps using Chrome while agents work and runs multiple Codex browser sessions concurrently. Default to tab-bound Chrome control by stable tab ID. Keep observations, screenshots, clicks, typing, navigation, and any network/CDP capture scoped to that tab handle. Do not use the frontmost Chrome window, active tab, window position, or global keyboard shortcuts as the target for ordinary browser work.
+
+- Give each chat its own named browser session and dedicated tab; reuse that chat's binding throughout the task. Claim an existing tab only when it is the intended target and another chat is not operating it. Do not take over another chat's tab.
+- A separate tab or window does not isolate cookies, login, or account state within the same Chrome profile. Coordinate account switches and sign-outs that could affect other work; do not change profiles silently.
+- If the binding fails, refresh the tab inventory, recover the exact tab, and read the adapter's troubleshooting before switching to desktop control. A failed create-tab command does not prove existing tabs cannot be claimed.
+- Native desktop control is a fallback for unsupported native dialogs or a binding that cannot be recovered. Before using it, explain that it requires shared focus and coordinate a brief exclusive interval with the user or other authorized chats. Stop if focus changes, then return to the tab handle as soon as possible. Do not repeatedly steal focus to continue a background task.
+
 ## Model the layers separately
 
 Diagnose the failing layer before changing anything:
@@ -47,7 +56,7 @@ Use the narrowest reliable surface that preserves the user's intended session:
 
 1. Use a purpose-built connector, API, or CLI for semantic operations when available and when the user did not explicitly request visible UI interaction.
 2. Use a dedicated app/browser plugin when the task depends on its live authenticated context.
-3. If the dedicated plugin loses a window/tab binding or cannot perform a native UI interaction, use Computer Use on the **same app and profile** to inspect, activate, or continue the workflow.
+3. For Chrome, recover the tab binding first. Use native Computer Use on the **same app and profile** only under the shared-focus fallback rule above.
 4. Prefer accessibility actions. Use screenshots and coordinates only when accessibility is incomplete or incorrect.
 5. Do not use AppleScript, shell-driven UI automation, or another automation technology unless the user explicitly requests it.
 6. Ask the user to intervene only after supported state refresh, identity recovery, same-app fallback, and tool-specific troubleshooting fail.
@@ -58,7 +67,7 @@ Never silently switch browser family, browser profile, desktop app, account, or 
 
 Treat local preparation as an intermediate checkpoint, not completion. If the user asked to attach, upload, save, publish, submit, or otherwise finish a UI workflow, do not stop at “the file is ready,” “select it manually,” or “the browser binding cannot handle the picker” while a supported Computer Use path remains.
 
-- Switch to Computer Use immediately when the dedicated surface reaches a native-control boundary it cannot operate.
+- At a native-control boundary, first use the documented tab-bound chooser or download interface when available. If native Computer Use is required, coordinate shared focus as described above before operating it.
 - Continue in the same turn through attachment and post-action verification when authorization permits.
 - Do not merely promise to use the fallback later. Invoke it and report observed results.
 - If a named Computer Use tool is not visible, check the current agent's supported desktop interfaces before calling the capability unavailable. Do not assume another agent's runtime or package is installed.
@@ -72,13 +81,13 @@ The fallback changes the control surface, not the task scope, destination, accou
 ### 1. Initialize or reuse
 
 - Reuse persistent tool and app bindings when valid.
-- Initialize the current Computer Use adapter as documented and inspect the named app first.
+- For Chrome, initialize the documented browser adapter and bind the exact tab first. For native applications, initialize Computer Use and inspect the named app.
 - If a display-name lookup fails, retry with the bundle identifier before broader discovery.
 - Do not reset the JavaScript session as a first-line recovery; resets destroy useful identity and operation state.
 
 ### 2. Observe fresh state
 
-- Fetch app state before acting.
+- Fetch state from the bound tab before browser actions; fetch app state before native actions.
 - Use the accessibility tree for identity and controls; inspect the screenshot when layout, focus, overlays, canvas content, native dialogs, or multiple monitors matter.
 - If the returned accessibility text is only a diff and earlier state is unavailable or suspect, request a fresh full state.
 - Treat empty or partial accessibility text as incomplete evidence, not proof that the UI is blank.
@@ -129,8 +138,8 @@ When a dedicated Chrome binding fails, preserve the same live Chrome session:
 3. Use the adapter's user-visible tab inventory and match a saved stable ID, URL/resource ID, or exact title plus origin/account marker.
 4. Bind or claim the existing tab through the adapter's documented interface when necessary.
 5. Verify URL/resource and account markers after claiming.
-6. If enumeration or claim remains unavailable, inspect `com.google.Chrome` with Computer Use, activate the existing tab via accessibility or Chrome tab search, then retry the browser binding.
-7. Read Chrome-specific troubleshooting before declaring the extension unavailable.
+6. Read Chrome-specific troubleshooting before declaring the binding unavailable.
+7. If enumeration or claim remains unavailable, coordinate shared focus, inspect `com.google.Chrome` with native Computer Use, activate the verified tab, then retry tab-bound control.
 
 Do not reload, duplicate, or recreate the tab until the user-visible inventory and same-Chrome recovery path are exhausted. Say “tab binding was lost,” not “the tab was closed,” unless closure was observed.
 

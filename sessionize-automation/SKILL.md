@@ -22,9 +22,12 @@ current official API surface for the exact operation.
 
 ## Prerequisites
 
-- Use Chrome control when the task depends on the user's logged-in Sessionize
-  organizer state.
-- Claim an existing Sessionize tab when available instead of reloading it.
+- Use tab-bound Chrome control when the task depends on the user's logged-in
+  Sessionize organizer state. Follow [resilient-computer-use](../resilient-computer-use/SKILL.md#chrome-default-bind-to-a-tab) so the user and other Codex chats can use Chrome concurrently.
+- Claim the intended Sessionize tab by stable ID when available and not in use
+  by another chat; otherwise use a dedicated tab. Keep reads, writes, and any
+  network inspection scoped to that handle. Coordinate shared focus before a
+  native desktop fallback.
 - Use Browser only as a fallback for non-authenticated inspection or screenshots.
 - Identify the event ID and the authoritative local source of truth before any
   write.

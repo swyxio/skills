@@ -1,6 +1,6 @@
 ---
 name: youtube-studio-computer-use
-description: Automate YouTube Studio through Chrome and Computer Use when API access is unavailable, insufficient, or slower for Studio-only edits. Use for browser-driven YouTube Studio work such as editing existing videos, adding custom thumbnails, changing visibility, scheduling publish times, selecting playlists, saving/verifying Studio state, recovering from disabled buttons, and coordinating DOM injection with Computer Use clicks. Prefer API or the youtube-studio-batch-upload skill for pure upload/download/metadata preparation when stable API credentials or batch upload workflows are available.
+description: Automate YouTube Studio through tab-bound Chrome control when API access is unavailable, insufficient, or slower for Studio-only edits. Use for editing existing videos, adding thumbnails, changing visibility, scheduling, selecting playlists, and verifying saved Studio state. Prefer API or youtube-studio-batch-upload for pure upload/download/metadata preparation when stable API credentials or batch upload workflows are available.
 ---
 
 # YouTube Studio Computer Use
@@ -13,39 +13,38 @@ Use this skill when the task must operate the live YouTube Studio UI in Chrome:
 - Schedule or reschedule videos through Studio visibility controls.
 - Fix metadata, playlist, audience, visibility, or save states when API setup is missing.
 - Batch a series of Studio edit-page operations with a ledger and recovery list.
-- Combine DOM injection with Computer Use for fragile UI states.
+- Inspect DOM state and use tab-bound controls for fragile UI states.
 
 Use `youtube-studio-batch-upload` instead when the primary job is downloading source videos, staging filenames, building metadata, uploading new videos, or keeping upload ledgers. Use an official YouTube API flow when OAuth/API credentials already exist and the operation is supported cleanly, especially for bulk metadata reads/writes. This skill is for the messy browser path.
 
 ## Ground Rules
 
-- Call `mcp__computer_use.get_app_state` before direct UI actions in a turn.
-- Treat Chrome tabs as shared with the user. Before injecting JS, explicitly target or activate the intended YouTube Studio tab; do not rely on “front window active tab” after the user has been browsing.
+- Follow [resilient-computer-use](../resilient-computer-use/SKILL.md#chrome-default-bind-to-a-tab). The user and other Codex chats may use Chrome concurrently: bind a dedicated Studio tab by stable ID and keep observations, actions, screenshots, and network inspection scoped to it.
+- Inspect fresh state from that tab before UI actions. Do not activate a frontmost window or use AppleScript as the default control path. Coordinate shared focus before any native desktop fallback.
 - Keep a local status JSON/CSV ledger with `video_id`, title, action, target time, thumbnail path, `ok`, error, and verification text.
 - Save each video before moving to the next. Verify `All changes saved` and the intended side-panel state, such as `Visibility Scheduled`.
-- If the user is also using Chrome, assume focus may move. Re-query app state and retarget the Studio tab after interruptions.
+- After interruptions, recover the same tab binding and verify channel/video identity and saved state before retrying. Do not take over another chat's tab.
 - Do not publish private/internal source URLs or notes while making metadata changes.
 
 ## Browser Automation Pattern
 
-Use Computer Use to anchor the session and DOM JS for repetitive page operations:
+Use the documented tab-bound browser adapter for page operations:
 
-1. Open or select a YouTube Studio edit page: `https://studio.youtube.com/video/<video_id>/edit`.
+1. Bind a dedicated Studio tab and open the edit page: `https://studio.youtube.com/video/<video_id>/edit`. Verify the channel and video ID.
 2. Wait for the edit page to be fully rendered. Require body text, a thumbnail/input area when needed, and the `Edit video visibility status` control.
-3. Run small JS snippets through Chrome AppleScript or a browser tool. For async browser work, start the async task in-page, store the result on `window.__codex...`, then poll it. AppleScript does not reliably await Promises.
-4. Use Computer Use clicks for native popups, file pickers, and UI states that DOM JS cannot reach.
+3. Use tab-bound accessibility actions or locators. Use DOM evaluation only within the current adapter's documented capabilities; do not bypass restrictions with AppleScript or injected scripts.
+4. Use the adapter's file-chooser interface for uploads. Use native Computer Use only for unsupported native controls after coordinating shared focus, then return to the tab binding.
 5. Save, wait, verify, and append to the ledger before continuing.
 
 For detailed snippets and known failure modes, read `references/studio-dom-patterns.md`.
 
 ## Thumbnails
 
-Reliable thumbnail replacement requires the hidden Studio file input:
+Use the documented tab-bound file-chooser flow for thumbnail replacement:
 
-- Scroll the thumbnail section into view and wait for `input[type=file]#file-loader`.
-- Do not click the upload button unless you plan to handle the native file picker.
-- A robust DOM route is to serve the local thumbnail file from a tiny localhost server, `fetch` it from the page, create a `File`, set `input.files` with `DataTransfer`, and dispatch `input` plus `change`.
-- After injection, wait for the thumbnail control to stop showing `Uploading...`. Large or slow images may need a 60-second poll.
+- Inspect the rendered Thumbnail section and identify its upload control.
+- Start the chooser wait, click the upload control through the bound tab, and set the local file through the returned chooser. See [browser upload examples](../resilient-computer-use/references/codex-browser-examples.md#browser-file-uploads).
+- Verify the new preview and wait for `Uploading...` to clear before saving. Do not substitute localhost fetch or DOM injection when the adapter restricts them.
 
 If Studio shows the new thumbnail but the status object still says pending, inspect the page before retrying; retrying may replace the same thumbnail harmlessly, but do not save until Studio is done uploading.
 
@@ -67,9 +66,9 @@ For spaced launches, generate slot times in the local YouTube timezone, e.g. sta
 Common recoveries:
 
 - `missing file input`: the thumbnail section has not rendered. Scroll to Thumbnail and wait again.
-- thumbnail result `pending`: the in-page async task did not finish in the poll window. Extend the poll, use a threaded local server, and inspect whether Studio is already uploading the thumbnail.
+- thumbnail still uploading: inspect the bound tab's upload progress and preview before retrying; reconcile whether the file was already accepted.
 - `Done` disabled after setting time: choose the time from the dropdown listbox; do not type or assign the value only.
 - `missing schedule`: the visibility popup did not open or is still collapsed. Re-open the visibility control and inspect visible popup text.
-- JS ran on the wrong page: retarget the Studio tab explicitly and re-run `get_app_state`.
+- Wrong page or lost binding: recover the exact Studio tab ID and inspect fresh tab state before continuing.
 
 Never bulldoze through failures in a batch. Stop, patch the driver, and resume from the ledger with the next available publish slot.

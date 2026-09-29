@@ -2,14 +2,9 @@
 
 ## Target The Right Chrome Tab
 
-When the user may be using Chrome too, avoid active-tab assumptions. Prefer a known Studio tab:
+Bind the intended Studio tab by stable tab ID through the current browser adapter. Use a dedicated tab for each Codex chat, verify the channel and video ID, and keep every action and observation scoped to its handle. Window/tab positions and frontmost-window activation are not stable targets. Follow [the shared Chrome rule](../../resilient-computer-use/SKILL.md#chrome-default-bind-to-a-tab).
 
-```applescript
-tell application "Google Chrome" to execute tab 1 of window 1 javascript "<js>"
-tell application "Google Chrome" to set URL of tab 1 of window 1 to "https://studio.youtube.com/video/VIDEO_ID/edit"
-```
-
-If the tab/window is not known, enumerate windows/tabs and select the tab whose URL starts with `https://studio.youtube.com/video/`.
+The snippets below are optional DOM patterns for adapters that explicitly support their required capabilities. They are not permission to bypass read-only evaluation restrictions. Prefer the tab-bound file-chooser flow for thumbnails; do not use AppleScript or localhost injection as a fallback around adapter restrictions.
 
 ## Wait For Edit Page Readiness
 
@@ -26,9 +21,9 @@ If the tab/window is not known, enumerate windows/tabs and select the tab whose 
 }))()
 ```
 
-## Async JS Must Be Start-And-Poll
+## Optional Async Page Tasks
 
-Chrome AppleScript does not reliably await Promises. Start the async work in-page:
+Only when the current tab adapter explicitly supports page globals and script execution, an async page task can expose completion state for later inspection:
 
 ```js
 (() => {

@@ -8,6 +8,8 @@ description: Visually inspect a local or deployed site/app in a real browser and
 Use the applicable browser-control skill. Match the effort to the request: a
 static page review is not a full product certification.
 
+For Chrome, follow [resilient-computer-use](../resilient-computer-use/SKILL.md#chrome-default-bind-to-a-tab): use a dedicated tab bound by stable ID for actions, screenshots, viewport changes, and console inspection. The user and other Codex chats may keep using Chrome concurrently; coordinate shared focus before any native desktop fallback.
+
 ## Choose the scope
 
 Identify the few states that can materially change the result: named pages,
