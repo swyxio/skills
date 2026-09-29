@@ -24,10 +24,12 @@ Inspect `assets/design-loop-reference.png` when a compact reminder of the loop i
 - Separate non-negotiable data, safety, and behavioral invariants from visual and product-behavior questions that are open to proposals.
 - Do not let a cleaner mock silently remove or weaken existing functionality.
 
-### 2. Generate four directions before coding
+### 2. Research references and generate four directions before coding
 
-- Use ImageGen to create four materially different visual, interaction, and product-behavior directions. Make the fourth a purposeful wildcard unconstrained by review cost.
-- Aim for a conservative refinement, a structural rethink, a bold product direction, and a wildcard rather than four surface variations.
+- Before ideation, use computer use in Chrome to search the free [Mobbin website](https://mobbin.com) for relevant screens and flows. Follow the bounded reference-search procedure in [references/imagegen-workflow.md](references/imagegen-workflow.md); no Mobbin MCP or paid plan is required.
+- Write distinct creative briefs before ImageGen: composition, typography, density, color strategy, interaction model, and one signature move. Each pair must differ on at least three axes, including composition or interaction; palette-only variants do not count.
+- Explore broadly with lightweight studies before developing four finalists. Use ImageGen to create four materially different visual, interaction, and product-behavior directions, each with its own brief and reference set. Make the fourth a purposeful wildcard.
+- Define directions by different design theses rather than a conservative-to-bold ladder. Borrow specific principles from different product families and, for the wildcard, references outside software when useful.
 - Include enough real content and controls to test hierarchy, not just a decorative hero view.
 - Show at least one compact/mobile composition and one desktop composition.
 - Generate expanded settings or menu states when those surfaces affect the information architecture.
@@ -45,6 +47,7 @@ Inspect `assets/design-loop-reference.png` when a compact reminder of the loop i
 - Do not infer approval from silence, prior enthusiasm, or the fact that one option appears objectively strongest.
 - If the user requests a hybrid, restate the combined contract and get confirmation when the combination materially changes layout or interaction.
 - Record the selected direction, retained traits, rejected tradeoffs, and any authorized deviations. This becomes the visual acceptance reference.
+- Record three defining traits of the selected direction, including its signature move, so implementation retains its character.
 - Treat approval as authority only for the numbered visual and behavioral changes presented at the gate. Keep every other audited capability and contract invariant.
 - Skip this gate only when the user explicitly delegates the selection.
 
@@ -89,6 +92,7 @@ Which direction and numbered options should I implement? Example: `C, 1B, 2A`.
 - Compare side by side first; use overlays or pixel diffs when alignment and spacing need closer inspection.
 - Create a finite delta list covering hierarchy, composition, spacing, type, color, depth, material, iconography, density, and interaction reachability.
 - Start with the selected direction's spatial thesis. Ask whether the implementation preserves the same fold, dominant region, visual weight, information density, and responsive transformation—not merely the same feature inventory.
+- Verify the three defining traits recorded at selection. Catch simplifications that flatten the selected character into a generic interface even when functionality and spacing pass.
 - Be candid about implementation habits that caused drift: generic stacked cards, permissive wrapping, excessive preambles, unconstrained registry copy, substituted components, omitted artwork, missing shared styles, or breakpoint fallbacks.
 - Measure important geometry when possible: masthead height, content start position, rail widths, line count, overflow width, and visible items above the fold.
 - Distinguish intentional implementation adaptations from accidental drift.
@@ -134,6 +138,7 @@ After each real use, identify any broadly reusable omission that was not already
 Report:
 
 - The generated directions and why one was selected.
+- The inspected reference links, borrowed principles, and how the directions differ; disclose any limits to free Mobbin access.
 - Which functionality was preserved, moved, or newly exposed.
 - Which matched viewports, settings, menus, and edge states were visually inspected.
 - Which visual deltas remain and whether each is intentional.
