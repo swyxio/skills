@@ -1,74 +1,38 @@
 # ImageGen direction workflow
 
-Use the installed `imagegen` skill and its built-in tool mode by default.
+Use the installed `imagegen` skill and its built-in tool mode.
 
-## Reference search before ideation
+## Free reference research
 
-- Use computer use in Chrome to browse and search the free Mobbin website. If Chrome is stuck, use computer control. Do not substitute the Codex in-app browser, a Mobbin MCP, or an API for this research step.
-- Search by the actual interaction problem, such as command menus, progressive disclosure, dense reading, search results, or long-running progress. Inspect screens and flows where accessible; do not infer behavior from a single screenshot.
-- Aim for 6–8 useful references across at least three product families, including adjacent categories rather than only direct competitors. Keep scouting to roughly ten minutes; stop earlier when the references provide distinct principles.
-- Use only content accessible for free. If login is needed, use an existing authorized Chrome session; do not create an account, subscribe, or bypass access restrictions. If access is blocked or the free sample is small, record the limitation and continue with accessible public product references.
-- For each inspected reference, save its source link and a short note: the composition or interaction principle to borrow, why it fits, and what should not transfer. Retain screenshots when the tool permits, and visually inspect them before using them as ImageGen inputs. A link or product name alone is not a visual reference.
-- Give each direction a different reference set. Include a reference outside software—editorial typography, wayfinding, physical instruments, or another relevant discipline—when it adds a useful principle to the wildcard. Borrow principles rather than reproducing branding or an entire screen.
+Use computer use in Chrome to browse and search [Mobbin](https://mobbin.com). If Chrome is stuck, use computer control. Use the free website, not the Codex in-app browser, Mobbin MCP, or an API.
 
-## Divergent creative briefs
+Search by the interaction problem: command menus, progressive disclosure, dense reading, search results, or progress. Inspect flows where accessible; a screenshot alone does not establish behavior. Look beyond direct competitors to adjacent product families.
 
-Before generating images, define each candidate's composition, typography, density, palette, interaction model, and signature move. Each pair must differ on at least three axes, including composition or interaction. Reject candidates that become indistinguishable when their accent colors are removed.
+As a non-blocking starting point, aim for 6–8 references across three product families and roughly ten minutes of scouting. Stop earlier when distinct useful principles are clear. Use an existing authorized Chrome session if login is needed; do not create accounts, subscribe, or bypass restrictions. If free access is limited, disclose that and continue with accessible public references.
 
-For a substantial redesign, start with about eight lightweight studies and develop the four most meaningfully different candidates. Keep early studies cheap: concise briefs or rough compositions suffice before full desktop/mobile ImageGen studies. For a bounded task, proceed directly to four distinct briefs. Do not spend the entire exploration budget polishing the first idea.
+For each inspected reference, keep its link and a note on what to borrow, why it fits, and what should not transfer. Capture and inspect images when the tools permit; a product name or URL is not an image input.
 
-Generate each finalist in a separate call with its own brief and references; avoid one shared prompt that anchors every direction to the same aesthetic. Label the current app as a functionality reference, and state which styling and geometry may change within scope. Shared shell requirements remain invariant unless their replacement is explicitly in scope.
+## Distinct briefs
 
-## Exploration prompt structure
+Define composition, typography, density, palette, interaction model, and a signature move for each direction. Give each a different reference set and a separate generation call. Label the current app as a functionality reference and identify which geometry or styling is open to change.
+
+Reject palette-only variants. A useful diversity check is differences on three axes, including composition or interaction. For larger redesigns, optionally explore about eight quick briefs or rough studies before developing four finalists. Borrow a principle from editorial design, wayfinding, physical instruments, or another non-software discipline when it strengthens the wildcard.
+
+## Prompt shape
 
 ```text
 Use case: ui-mockup
-Asset type: responsive app or site interaction study
-Primary request: <the unresolved hierarchy or interaction>
-Input images: <label each as style reference, geometry reference, or current implementation>
-Style/medium: shippable product UI, not concept art
-Design thesis: <specific composition and interaction principle>
-Visual language: <typography, density, palette, and spatial organization>
-Signature move: <one recognizable defining treatment>
-Reference principles: <what to borrow from each attached, inspected reference>
-Composition: <named viewports and expanded states>
-Shared invariants: <exact counts, rules, controls, and behavior that must not change>
-Open product questions: <behavior, navigation, defaults, workflow, or capability proposals invited>
-Direction: <one independently briefed direction; use separate calls for the other finalists>
-Constraints: practical touch targets; readable copy; distinguish proposals from invariants; no watermark
+Request: <one direction's design thesis and unresolved interaction>
+References: <attached inspected images, their roles, and principles to borrow>
+Visual language: <composition, typography, density, palette, signature move>
+Composition: <viewports, real content density, expanded states>
+Invariants: <capabilities, exact counts, dependencies, and rules>
+Open questions: <authorized areas for workflow or behavior proposals>
+Constraints: shippable UI, readable copy, practical controls, no watermark
 ```
 
-## Rules
+Inspect results for missing capabilities, invented controls, impossible navigation, and contradictory states. Correct factual drift while retaining invariants; present useful new behavior as a proposal. Keep exploratory images outside the project; copy selected production assets into its established asset location.
 
-- Label the role of every reference image.
-- Ask for practical UI, not cinematic concept art.
-- Put exact counts and dependencies in both `Shared invariants` and `Constraints`.
-- Generate separate calls for distinct assets or surfaces. Do not rely on one giant contact sheet for final asset production.
-- Keep preview-only studies under the generated-image path. Copy selected project-bound assets into the project or skill before referencing them.
-- Inspect every result for factual drift. Common failures include invented menu items, missing controls, impossible navigation, contradictory toggle states, misleading text, and inconsistent counts.
-- Treat plausible new controls or behaviors as proposals to include in the numbered confirmation gate, not as errors to implement silently.
-- Correct one factual or visual issue per edit where practical; restate every invariant that must remain unchanged.
+## Asset-dependent directions
 
-## Asset-feasibility study
-
-When a visual direction depends on raster assets, or when code-native approximations would flatten its material character:
-
-1. Generate one representative asset at its real usage scale.
-2. Test it on light/dark states and at mobile/desktop density.
-3. Check whether the look can be repeated consistently for the full required set.
-4. Test seamless tiles for visible edges and illustrations for cropping at every target aspect ratio.
-5. Check resolution, high-density rendering, compression, theme compatibility, and asset weight.
-6. Prefer code-native rendering if the generated asset would contain small text, UI chrome, simple geometry, or a frequently changing state. Prefer raster assets for texture, organic variation, illustration, and decorative material detail.
-7. Save selected project-bound assets in the project's established asset location; keep discarded explorations outside the repository.
-
-## Direction-selection checklist
-
-- Does each direction have a recognizable signature and differ meaningfully from the others beyond color and corner radius?
-- Does the output preserve every named capability?
-- Are collapsed and expanded states both represented?
-- Are primary and secondary actions visually distinct?
-- Is the strongest accent used sparingly and consistently?
-- Does mobile recompose rather than merely shrink?
-- Can the look be built with the available asset pipeline?
-- Is any generated text being mistaken for an authoritative rule?
-- Does the direction remain coherent across mobile, tablet, half-width desktop, and full desktop?
+Generate one representative asset at real usage scale. Check crops, resolution, compression, supported themes, and consistency across the required set; test seams for tiles. Use raster assets for texture, illustration, and organic material. Keep small text, changing state, UI controls, and simple geometry code-native. Generate production assets separately rather than extracting them from a contact sheet.

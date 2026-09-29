@@ -1,4 +1,4 @@
 interface:
   display_name: "Design Apps with ImageGen"
-  short_description: "Choose and implement visual product directions"
-  default_prompt: "Use $design-apps-with-imagegen to generate four visual and behavioral directions, ask me to approve one numbered contract, implement it with code and generated assets, and critique the result across mobile, tablet, and desktop."
+  short_description: "Explore and implement image-led redesigns"
+  default_prompt: "Use $design-apps-with-imagegen to research free Mobbin references in Chrome, generate four distinct ImageGen directions, resolve the choice using my selection or delegated defaults, implement it, and critique matched screenshots at relevant sizes."
