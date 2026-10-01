@@ -3,8 +3,6 @@ name: conference-transcribe
 description: |
   Transcribe a multi-talk conference livestream or long YouTube video into separate per-talk transcripts. Parses timestamps from the video description to split talks, downloads audio/video, transcribes each segment, then uses an LLM to clean up and format the transcripts with key takeaways and frequent timestamps. Use when user says "transcribe this conference", "split this livestream into talks", "transcribe each talk separately", or provides a YouTube URL of a multi-hour event stream with chapter timestamps.
 license: MIT
-user_invocable: true
-argument-hint: <youtube-url>
 compatibility: |
   Requires macOS with ffmpeg and yt-dlp installed. Needs at least one transcription backend (Groq API recommended for speed). Needs an LLM API key (Anthropic recommended) for cleanup pass.
 metadata:
@@ -15,6 +13,8 @@ metadata:
 ---
 
 # Conference Transcribe
+
+Input: a YouTube URL with chapter timestamps or another multi-talk recording.
 
 Transcribe a multi-talk conference livestream into individual, cleaned-up per-talk markdown files with key takeaways and frequent timestamps.
 

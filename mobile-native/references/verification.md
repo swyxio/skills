@@ -20,6 +20,32 @@ Select affected conditions: relevant widths/rotation, long or empty content,
 large text, keyboard/pinned bars, search/back/exit, and recovery or persistence
 when touched. Do not populate fake approvals/accounts just to complete a matrix.
 
+## Entry-point loading and recovery
+
+For touched notifications, deep links, widgets, or shortcuts, select focused
+cases from the following:
+
+- Open before sync, with no cached record: available preview or loading appears
+  immediately, exit works, and raw storage errors are not exposed.
+- Open a cached conversation missing the notified message: old history remains
+  readable, the new message is visibly pending, and its actions wait for exact
+  account/record readiness.
+- Cold launch or denied/missed background execution: opening still initiates
+  loading independently of prefetch.
+- Offline, slow response, failed fetch, Retry, and connectivity recovery: context
+  survives, retries are bounded/coalesced, and later arrival updates an open
+  reader without reopening it or requiring another tap.
+- Rapid taps, dismissal, a different destination, and account/workspace switch:
+  delayed results cannot show the wrong record or overwrite newer navigation.
+- Receipt and tap overlap: alert presentation is not held for download, existing
+  sync ownership is respected, and prefetch performs no read-state/mail mutation.
+
+Use isolated fixtures to prove loading, identity, cancellation, and recovery.
+Verify relevant platform notification/background behavior on a physical device
+when making those claims; unit/simulator passes do not establish APNs arrival or
+an OS-granted background execution window. Record whether prefetch was observed,
+tap loading worked without it, and authoritative content became usable.
+
 ## XCTest pitfalls
 
 Inspect the current hierarchy: tablet tabs may be nested buttons outside

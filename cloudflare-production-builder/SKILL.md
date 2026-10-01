@@ -137,7 +137,10 @@ runtime.
   execution boundary requires tenant isolation. Do not load it solely because a
   preview comes from a same-repository PR by trusted collaborators.
 - [observability-testing-and-cost.md](references/observability-testing-and-cost.md):
-  use when adding or reviewing telemetry, test layers, or spend controls.
+  use when adding or reviewing telemetry, test layers, or spend controls,
+  including CI build artifacts. Default large temporary build packages to
+  three-day retention; keep small release receipts longer. The reference covers
+  local validation, batched pushes, and selecting builds by actual dependencies.
 
 Retrieve current first-party Cloudflare documentation before relying on API
 signatures, configuration, limits, pricing, retention, or product support.

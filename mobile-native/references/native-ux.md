@@ -19,6 +19,46 @@ provider diagnostics in settings details. Gesture shortcuts supplement a
 discoverable essential action. Preserve account/workspace/navigation context
 through loading, failure, permission, and recovery states.
 
+## Opening before local content is ready
+
+Apply this contract to notifications, deep links, widgets, and shortcuts that
+can open a record before its local data is available. Keep the existing shell
+or reader presentation, with usable Back/Done and unrelated drafts preserved.
+
+Show authorized cached content immediately. If a conversation is cached but the
+notified message is absent, retain that history with an explicit new-message
+pending indicator; do not present the old message as the notification's target.
+When no cached content exists, show available bounded sender/title/snippet
+context from the entry point, subject to its privacy settings and account
+binding. If no preview exists, use a clear loading state instead of a blank
+reader. Preview metadata is display context, not an authoritative cache record
+or permission to access content.
+
+Prioritize fetching the target conversation through existing transport/sync
+infrastructure where supported. Defer attachment downloads and remote images;
+do not make a full mailbox/provider refresh a prerequisite to opening a record
+already available on the server. Keep canonical cache writes and sync cursors
+under the existing concurrency/ownership contract. Do not invent a new queue,
+service, or cache from unverified entry-point metadata.
+
+A missing local row during catch-up is pending, not a user-facing database
+error. Keep available context through delays, offline states, and retries. Show
+an honest loading or recovery message, offer Retry and exit, and recover
+automatically when connectivity or authoritative content returns while this
+reader remains open. Bound and coalesce retries; avoid a fixed timeout as a
+universal personal default or an endless spinner without recovery controls.
+Use [long-running-operation-ux](../../long-running-operation-ux/SKILL.md) for
+proportional waiting and recovery behavior.
+
+Replace provisional content in place once the exact target is ready, preserving
+focus, reading position, and selection where possible. Fence delayed responses
+against account/workspace changes, a newer target, and dismissal: completion
+must never reopen a dismissed reader or navigate away from the user's new
+destination. Enable target-dependent actions only after its authoritative
+identity and required data are verified. Prefetch itself must not mark read,
+archive, send, or otherwise mutate user content; preserve the product's separate
+opening/read-state contract.
+
 ## Search changes with native presentation
 
 Search may collapse to a button, move, or change tab visibility by OS, device,

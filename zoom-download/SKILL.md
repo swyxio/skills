@@ -5,7 +5,8 @@ description: >
   "grab recordings from Zoom", "get new Zoom videos", or needs to download
   cloud recordings and analyze their content via frame extraction. Covers
   file type selection, filename verification, and ffmpeg-based content analysis.
-version: 0.1.0
+metadata:
+  version: "0.1.0"
 ---
 
 # Zoom Cloud Recording Download

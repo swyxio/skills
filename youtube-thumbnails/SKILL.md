@@ -5,7 +5,8 @@ description: >
   "generate thumbnails", "make video thumbnails", or needs AI-generated
   thumbnail images via Google Gemini for YouTube videos. Covers prompt
   engineering, image generation, compression, and upload to YouTube Studio.
-version: 0.1.0
+metadata:
+  version: "0.1.0"
 ---
 
 # YouTube Thumbnail Generation via Gemini

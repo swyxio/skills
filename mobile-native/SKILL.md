@@ -1,6 +1,6 @@
 ---
 name: mobile-native
-description: "Apply swyx's native mobile UX preferences when designing or critiquing iPhone/iPad flows, adapting tablet layouts, or choosing communication-app notification behavior. Also use for iOS/iPadOS generated build configuration, signing/install/launch problems, and device playtesting. Keep existing native or cross-platform stacks; excludes browser-only responsive work and backend-only changes without native UX or delivery implications."
+description: "Apply swyx's native mobile UX preferences when designing or critiquing iPhone/iPad flows, adapting tablet layouts, choosing communication-app notification behavior, or opening notifications/deep links/widgets/shortcuts before local content is ready. Also use for iOS/iPadOS generated build configuration, signing/install/launch problems, and device playtesting. Keep existing native or cross-platform stacks; excludes browser-only responsive work and backend-only changes without native UX or delivery implications."
 ---
 
 # Mobile Native
@@ -17,7 +17,9 @@ Platform operations here cover iOS/iPadOS; Android procedures are not establishe
   [iOS/iPadOS delivery](references/ios-ipados-delivery.md).
 - Device QA, XCTest, accessibility findings, screenshots:
   [verification](references/verification.md).
-- Importance, batching, AI recaps, notification text/actions:
+- External entry points before local content is ready:
+  [native UX](references/native-ux.md#opening-before-local-content-is-ready).
+- Importance, batching, AI recaps, notification text/actions and prefetch:
   [attention](references/attention-notifications.md).
 - Material unresolved choices: [clarifications](references/clarifications.md).
   These notes are not an interview required before routine work.
@@ -41,6 +43,11 @@ For communication apps, combine explicit importance rules, model assistance,
 and user corrections. Respect existing preview settings. Batching cadence has
 **no personal default**: present rolling, scheduled, and in-app-only options
 when the product needs that decision.
+
+For notifications, deep links, widgets, and shortcuts, show useful cached
+context immediately with an explicit indication of missing new content.
+Prioritize fetching the target, preserve exit/navigation, and recover
+automatically while its reader remains open; see the native UX reference.
 
 ## Proportional completion
 

@@ -5,7 +5,8 @@ description: >
   "publish videos on YouTube", "set YouTube titles and descriptions",
   "add timestamps to YouTube videos", or needs to edit video metadata,
   assign playlists, and publish in YouTube Studio.
-version: 0.1.0
+metadata:
+  version: "0.1.0"
 ---
 
 # YouTube Video Publishing & Metadata

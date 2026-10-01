@@ -42,6 +42,8 @@ For catalog implementation or repair, trace authoritative published-page metadat
 
 For responsiveness work, separate dialog opening from suggestion latency: chunk loading → paint/focus versus debounce → network/catalog initialization → indexing/ranking → result paint. Optimize the measured stage rather than assuming fuzziness is expensive.
 
+For a perceived-speed or discovery refinement pass on an already-working search, read [references/perceived-ux.md](references/perceived-ux.md). It covers destination prefetch, navigation feedback, recent destinations, and popularity signals. Choose improvements from observed friction; this is not a required feature checklist for ordinary search fixes.
+
 - Keep heavier UI lazy when beneficial; preload on focus/hover/touch intent, or during idle if opening latency warrants it. Tiny interfaces may reasonably ship eagerly. Opening must work without a completed preload.
 - A shared catalog download can remove per-query round trips. Measure compressed bytes, parse/index time, memory, and phone long tasks before choosing it; no fixed catalog count or byte threshold proves suitability. Show useful local matches while fuller coverage initializes, and yield index construction in batches if it blocks typing.
 - Remote typeahead commonly starts after two characters with about 150ms debounce; tune this to the product. Local suggestions need not inherit network pacing. Guard stale responses and prevent hydration/URL updates from overwriting active edits; aborting requests alone is insufficient.

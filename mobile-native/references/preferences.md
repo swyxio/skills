@@ -14,6 +14,7 @@ remain in [design-preferences](../../design-preferences/SKILL.md).
 | Hybrid notification importance | Combine explicit rules with model assistance and discoverable user corrections/overrides. Do not treat model scoring alone as authority. |
 | Respect existing lock-screen preview settings | Check OS and app configuration; do not impose generic-only or content-rich previews as a personal default. |
 | Cached reading, task-driven offline actions | Add durable queued actions where the core task needs them. Define confirmation/rejection and restart behavior for those actions. |
+| External entry points before content is ready | Notifications, deep links, widgets, and shortcuts show available cached context with missing new content clearly pending. Prioritize fetching the target; defer attachments and remote images. Keep the preview and Retry during delays, and recover automatically while the reader remains open. See [the opening contract](native-ux.md#opening-before-local-content-is-ready). |
 | Focused verification | Physical-device checks for relevant behavior or explicit requests; report unresolved accessibility/device findings. No full hardware/audit gate for every UI edit. |
 | Broad skill scope | Retain native UX, implementation pitfalls, device delivery, and playtesting; remove generic advice and duplicate policy. |
 

@@ -35,6 +35,12 @@ Do not flag a pattern merely because it differs from a preferred template.
 Confirm that it is incorrect for the installed types, compatibility date, and
 runtime path.
 
+When serving static assets or an SPA, trace which requests reach the Worker
+under the actual assets configuration. Worker middleware may not run for static
+pages. Check that canonical-host/HTTPS redirects and required origin controls
+cover the affected pages and APIs; choose routing or edge redirects deliberately
+rather than defaulting every project to `run_worker_first: true`.
+
 ## Review proportionally
 
 1. Retrieve only the docs and types relevant to the touched APIs.

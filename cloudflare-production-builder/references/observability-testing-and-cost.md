@@ -174,6 +174,40 @@ step results can shift cost unexpectedly.
 Put hard per-operation, per-tenant, provider-account, and global budgets around
 untrusted or user-triggered work. Add circuit breakers before self-service.
 
+### CI builds and artifact retention
+
+For CI supporting Cloudflare releases, use these defaults unless an existing
+release dependency requires a different retention window:
+
+- Retain large temporary compiled build packages for **3 days**. Retain small
+  deployment/controller receipts, checksums, and sanitized diagnostic summaries
+  for **30 days**. Classify uploads by purpose instead of applying one retention
+  period to every artifact.
+- Treat CI package expiration separately from production retention. It does not
+  authorize deletion of deployed Cloudflare versions, production assets, or
+  required rollback resources. Rebuild an expired preview package when needed;
+  preserve the identities and evidence required for staging and promotion.
+- Validate the complete candidate locally before pushing, then batch related
+  changes into one coordinated push. Reuse the verified artifact for staging and
+  promotion when the source/build identity matches. Honor required remote checks
+  without moving local refresh work into CI merely to execute it.
+- Skip website builds for proven offline-only tooling changes, based on the
+  build's dependency closure. Keep focused tooling validation. Mixed changes and
+  uncertain dependencies still select the affected builds; a directory name
+  alone is not proof that its code is absent from the deployed application.
+- Account for runner time and storage separately: include canceled work,
+  repeated build attempts, artifact sizes, and retention in GB-days. Label the
+  measurement window and distinguish daily spend from month-to-date totals.
+  Estimate savings from measured quantities and current account billing rates.
+- Keep compression settings unchanged unless representative measurements show
+  a worthwhile reduction in total cost or elapsed time. Shorter retention should
+  not introduce extra runner CPU, a new cleanup service, or another review queue.
+
+These are build-cost defaults, not permission to bypass trusted artifact ingest,
+required checks, source identity validation, or production verification. Apply
+retention settings to future uploads; classify existing artifacts and their
+release dependencies before any separately authorized cleanup.
+
 ## Current first-party sources
 
 - [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)

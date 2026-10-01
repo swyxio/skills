@@ -1,7 +1,8 @@
 ---
 name: thumbnail-extraction
 description: "Extracts the most interesting frames from video files for thumbnail compositing. Detects faces, expressions, smiles, and presentation slides. Outputs full frames, face crops, and transparent cutouts. Use when asked to extract thumbnails, find interesting frames, grab screenshots from video, or create thumbnail candidates from recordings."
-version: 0.1.0
+metadata:
+  version: "0.1.0"
 ---
 
 # Video Thumbnail Extraction

@@ -142,6 +142,16 @@ Add DNS, TLS, redirects, authorization, asynchronous-consumer, log, or rollback
 checks only when the operation touches those surfaces or the risk justifies
 them. Report only what was actually verified.
 
+For login or origin-routing changes, smoke-test the affected page over HTTP and
+HTTPS and through any alternate public hostname. Verify the redirect destination
+and preserved path/query, then exercise sign-in from the canonical origin. A
+healthy API does not prove that a static login page follows the same routing.
+
+Diagnose auth failures at the stage that produced them: an origin rejection
+before OAuth starts is not evidence of the wrong Google account. Keep origin,
+account eligibility, expired/missing cookies, and cancellation errors distinct,
+with safe recovery instructions. Do not widen trusted origins to hide the error.
+
 ## Current first-party sources
 
 - [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/)

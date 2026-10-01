@@ -1,7 +1,8 @@
 ---
 name: multimodal-extraction
 description: "Given a local video or video URL, downloads the media if needed, extracts slide frames and key moments, transcribes the audio, and writes a Markdown timeline that interleaves screenshots with the transcript at the associated timestamps. Use when asked to turn a video into a multimodal notes file, slide-synced transcript, screenshot-enhanced transcript, or talk recap with images."
-version: 0.1.0
+metadata:
+  version: "0.1.0"
 ---
 
 # Multimodal Extraction

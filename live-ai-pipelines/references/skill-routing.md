@@ -22,7 +22,7 @@ Do not make two skills define competing job state machines. Pick one control-pla
 
 | Primary concern | Add this skill | Companion owns | `live-ai-pipelines` owns |
 | --- | --- | --- | --- |
-| Current OpenAI API or Structured Outputs behavior | [`openai-docs`](../../openai-docs/SKILL.md) | Current product/API guidance and supported request shapes | Provider-neutral adapter boundary, validation, events, and recovery |
+| Current OpenAI API or Structured Outputs behavior | `openai-docs` (environment-supplied) | Current product/API guidance and supported request shapes | Provider-neutral adapter boundary, validation, events, and recovery |
 | Cloudflare `agents` package, Agent routing, synchronized state, or resumable streams | [`agents-sdk`](../../agents-sdk/SKILL.md) | Agent classes, RPC, connections, persisted Agent state, and SDK-specific workflows | Run schema, item identity, artifact publication, and progress projection |
 | Cloudflare production architecture or primitive selection | [`cloudflare-production-builder`](../../cloudflare-production-builder/SKILL.md) | Workflows, Queues, Durable Objects, R2, rollout, rollback, and live verification | Logical stages, data contracts, event semantics, and resumable application state |
 | Per-key coordination, serialization, alarms, or WebSockets | [`durable-objects`](../../durable-objects/SKILL.md) | Durable Object boundaries and consistency model | What coordinated work means in the run and how it becomes an event/artifact |
@@ -77,3 +77,12 @@ When several skills appear relevant:
 5. Add `release-readiness-hardening` only when deployment/release verification is part of the request.
 
 Load only the relevant companion references. Keep the final implementation's ownership visible in code: provider adapter, run store, event journal, renderer, and operational surface should not each maintain their own incompatible status vocabulary.
+
+## Environment-supplied OpenAI guidance
+
+`openai-docs` is supplied by the agent environment rather than this repository.
+Resolve it from the current skill catalog; Codex installations may provide it
+under `~/.codex/skills/.system/openai-docs/SKILL.md`. If unavailable, consult
+[official OpenAI documentation](https://developers.openai.com/) for the relevant
+API before relying on request shapes or product behavior. Do not assume a
+sibling `openai-docs` directory exists in a clone of this collection.

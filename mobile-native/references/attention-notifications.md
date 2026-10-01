@@ -1,6 +1,7 @@
 # Communication-app attention and notifications
 
-Use for interruption policy, notification text/actions, batching, or AI recaps.
+Use for interruption policy, notification text/actions, prefetch/opening,
+batching, or AI recaps.
 
 ## Importance and cadence are separate decisions
 
@@ -60,3 +61,26 @@ and Undo contracts; use actual receipts for live-success claims.
 
 Keep destination/permission health, recap readiness, and detailed action receipts
 separate in settings. Isolate and visibly label synthetic test controls/data.
+
+## Delivery alongside client prefetch
+
+Deliver the alert promptly without waiting for client downloads. Alongside
+delivery/receipt, start best-effort prefetch of the notified conversation through
+the existing sync path where the platform permits. Prioritize the target and
+defer attachments and remote images. Opening must independently ensure loading
+even when background execution never occurred; background execution is an
+optimization, not a delivery or readiness guarantee.
+
+Reuse existing alert preview fields when sufficient. Add only bounded routing
+and preview context needed by the reader, respecting the same OS/app privacy
+settings as the notification. Avoid duplicating a full message body in the push
+payload. Preserve exact account/connection, conversation, and message identity;
+content text is neither authorization nor canonical mail data.
+
+Follow the [opening contract](native-ux.md#opening-before-local-content-is-ready):
+show cached history with the new message explicitly pending, otherwise show the
+available notification preview, and retain that context during loading/recovery.
+Background fetch, user tap, and ordinary sync may overlap; reuse concurrency
+controls, coalesce requests, and keep stale completion from changing navigation.
+Do not hold alert presentation for a fetch, or let a background fetch timeout
+cancel work still needed by an active reader.
