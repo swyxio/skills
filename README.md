@@ -84,6 +84,7 @@ the suite merely because it will ship or could be made more robust.
 
 #### Other coding/workstation skills
 
+- [review-thread](./review-thread) — reviews task progress and goal alignment, estimates agent execution time, and suggests worthwhile parallel work.
 - [align-me](./align-me) — pauses before a long autonomous run to surface material ambiguities as numbered, lettered choices with concrete tradeoffs, recommendations, and an `approve all` path.
 - [new-mac-setup](./new-mac-setup) — opinionated Apple Silicon Mac bootstrap for fullstack and AI work. Installs Homebrew, shell tooling, editors, AI tools, terminal setup, and macOS defaults in a repeatable run order.
 - [cloudflare-production-builder](./cloudflare-production-builder) — chooses among Workers, Pages, Workflows, Queues, Durable Objects, D1, R2, KV, Cache API, alarms, and Cron; then applies durable handoffs, safe caching, migration discipline, multi-tenant boundaries, observability, and live production verification.
