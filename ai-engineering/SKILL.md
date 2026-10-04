@@ -74,6 +74,8 @@ are not additive wall time. Missing timing or cost remains unavailable.
 
 ### 6. Verify the relevant unhappy paths
 
+When changing a multi-item runner, test dependency readiness: hold one item deliberately and verify that an independent ready item advances through its eligible downstream stages before the held item settles. Also verify that genuinely dependent work and publication remain blocked until their prerequisites pass. Successful concurrent calls alone do not prove effective overlap.
+
 Exercise the failures that the chosen provider and artifact contract make material: rate limits, timeouts, malformed/length-limited output, duplicate delivery, cancellation, restart, and cache reuse. Hand off the result coverage, notable fallbacks, cost/latency, and output/telemetry locations for significant runs.
 
 ## References

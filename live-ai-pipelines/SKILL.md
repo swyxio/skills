@@ -25,6 +25,8 @@ Identify deterministic preparation, independent fan-out, fan-in synthesis, proje
 
 For each stage, choose its item key, input/output contract, retry behavior, and whether a partial result is safe to show. Feed fan-in synthesis a bounded normalized projection of completed artifacts, not the raw corpus and every intermediate response.
 
+For each await-all, drain, or batch-wide join, identify the shared result its downstream work actually requires. Start item-local projection, rendering, and validation when that item’s dependencies are accepted. Keep snapshot assembly and publication joins where consistency requires them. Batched publication does not imply batched preparation.
+
 ### 2. Define complete versus preview data
 
 Validate a response before writing a canonical artifact. Write it atomically, then emit a completion/failure event and update a replaceable status snapshot. Streamed token fragments and drafts may support a preview, but do not give them canonical links or present them as complete facts.

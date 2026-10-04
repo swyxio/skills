@@ -9,6 +9,8 @@ Run the user-requested model through its selected coding-agent CLI without silen
 
 Special preview model identifiers must be supplied by the user for the current task. Do not name, suggest, hardcode, or infer preview identifiers from prior sessions or local availability. Keep reusable examples generic, using placeholders such as `$MODEL_ID`.
 
+This skill covers agent invocation and execution mechanics. When building an orchestrator with multiple stages, shared resources, batch joins, or durable resume, also consult [live-ai-pipelines](../live-ai-pipelines/SKILL.md); consult [ai-engineering](../ai-engineering/SKILL.md) for admission, retries, concurrency, and timing. Provider adapters do not substitute for workflow dependency design.
+
 ## Choose the execution surface
 
 Use the coding-agent CLI selected by the user or existing workflow. Check its
