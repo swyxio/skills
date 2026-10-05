@@ -29,6 +29,12 @@ Lead with the organization itself, not archive coverage or verification. Develop
 
 A single credible primary source can support a modest profile. Missing optional founders, current executives, finance or research details does not require a dossier. Repetition, empty praise or a talk walkthrough can be editorial defects even when their individual facts are true.
 
+For visual organization pages, select an official logo or other source-backed
+identity image for the exact entity. A founder portrait, product mark and parent
+company logo are not interchangeable. Preserve existing approved assets; do not
+invent a substitute or guess a namesake's image. Missing artwork is an explicit
+coverage outcome, not evidence that supported organization prose is incomplete.
+
 ## Topic page
 
 Help a reader understand a bounded subject and navigate its most useful sources. Define scope, aliases and exclusions; distinguish genuinely different concepts rather than merging labels by keyword overlap. Explain mechanisms, use cases, tradeoffs and important distinctions with concrete sourced examples.

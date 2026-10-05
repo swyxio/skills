@@ -49,6 +49,30 @@ Person research supports chronology, contributions, authored work, projects, ide
 
 Enroll authoritative identities and memberships during preparation. Accept new person/organization profiles before treating public pages as complete; enrollment and content may ship together. Missing enrollment is an explicit error with a research/repair disposition, not silent success. Existing accepted pages remain visible while proposed replacements are held.
 
+## Profile image qualification
+
+When the destination renders profile images, run image qualification alongside
+person/organization writing through existing adapters, with bounded source/media
+concurrency. Reuse identity-matched official or curated assets first. Person-owned
+sites and public accounts require independent ownership evidence; organization
+marks require the exact official entity. Retain source identity, image URL and
+byte hash, inspected pixels, and either qualification or a concrete unavailable
+reason. This is separate from editorial approval and does not authorize new
+providers, invented likenesses or unrelated image collection.
+
+Apply qualified image metadata to fresh and cached accepted results without
+regenerating prose. Ensure accepted-profile preservation does not discard a
+qualified photo overlay. Validate the same image policy across producer, uploader,
+compact discovery and full page loader: an externally hosted but source-qualified
+image must not disappear or invalidate the whole index at a downstream boundary.
+
+Bind changed-image acceptance to the exact selected image and identity evidence;
+a collection-wide hash change need not invalidate unchanged image approvals.
+On affected public pages, require that image to be visibly decoded with nonzero
+dimensions, and inspect desktop/mobile rendering. Unchanged biography checksums,
+successful uploads and initials placeholders cannot prove portrait delivery.
+Repair stale cache/rendering locally without republishing settled content.
+
 ## Resume and subset refresh
 
 Reuse the existing runner and ledger. Freeze an explicit selection of source IDs, entity IDs or topic IDs plus observed versions and an update cutoff. Selection names the refresh boundary, not permission to rewrite the corpus. An affected shared page may use unchanged retained sources outside that selection as context. Supporting research for selected entities proceeds within the existing authorization and budget; do not enroll unrelated sources or expand the refresh target merely because research discovers them. Record coverage and exclusion reasons.

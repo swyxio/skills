@@ -32,6 +32,27 @@ Build an evidence packet when important facts remain uncertain:
 
 Use `smart-entity-resolution` only when the identity is genuinely ambiguous.
 
+## Qualify the profile image
+
+For a visual profile page, qualify a portrait alongside research and writing;
+do not leave image discovery as a model suggestion or defer it until publication.
+Reuse the destination's existing photo adapters. Prefer an identity-matched
+organizer, employer or curated portrait, then a verified person-owned website or
+independently verified public account. Name similarity, a search thumbnail or face
+similarity alone does not establish identity. Do not generate a likeness to fill a gap.
+
+Retain the exact image URL, identity source, image hash and qualification outcome.
+Check acquired image bytes and dimensions, and inspect the selected image. If no
+image qualifies within scope and budget, record the concrete unavailable reason;
+a missing portrait does not justify inventing identity or discarding useful prose.
+
+Apply qualified portraits to fresh and cached accepted biographies as metadata
+updates without replaying approved writing. Preserve existing approved images and
+carry the image and provenance through snapshot assembly, compact indexes and
+public loaders. For publication, verify the selected image actually renders and
+loads on the affected desktop/mobile page; a biography checksum or initials
+placeholder is not portrait acceptance. Pure text-only writing needs no image work.
+
 ## Write the person
 
 Lead with the strongest supported identity and contribution. The opening should

@@ -17,6 +17,7 @@ Read the references relevant to the task:
 
 - Freeze source IDs and versions per batch or subset refresh; queue later arrivals separately.
 - Resolve identities early, then let source readers, person, organization and topic work proceed independently where their dependencies permit.
+- For visual person/organization pages, qualify portraits or official identity images alongside writing, including cached accepted profiles. Preserve image provenance through assembly and loaders; see the image contract in the stage and release reference.
 - Overlap ready-item rendering and QA with unfinished source/profile work; retain the user’s chosen publication batching.
 - Enroll supported identities and relations early; public page readiness is a separate content decision. Brief supported writing is valid; placeholder identity pages are not complete profiles.
 - Keep dated source/event roles separate from independently sourced current employment. Research disputed identity within budget; do not guess a canonical link.
