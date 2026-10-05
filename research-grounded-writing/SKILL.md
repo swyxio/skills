@@ -38,6 +38,21 @@ Stop when the requested artifact is supported and material uncertainties are
 identified. Gather more evidence only when it could change a consequential
 conclusion or resolve a missing requirement.
 
+## Acceptance in a publishing pipeline
+
+Record factual support and editorial usefulness as separate judgments on the
+exact proposed text. Correct claims do not establish a coherent, distinctive
+artifact; polished prose does not establish supported claims. Use the applicable
+page contract and complete approved examples to assess selection, proportion,
+repetition and whether the artifact answers its reader's question.
+
+Keep evidence and editorial findings in the existing item record, with the text
+version and actual review coverage. JSON validity, citation counts, word counts
+and clean screenshots are diagnostic checks, not substitutes for reading.
+After a localized correction, reconsider changed claims and their surrounding
+meaning; retain unaffected accepted judgments rather than restarting research
+and reviewing the whole batch.
+
 ## Optional presentation advice
 
 Organize around the reader's question rather than the order of research. Put
