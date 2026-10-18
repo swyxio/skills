@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js Camera Direction"
+  short_description: "Direct scale-aware 3D camera systems"
+  default_prompt: "Use $threejs-camera-direction to build a scale-aware chase/side/orbit rig or authored-shot, projection, floating-origin, pointer-look, and lifecycle camera system."

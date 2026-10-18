@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js Procedural VFX"
+  short_description: "Build filmic flare, aurora, fire, plasma, and pooled effects"
+  default_prompt: "Use $threejs-procedural-vfx to build a filmic HDR lens-flare compositor, raymarched aurora curtains, coupled WebGPU volumetric fire, a reentry shell/wake, a holographic projection, or an instanced spark/debris system with explicit field, lifetime, pool, HDR, and bloom ownership."

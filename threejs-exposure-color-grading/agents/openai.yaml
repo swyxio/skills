@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js Exposure and Color Grading"
+  short_description: "Build encoded metering and generated LUT grading"
+  default_prompt: "Use $threejs-exposure-color-grading to implement a 64x36 encoded meter, weighted log average, asymmetric exposure, single tone-map owner, and generated 32-cube display-domain LUT."
