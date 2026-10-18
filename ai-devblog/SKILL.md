@@ -197,7 +197,9 @@ implementation inventory into the story merely because it exists.
 When the user wants original video, look for the project's existing capture
 and publishing workflow and run it autonomously within the authorized scope.
 For games or canvas content, capture rendered pixels rather than assuming a
-DOM replay contains them. Prefer an isolated test environment and fresh test
+DOM replay contains them. When the source has game audio, capture it too;
+verify a non-silent track and check synchronization against a visible cue.
+Use original or licensed audio and document any sources excluded from capture. Prefer an isolated test environment and fresh test
 identity; inspect footage for private material, retain the run's provenance,
 and publish the video with the article using the established site workflow.
 Include native controls, a poster, descriptive text and a fallback link;
