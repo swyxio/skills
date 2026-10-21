@@ -58,6 +58,25 @@ Change source priority when the question changes:
 
 Never treat a guessed thumbnail, nearby-session photograph, face similarity, or biometric embedding as verified identity evidence.
 
+## Publishing identity decisions
+
+Bind partial-name resolutions to the source/event context that establishes them.
+Do not promote a recording-specific first-name match into a global alias without
+independent support. Preserve the exact source, identifiers and decision reason
+so a later batch can reuse the match without another search.
+
+Keep enrollment eligibility separate from identity. Apply the destination's
+participant policy before creating pages: for a presenter-only archive, audience
+mentions and prerecorded cameos do not qualify merely because a name is known.
+Resolve participation from source evidence rather than assuming a roster proves
+an appearance. A user may explicitly choose a broader participant policy.
+
+For portrait candidates, verify their binding through an authoritative record or
+identity-bound profile. Face resemblance alone is insufficient. Search exhaustion
+is an explicit unresolved outcome, not permission to choose a plausible image.
+Keep existing accepted identity/content visible while a disputed replacement is
+held; hold the affected field or relation rather than unrelated accepted work.
+
 ## Workflow
 
 1. Classify the query before searching. Detect whether it is a single entity, a list of entities, or a fuzzy group/cast/member/team/org query. Terms like `members`, `cast`, `lineup`, `team`, `company`, `subsidiaries`, and `leadership` usually mean expansion is needed.
