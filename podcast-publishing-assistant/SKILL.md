@@ -1,115 +1,97 @@
 ---
 name: podcast-publishing-assistant
-description: Prepare podcast and interview publishing assets, including episode write-ups, chapters, transcripts, title and thumbnail angles, and X promotion; assemble or update podcast posts and verify authorized release states. Resume existing episode assets rather than restarting production.
+description: Draft or update podcast write-ups, chapters, title/hook options, show notes, and X promotion; prepare podcast posts and verify requested release states. Not standalone ASR, video editing, or thumbnail artwork.
 ---
 
-# Podcast Publishing Assistant
+# Podcast publishing assistant
 
-Use this skill for editorial packaging and platform handoff. Apply `swyx-writing`
-to summaries, titles, descriptions, show notes, newsletter and social copy, not
-verbatim transcripts or speaker labels. Preserve the user's wording and existing
-draft edits when revising their work.
+Resume the existing episode and requested deliverables, reusing approved media,
+copy, transcripts and overlay sources. Preserve user edits. Keep the current
+master/version, edit map, approved angle/cover, destination IDs and release states
+in the existing episode record, not a second tracking system.
 
-## Resume the episode
+Use `swyx-writing` for editorial copy, not verbatim transcripts or speaker labels.
+Route missing ASR to `transcribe-anything`, edits and annotations to
+`annotated-video-production`, and LS artwork to `latent-space-thumbnail-director`.
+Prefer source audio; captions serve an explicitly requested rough pass. Anonymous
+ASR labels do not establish named identities. Publishing consumes the approved
+edit; it does not silently introduce editorial cuts.
 
-Start from the current assets and requested deliverables. Reuse approved copy,
-transcripts, overlay research and media rather than restarting acquisition or
-transcription. Keep a compact handoff in the existing episode record: current
-master/version, source-to-output edit map when cuts exist, approved angle and
-cover, platform IDs/URLs, verified release states, and remaining work. Do not
-create another tracking system for an episode that already has one.
+## Choose the angle
 
-Route missing source acquisition to the relevant download skill and ASR to
-`transcribe-anything`. Prefer source audio; use platform captions only for an
-explicitly requested rough pass. Anonymous speaker labels are not named-person
-identification; mark uncertain attribution rather than claiming verified
-speakers. Route pacing, commentary cleanup and overlays to
-`annotated-video-production`, explanatory motion to `animated-annotations`, and
-LS thumbnail artwork to `latent-space-thumbnail-director`. Publishing consumes
-the approved edit and its timing; it does not silently make new editorial cuts.
+For a new YouTube package or X launch angle, offer at least four distinct options
+unless the user specifies otherwise. Pair YouTube titles with thumbnail hooks;
+recommend one and briefly argue against each, including overemphasis on a minor
+segment. Apply the user's selection or delegated choice; do not reopen it on
+resume. Continue independent copy and chapter work while a choice is pending.
 
-Produce the requested assets. A full launch request can include a write-up,
-chapters, title/hook alternatives and social copy; clips and quote cards belong
-in the pack when requested or useful to the launch, not as obligatory filler.
-Continue independent preparation while an editorial choice is pending.
+Prefer specific theses and mechanisms over vague promises. Keep recurring series
+identity first. Thumbnail hooks should be thoughtful sentence/title case, with a
+concise role, company or verified milestone where useful. Attribute guest claims.
+Write one coherent description by default; alternatives, clips and quote cards
+are optional unless requested, not mandatory launch-pack filler.
 
-## Editorial packaging
+## Timing and source fidelity
 
-For a new YouTube episode, offer at least four distinct title angles paired with
-thumbnail hooks in a scannable table, unless the user specifies another count.
-Recommend one and briefly argue against each, including when it overweights a
-minor segment. Wait for selection before applying either unless the user has
-already chosen or delegated the choice. Do not reopen an approved choice merely
-because work resumes.
+Align chapters and transcript to the approved edit, including commentary, intro,
+cold open and cuts. Use the edit map and verify against media or a synchronized
+transcript. Do not assume a revision shifts every timestamp by one constant.
+Approximate times are draft-only until verified. Format chapters as start time
+plus a 2–10 word headline, in normal text rather than headings:
+`0:00 Intro and origin story`. Verify quoted words and named speakers; identify
+automated transcript uncertainty without rewriting it into polished commentary.
 
-Favor a specific thesis and guest credibility over vague promises. For recurring
-series, put the series identity first. Use thoughtful sentence-case or title-case
-thumbnail hooks rather than all-caps slogans; a concise company/role or verified
-milestone can add context. Attribute guest claims. Distinguish the subject from
-why it matters now, and use concrete mechanisms and takeaways for technical
-audiences. Write one coherent description by default; provide alternatives when
-requested rather than several near-duplicates.
+## Podcast post and media
 
-Align the transcript and chapters to the final edit, including commentary,
-cold open, intro and cuts. Use the edit map and verify against media or a
-synchronized transcript; do not publish guessed timestamps. Approximate times
-are draft-only until checked. Default chapter format: start time followed by a
-2–10 word headline, such as `0:00 Intro and origin story`. Use normal text, not
-oversized headings. When an edit changes, revise affected timing and dependencies
-instead of assuming every chapter shifts by one constant offset.
+Resume the named platform or existing draft, whether Beehiiv or Substack. For a
+complete podcast post, use the approved MP3, episode-specific write-up, full
+transcript and available video embed. Use the approved thumbnail as episode cover
+when supported, adapting the crop without distorting faces or text.
 
-## Latent Space podcast posts
+Before the transcript, place bulleted show notes with a short description and
+verified link for each relevant guest, company or source. Reuse research from
+the edit selectively. Order: show notes → chapters → transcript.
 
-Prepare the podcast post or episode in the platform the user names: Substack or
-Beehiiv. If an existing draft identifies the destination, resume there. Do not
-create a duplicate on the other platform. Treat the newsletter post, podcast
-episode/feed, YouTube video, and X post as separate release surfaces: check their
-actual states and keep each draft, private, unlisted, scheduled, or published
-only as authorized. Saving a draft on one surface does not prove another is
-unpublished.
+Verify the exact destination publication/post/episode, saved audio and cover,
+embed and requested visibility. **Newsletter post, podcast/RSS episode, YouTube
+and X have independent release states.** A Beehiiv post draft does not prove the
+episode is absent from RSS. Keep each unpublished, scheduled or live only as
+authorized, and confirm video embeds are accessible to their intended audience
+before release.
 
-Use the approved final edit's audio (MP3), a substantive, episode-specific
-write-up, the full transcript, and an embedded video when available. Set the
-audio-player or episode cover to the approved video thumbnail when supported;
-adapt its crop to the platform without distorting faces or text. Preserve any
-existing user edits when revisiting a draft. Confirm that a private or unlisted
-video embed will be accessible to its intended audience before release.
-
-Before the transcript, add relevant show notes as a bulleted list, each with a
-short description and a verified link to the guest, company, or material actually
-discussed or used in the edit. Reuse overlay research and source manifests rather
-than dumping every asset. Follow show notes with chapter timestamps, then the
-transcript. Use start times and concise descriptive headlines; confirm timing
-against the final edit. Keep the transcript aligned to that edit, including its
-cold open and requested cuts, and label automated text appropriately. Render
-timestamps as normal readable text, not oversized headings.
-
-In Substack, verify the intended post, audio attachment and cover, video embed,
-and draft or published state. In Beehiiv, verify the intended publication and
-podcast episode, audio attachment and cover, and separately check the newsletter
-post and feed release state where applicable. Do not assume a post draft keeps an
-episode off the RSS feed. After replacing audio, verify the saved media by
-filename and duration or playback; a completed upload alone is not proof that
-the replacement is active. If a cut changes the episode, update and verify the
-transcript, chapters, embed and related promotional links against the new edit.
-Preserve the old media locally, and report any unverified replacement or stale
-material rather than treating it as ready to release.
+After media replacement, verify the saved attachment by filename and duration or
+playback; upload completion alone is insufficient. Preserve prior media locally.
+Update affected transcript, chapters, embed and promo links to the new edit;
+report stale or unverified dependencies instead of calling the package ready.
 
 ## X promotion
 
-- Offer at least four distinct hook/post directions when choosing a new launch angle, unless the user specifies otherwise. Recommend one and explain each option's weakness; do not repeat selection after the user chooses or delegates it.
-- Ground angles in the write-up and specific released moments. Supply verified source timestamps for review, distinguish guest arguments from established facts, and lead with a substantive idea, mechanism or tension. Name/tag verified guest accounts and relevant roles; make episode links easy to find. Preserve series identity first where applicable.
-- For full native-video launches, use the approved full episode, put verified chapter timestamps in the **same main post as the video**, and include the domain and YouTube links. Use a long post when supported; check that timestamps match the uploaded edit and are clickable. Do not move them to a reply just to shorten the post. If a platform limit prevents this, explain the limitation; a reply is not equivalent.
-- Use replies for additional context or links. For clip promotion, choose a useful opening with accurate captions that works without sound; offer a link-led alternative when helpful. Choose the format for the user's goal, not a claimed universal algorithm preference.
-- When clip or quote-card ideas are requested, supply concrete moments, why they work, and verified or explicitly provisional time windows; verify quoted words against the source.
+Ground each angle in the episode write-up and specific moments, supplying verified
+source timestamps for review. Lead with a concrete idea, story or tension and tag
+verified guest accounts with relevant roles. Use the angle-selection rules above.
 
-### Promo research
+For a full native-video launch, attach the approved episode, put verified chapters
+in the **same main post as the video**, and include domain and YouTube links. Use
+a long post when supported; check timestamps against that uploaded edit and their
+clickability. Replies can carry extra context, but are not equivalent to chapters
+beside the video. Explain actual platform limits rather than silently moving them.
 
-- Research recent, comparable podcast announcements from the user's followed accounts when available. Confirm which account's follows a filter uses. Note the hook, format, guest attribution, date and observable metrics alongside links; treat the sample and visible engagement as descriptive, not causal proof of reach, clicks, or listening. Account for age and audience differences, and test formats against actual goals. X's own guidance on [notifications](https://help.x.com/en/resources/recommender-systems/notifications-recommendations) describes personalized signals for that surface; its [traffic guidance](https://help.x.com/en/business-and-advertising/optimizing-website-traffic-campaigns) concerns ads, not a guaranteed organic ranking formula.
-- For concrete examples and their tradeoffs, consult [X podcast promo inspiration](references/x-podcast-promo-inspiration.md). Refresh examples as needed, and use them to develop varied, episode-specific options rather than copying a formula.
+For clips, choose a useful opening and accurate captions that work without sound.
+Offer link-led alternatives when helpful. When requested, provide clip windows
+and quote-card candidates with their editorial rationale; mark provisional timing.
 
-## Existing helper
+For inspiration, consult [X examples](references/x-podcast-promo-inspiration.md)
+or research comparable announcements from followed accounts. Confirm whose follows
+a filter uses. Treat visible views/likes as descriptive, not proof of listens or
+causal evidence for a format; account for post age and audience differences.
+Do not make fresh inspiration research a prerequisite to an already chosen post.
 
-`scripts/transcribe_youtube.sh` is available for YouTube audio acquisition and
-Whisper transcription. Inspect its suitability before use; `transcribe-anything`
-owns current ASR choices and recovery rather than duplicating them here.
+## Finish at the requested state
+
+Deliver the requested copy, draft or authorized publication, with destination links
+and verified state where applicable. Do not expand a single deliverable into an
+entire launch pack or treat a draft as permission to publish.
+
+The existing `scripts/transcribe_youtube.sh` helper remains available for audio
+acquisition/transcription; inspect suitability before use. `transcribe-anything`
+owns current ASR choices and recovery.

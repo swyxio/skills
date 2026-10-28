@@ -1,4 +1,4 @@
 interface:
   display_name: "Annotated Video Production"
-  short_description: "Resume an annotated episode at any production stage"
-  default_prompt: "Use $annotated-video-production to resume this annotated episode at the requested stage, reuse existing decisions and artifacts, and route specialist work to its owning skill."
+  short_description: "Edit and review conversation overlays and animation"
+  default_prompt: "Use $annotated-video-production to resume this episode's edits or annotations, reuse its current cut and feedback, and deliver the requested board, preview, render, or audit."
