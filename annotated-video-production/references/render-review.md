@@ -8,6 +8,8 @@ Record cue/time, planned visual, output/source evidence, and keep/refine/replace
 - Useful detail is readable within the hold; the active speaker stays clear.
 - Highlights have padding and remain aligned during motion.
 - Clips show the relevant action/result; repeated clips add something new.
+- The visual explains the actual point at that moment: diagrams make relationships legible, paired sources appear in a meaningful sequence, and pull quotes match the speaker's words and timing.
+- The insert answers its viewer question during the dialogue; generated illustrations read as illustrative and do not stand in for real evidence.
 - Attribution is useful and concise; no distracting boilerplate or player chrome.
 - Entrances/exits and sound cues align without masking speech.
 

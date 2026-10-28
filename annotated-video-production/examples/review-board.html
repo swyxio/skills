@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overlay review</title>
+<style>
+  body { max-width: 920px; margin: auto; padding: 24px; background: #17121e; color: #f9f6fb; font: 16px/1.5 system-ui; }
+  section { margin: 18px 0; padding: 20px; border: 1px solid #5b4669; border-radius: 12px; }
+  label { display: block; margin-top: 12px; } textarea { box-sizing: border-box; width: 100%; padding: 10px; margin-top: 5px; }
+  textarea { min-height: 80px; } button { padding: 10px 16px; } a { color: #e1b1ff; overflow-wrap: anywhere; } img, video { max-width: 100%; max-height: 250px; display: block; margin: 6px 0; }
+  .meta { color: #d4c7de; } li { margin-bottom: 12px; }
+</style>
+<h1>Overlay review</h1>
+<p>Example data only. Replace it with verified cues, sources, and assets for your episode.</p>
+<p id="storage-status">Comments save for this review round. Blank means keep the current proposal when you return the review. Request alternatives in text.</p>
+<button id="export">Download this review</button>
+<main id="cues"></main>
+<script>
+// Keep cue IDs stable; change round_id for a new review and proposal_revision for changed proposals.
+const board = {
+  id: 'example-episode', round_id: 'r02', timebase: 'example-cut.mp4', cues: [
+    {id: 'cue-01', proposal_revision: 'r02', time: '00:20', speaker: 'Guest', topic: 'Product introduction',
+     visual: 'Show the product interface at the relevant point.', status: 'proposed', source: '',
+     changed: 'The proposed crop now emphasizes the requested interface detail.',
+     history: [{round_id: 'r01', comment: 'Highlight the relevant interface detail.', status: 'addressed', resolution: 'Updated the proposed crop; capture remains outstanding.'}],
+     alternatives: [
+       {id: 'demo', title: 'Screen recording of product action', status: 'not yet captured', media: '', source: ''},
+       {id: 'post', title: 'Guest’s announcement post', status: 'not yet captured', media: '', source: ''}
+     ]}
+  ]
+};
+const key = 'overlay-review:' + board.id + ':' + board.round_id;
+let comments = {};
+try { const stored = JSON.parse(localStorage.getItem(key) || '{}');
+  if (stored && typeof stored === 'object' && !Array.isArray(stored)) comments = stored; }
+catch { document.querySelector('#storage-status').textContent = 'Could not load saved comments; export your work before leaving.'; }
+const root = document.querySelector('#cues');
+function element(tag, text) {
+  const el = document.createElement(tag);
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function save() {
+  try { localStorage.setItem(key, JSON.stringify(comments)); }
+  catch { document.querySelector('#storage-status').textContent = 'Browser storage unavailable; download your comments before leaving.'; }
+}
+function link(parent, href) {
+  if (!href) return;
+  const a = element('a', href); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; parent.append(a);
+}
+for (const cue of board.cues) {
+  const saved = comments[cue.id];
+  const state = saved?.proposal_revision === cue.proposal_revision && typeof saved.comment === 'string'
+    ? {proposal_revision: cue.proposal_revision, comment: saved.comment}
+    : {proposal_revision: cue.proposal_revision, comment: ''};
+  comments[cue.id] = state;
+  const section = element('section');
+  section.append(element('h2', `${cue.time} · ${cue.speaker} · ${cue.topic}`));
+  section.append(element('p', `${cue.visual} (${cue.status})`));
+  link(section, cue.source);
+  if (cue.changed) section.append(element('p', 'Changed this round: ' + cue.changed));
+  for (const previous of cue.history || []) {
+    const history = element('details');
+    history.append(element('summary', `Previous review · ${previous.round_id} · ${previous.status}`),
+      element('p', previous.comment), element('p', 'Resolution: ' + previous.resolution));
+    // Unresolved history stays visible; it never populates the current comment.
+    history.open = previous.status === 'unresolved';
+    section.append(history);
+  }
+  const list = element('ul');
+  for (const alternative of cue.alternatives) {
+    const li = element('li');
+    li.append(element('strong', alternative.id + ' · ' + alternative.title), element('div', alternative.status));
+    if (alternative.media) {
+      const media = element(alternative.kind === 'video' ? 'video' : 'img');
+      media.src = alternative.media;
+      if (alternative.kind === 'video') { media.controls = true; media.preload = 'metadata'; }
+      else media.alt = alternative.title;
+      li.append(media);
+    }
+    link(li, alternative.source);
+    list.append(li);
+  }
+  section.append(element('h3', 'Alternatives'), list);
+  const notesLabel = element('label', 'Comment on this version (blank = keep)');
+  const notes = element('textarea'); notes.value = state.comment;
+  notes.addEventListener('input', () => { state.comment = notes.value; save(); });
+  notesLabel.append(notes); section.append(notesLabel); root.append(section);
+}
+document.querySelector('#export').addEventListener('click', () => {
+  const data = {timebase: board.timebase, board_id: board.id, round_id: board.round_id,
+    reviews: board.cues.map(cue => ({cue_id: cue.id, ...comments[cue.id],
+      disposition: comments[cue.id].comment.trim() ? 'interpret_comment' : 'keep'})),
+    proposals: board.cues.map(({history, ...proposal}) => proposal),
+    history: board.cues.map(cue => ({cue_id: cue.id, entries: cue.history || []}))};
+  const a = element('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  a.download = board.id + '-' + board.round_id + '-review.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+</script>
+</html>
