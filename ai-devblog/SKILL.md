@@ -34,9 +34,8 @@ copy edits do not require a site-wide audit.
 
 First decide whether a devblog is the right container:
 
-- Put a routine shipped fact in a changelog or release note. When the user
-  wants richer release notes, use `blog-system-design` for a linked changelog:
-  explain consequential changes and their evidence, with optional detail.
+- For a changelog or in-app release note, follow the
+  [feature, benefit and implementation-detail guidance](../blog-system-design/SKILL.md#pair-the-devblog-with-a-rich-changelog).
 - Put durable project onboarding, commands, API guidance, and contributor
   instructions in a README; use `ai-readme` when available.
 - Put an exhaustive roadmap, product plan, design specification, API reference,
