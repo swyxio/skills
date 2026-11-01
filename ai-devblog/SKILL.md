@@ -78,12 +78,10 @@ a mechanism until it no longer makes sense.
 
 ## Align with the reader
 
-Determine what the reader is likely to **be**, **know**, and **want**, using
-the user's instructions and context. Default to a smart adjacent engineer who
-knows the domain but not the project and wants a useful model or decision.
-Proceed with reasonable assumptions; ask only when an unresolved choice would
-materially change the post or the user asks to choose. Use the
-[reader-and-angle reference](references/angle-review.md) when useful.
+Before drafting any post, including a short note, establish what the user
+expects the reader to **be**, **know**, and **want**. Use what the user has
+already specified. Ask about open reader choices in one compact batch and
+wait for their response. See the [reader-and-angle reference](references/angle-review.md).
 
 Then write privately:
 
@@ -92,9 +90,10 @@ Then write privately:
 - **Spine:** the one question the post answers.
 - **Not this post:** two or three tempting facts that belong elsewhere.
 
-Choose the strongest honest angle. If the user requests options or a material
-choice cannot be inferred, offer genuinely different angles with a title,
-promise, and tradeoff. Never hide a single thesis behind cosmetic title variants.
+If the user has already chosen the angle, use it. Otherwise offer two or
+three genuinely different angles, or propose the one angle the evidence
+supports. Give each a title, promise, and tradeoff. Recommend one and wait
+for the user’s choice before drafting.
 
 ## Establish the evidence boundary
 
