@@ -1,4 +1,4 @@
 interface:
   display_name: "Design Apps with ImageGen"
-  short_description: "Explore and implement image-led redesigns"
-  default_prompt: "Use $design-apps-with-imagegen to research free Mobbin references in Chrome, generate four distinct ImageGen directions, resolve the choice using my selection or delegated defaults, implement it, and critique matched screenshots at relevant sizes."
+  short_description: "Explore and implement image-led UI changes"
+  default_prompt: "Use $design-apps-with-imagegen to explore distinct directions for the requested UI, draw on relevant references, refine my selection or delegated choice, and verify the implemented design."

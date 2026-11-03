@@ -22,6 +22,9 @@ Before rendering, reconcile each selected image/chart/demo with the actual media
 - Visually inspect saved captures and encoded preview frames. Full-page captures can fail around sticky/animated heroes; clipped screenshots can disagree with DOM coordinates. Recover with a verified viewport capture and checked crop. Preserve chart axes and legends, complete highlighted text and attribution; wait for source animations to settle before selecting a still.
 - Record unresolved captures with no usable asset path; never fill their card or manifest with an unrelated image. Offer genuinely different captured alternatives separately from ideas still needing production. Keep the current round’s comments distinct from historical feedback in the export.
 
+- Display alternatives openly, with actual media, a reason to use each and a tradeoff. A sourced chart versus a spatial analogy is a useful choice; three recolors rarely are. Label uncaptured alternatives honestly.
+- For timing-sensitive cues, show original and proposed compositions of the same excerpt with dialogue and matching in/out context. Keep one audio player active at a time. Show the user's comment and what changed alongside playback; source footage alone is not the proposed composition.
+
 ## Review rounds and comment semantics
 
 - Keep cue IDs stable, but identify the board’s review round, source cut/timebase and each proposal revision. Use project + round in browser-storage keys. Do not restore the preceding round’s textarea values into a revised board.
@@ -29,3 +32,13 @@ Before rendering, reconcile each selected image/chart/demo with the actual media
 - Use free text for feedback and alternative selection; no decision dropdown or mandatory keep/cut controls. When the user returns the review, blank means keep the current proposed cue. Interpret comments in context, including tentative language, and preserve the raw text alongside any agent interpretation. Blank does not supply a missing asset, establish an unperformed check, or authorize a separate render/publication action.
 - Export current comments, round ID, cue/proposal revisions and timebase separately from history/resolutions. Reconcile against the reviewed version before applying a returned file; do not merge stale feedback into new comments. A submitted review may record the blank-default keep explicitly, but merely opening a board or waiting is not a submitted review.
 - Show each complete source URL as the link text, wrapping long URLs instead of truncating or hiding them behind “Exact source.” Include the actual URL for each alternative and retain meaningful timestamps/fragments. This is a review-board requirement; readable on-video attribution can still use a concise domain with the complete link in the source record.
+
+## Proposed learning from returned reviews
+
+Apply authorized cue edits, then separately propose reusable interpretations from
+the review JSON. For each proposed preference show the raw comment/cue IDs,
+interpretation, plausible alternative reading, scope and confidence, and the exact
+skill/preference change suggested. Separate explicit directions from inference;
+blank keeps are not strong evidence of general taste. Ask the user which proposals
+to adopt before writing durable preferences or committing inferred rules. Do not
+make this optional learning step block the episode edit.

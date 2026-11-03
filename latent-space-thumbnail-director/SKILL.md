@@ -5,7 +5,9 @@ description: Create, revise, or review Latent Space or Forward Deployed Engineer
 
 # Latent Space Thumbnail Director
 
-Use `$imagegen` for raster artwork. Read [preferences](references/preferences.md); consult [resources](references/resource-index.md) for assets and [examples](references/example-index.md) for relevant approved work. Apply the FDE template only when that series is requested.
+Use the built-in `$imagegen` tool for **every new or revised thumbnail**, including first looks, quote options, review-board previews and A/B variants. Generate each direction with a separate prompt, using the guest’s real photo and approved branding as references. A hook shortlist can be text only. As soon as you show artwork, show an actual ImageGen result. Never substitute a scripted photo-and-text layout, template render or contact sheet of text swaps. If ImageGen is unavailable, report the blocker and follow its skill’s fallback policy. Code may resize, compress, or arrange finished artwork for review.
+
+Read [preferences](references/preferences.md); consult [resources](references/resource-index.md) for assets and [examples](references/example-index.md) for relevant approved work. Apply the FDE template only when that series is requested.
 
 1. Ground ideas in the episode. Review several recent thumbnails on the target channel or series, and compare their composition, type, scale and imagery; distinguish observed patterns from a rigid template.
 2. Offer at least four distinct title-and-hook pairs in a table, recommend one, and briefly challenge each. Favor specific, thoughtful sentence-case hooks. Verify any claim, number, guest post, role or milestone. Honor existing choices instead of asking again.

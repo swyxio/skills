@@ -74,6 +74,10 @@ voice. Let the evidence earn the drama, humor, and degree of informality.
 Remove patterns that make the writing feel produced by a template:
 
 - repeated `not X, but Y`, `X is not Y`, and perfectly balanced reversals;
+- obvious or repetitive disclaimers that tell readers a game's money is
+  fictional, an example is made up, or a model is synthetic. Put consequential
+  assumptions and shipped-versus-planned status where they help a decision;
+  don't keep announcing what the reader already understands;
 - uniform triads, symmetrical sections, bold thesis restatements, and mandatory
   recaps;
 - every heading, paragraph, and sentence competing to be an aphorism;

@@ -11,8 +11,11 @@ master/version, edit map, approved angle/cover, destination IDs and release stat
 in the existing episode record, not a second tracking system.
 
 Use `swyx-writing` for editorial copy, not verbatim transcripts or speaker labels.
-Route missing ASR to `transcribe-anything`, edits and annotations to
-`annotated-video-production`, and LS artwork to `latent-space-thumbnail-director`.
+Route missing ASR to `transcribe-anything` and edits and annotations to
+`annotated-video-production`. For Latent Space and Forward Deployed Engineering
+episodes, use `latent-space-thumbnail-director` and built-in `$imagegen` for every
+new or revised thumbnail, including rough previews and A/B variants.
+Reuse approved producer-supplied artwork as-is when no change is requested.
 Prefer source audio; captions serve an explicitly requested rough pass. Anonymous
 ASR labels do not establish named identities. Publishing consumes the approved
 edit; it does not silently introduce editorial cuts.
@@ -30,6 +33,13 @@ identity first. Thumbnail hooks should be thoughtful sentence/title case, with a
 concise role, company or verified milestone where useful. Attribute guest claims.
 Write one coherent description by default; alternatives, clips and quote cards
 are optional unless requested, not mandatory launch-pack filler.
+
+Before a substantial write-up, review the available creator brief, relevant prior
+LS episodes and primary sources behind the chosen angle. Build a concrete argument
+with supporting links and useful images, rather than a topic-by-topic recap.
+Distinguish a guest's requested talking points from editorial commitments and
+verified claims. Keep research targeted; do not turn a copy revision into a broad
+reported essay unless requested.
 
 ## Timing and source fidelity
 
