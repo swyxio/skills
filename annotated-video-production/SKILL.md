@@ -50,7 +50,10 @@ helpful. Later sources are acceptable with their dates; avoid repeated warnings.
 
 Offer distinct treatments where useful: actual product/source footage, an
 explanation, a strong spoken quote, or a fitting cultural reference. Find the
-specific scene or original work rather than a generic substitute. A sequence or
+specific scene or original work rather than a generic substitute. Search for real
+logos, photographs, charts and existing diagrams before defaulting to boxes and
+arrows. Consider analogy scenes or layered imagegen/3D treatments when they clarify
+the mechanism; complexity alone is not an improvement. A sequence or
 callback can serve the argument better than another unrelated card.
 
 Deliver a board of exact captured assets beside episode cues, with genuinely
@@ -59,7 +62,10 @@ captured visual. Read [capture-and-cues.md](references/capture-and-cues.md) when
 building the board or reconciling review JSON: it owns cue fields, full source
 URLs, revision/timebase tracking and review-round semantics. Use free-text
 comments; on a returned review, blank means keep the proposed cue, not permission
-to render or publish. Keep old feedback separate from new comments.
+to render or publish. Keep old feedback separate from new comments. Show alternatives expanded by default,
+with their visual, rationale and tradeoff; prefer different explanatory approaches
+over cosmetic variants. Include original/proposed playback of the same excerpt
+with dialogue for timing-sensitive decisions.
 
 Inspect saved media, including post attachments. Reuse local originals before
 recapturing. Start demos with the result; land articles on the relevant passage
@@ -103,7 +109,11 @@ reel across beginning/middle/end is an optional fast check. Full-render authoriz
 means continue through the full output; previews add no approval gate.
 
 Apply clear framing, margin and timing feedback across comparable cues, while
-keeping tentative or cue-specific choices scoped. Preserve approved quality and
+keeping tentative or cue-specific choices scoped. After returned review JSON, infer
+possible reusable preferences and present a compact proposal list with supporting
+comments, alternative interpretations and intended scope. Ask before adopting or
+committing these as durable skill/preferences changes; applying episode-specific
+feedback does not require reopening decisions already authorized. Preserve approved quality and
 variety throughout; later sections do not get text fallbacks for convenience.
 
 Before rendering, reconcile selections with actual renderer inputs. Review the

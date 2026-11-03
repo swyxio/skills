@@ -8,6 +8,7 @@
   section { margin: 18px 0; padding: 20px; border: 1px solid #5b4669; border-radius: 12px; }
   label { display: block; margin-top: 12px; } textarea { box-sizing: border-box; width: 100%; padding: 10px; margin-top: 5px; }
   textarea { min-height: 80px; } button { padding: 10px 16px; } a { color: #e1b1ff; overflow-wrap: anywhere; } img, video { max-width: 100%; max-height: 250px; display: block; margin: 6px 0; }
+  .comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
   .meta { color: #d4c7de; } li { margin-bottom: 12px; }
 </style>
 <h1>Overlay review</h1>
@@ -22,10 +23,13 @@ const board = {
     {id: 'cue-01', proposal_revision: 'r02', time: '00:20', speaker: 'Guest', topic: 'Product introduction',
      visual: 'Show the product interface at the relevant point.', status: 'proposed', source: '',
      changed: 'The proposed crop now emphasizes the requested interface detail.',
+     context: 'Same episode excerpt: 00:16–00:28, including dialogue.',
+     before: {media: '', status: 'Original excerpt not yet exported'},
+     after: {media: '', status: 'Proposed composition not yet rendered'},
      history: [{round_id: 'r01', comment: 'Highlight the relevant interface detail.', status: 'addressed', resolution: 'Updated the proposed crop; capture remains outstanding.'}],
      alternatives: [
-       {id: 'demo', title: 'Screen recording of product action', status: 'not yet captured', media: '', source: ''},
-       {id: 'post', title: 'Guest’s announcement post', status: 'not yet captured', media: '', source: ''}
+       {id: 'demo', title: 'Screen recording of product action', status: 'not yet captured', media: '', source: '', reason: 'Shows the product action and result.', tradeoff: 'Needs enough time for the action to read.'},
+       {id: 'post', title: 'Guest’s announcement post', status: 'not yet captured', media: '', source: '', reason: 'Provides the guest’s original explanation.', tradeoff: 'Less effective for demonstrating interaction.'}
      ]}
   ]
 };
@@ -48,6 +52,23 @@ function link(parent, href) {
   if (!href) return;
   const a = element('a', href); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; parent.append(a);
 }
+function playback(item, title) {
+  const panel = element('div'); panel.append(element('h4', title));
+  if (item?.media) {
+    const player = element('video'); player.src = item.media;
+    player.controls = true; player.preload = 'metadata'; player.playsInline = true;
+    panel.append(player);
+  } else panel.append(element('p', item?.status || 'Preview unavailable'));
+  return panel;
+}
+// Prevent overlapping dialogue without forcing both clips to buffer or play together.
+document.addEventListener('play', event => {
+  if (event.target.tagName === 'VIDEO') {
+    document.querySelectorAll('video').forEach(player => {
+      if (player !== event.target) player.pause();
+    });
+  }
+}, true);
 for (const cue of board.cues) {
   const saved = comments[cue.id];
   const state = saved?.proposal_revision === cue.proposal_revision && typeof saved.comment === 'string'
@@ -58,6 +79,9 @@ for (const cue of board.cues) {
   section.append(element('h2', `${cue.time} · ${cue.speaker} · ${cue.topic}`));
   section.append(element('p', `${cue.visual} (${cue.status})`));
   link(section, cue.source);
+  const comparison = element('div'); comparison.className = 'comparison';
+  comparison.append(playback(cue.before, 'Original'), playback(cue.after, 'Proposed composition'));
+  section.append(element('p', cue.context || 'Use matching excerpts with dialogue.'), comparison);
   if (cue.changed) section.append(element('p', 'Changed this round: ' + cue.changed));
   for (const previous of cue.history || []) {
     const history = element('details');
@@ -78,6 +102,8 @@ for (const cue of board.cues) {
       else media.alt = alternative.title;
       li.append(media);
     }
+    if (alternative.reason) li.append(element('p', 'Why: ' + alternative.reason));
+    if (alternative.tradeoff) li.append(element('p', 'Tradeoff: ' + alternative.tradeoff));
     link(li, alternative.source);
     list.append(li);
   }

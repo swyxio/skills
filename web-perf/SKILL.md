@@ -47,6 +47,23 @@ Useful evidence, selected as needed:
 Keep lab and field evidence distinct. Record the URL, viewport, cache state,
 network/CPU conditions, and run count when they materially affect comparison.
 
+## Navigation investigations
+
+- **Measure the journey the visitor takes.** For a cold document, time the tap
+  to first byte and then to native first contentful paint (FCP). For an in-site
+  link or search result, time selection to visible, usable destination content.
+  Define that content before testing, such as the first playable talk or a row
+  with a real count and working download. Record whether the click loaded a new
+  document or reused the current one.
+- **Explain a slow visit with its own timestamps.** To explain p75, inspect a
+  visit at or near that rank. Trace which requests ran in sequence, which
+  overlapped, and when the content became usable. Adding separately computed
+  stage percentiles can combine timings from different visits.
+- **Verify which experience was served.** For rollout comparisons, record the
+  build and check a response or rendered marker for the actual treatment.
+  Report forced treatment, forced control, and ordinary unforced visits
+  separately, with sample counts and the observed arm split for unforced visits.
+
 ## Focused workflow
 
 1. Reproduce the named page, route, viewport, and state.
