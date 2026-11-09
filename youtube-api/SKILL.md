@@ -127,6 +127,9 @@ Upload a finished local video file directly to YouTube.
 python <skill-path>/scripts/upload_video.py --file /path/to/video.mp4 --privacy unlisted
 ```
 
+AI Engineer uploads save the returned video ID beside the final cut and call `aie-upload-handoff` on the uploader's PATH. Pass `--transcript` for a separately named timestamped transcript. Rerunning the same saved cut resumes its writing handoff. Other channels keep their own upload workflow.
+
+
 Optional metadata at upload time:
 
 ```bash
