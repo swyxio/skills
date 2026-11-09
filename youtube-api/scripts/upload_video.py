@@ -80,8 +80,11 @@ AIE_CHANNEL = "UCLKPca3kwwd-B59HNr-_lvA"
 
 
 def cut_digest(file: Path) -> str:
+    digest = hashlib.sha256()
     with file.open("rb") as source:
-        return hashlib.file_digest(source, "sha256").hexdigest()
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def finish_writing(file: Path, video_id: str, title: str, transcript: str | None):
