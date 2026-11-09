@@ -156,6 +156,8 @@ def audit_descriptions(args: argparse.Namespace) -> None:
 
 
 def update_ledger(args: argparse.Namespace) -> None:
+    if (args.file or args.transcript) and not args.channel_id:
+        raise ValueError("Specify the channel verified in Studio when passing a final cut")
     path = Path(args.ledger)
     path.parent.mkdir(parents=True, exist_ok=True)
     exists = path.exists()
@@ -220,7 +222,7 @@ def main() -> None:
     ledger.add_argument("--ledger", required=True)
     ledger.add_argument("--title", required=True)
     ledger.add_argument("--youtube-url", required=True)
-    ledger.add_argument("--channel-id", required=True, help="Immutable channel ID verified in Studio")
+    ledger.add_argument("--channel-id", help="Immutable channel ID verified in Studio; required for the AIE writer")
     ledger.add_argument("--file", help="The exact staged final cut (required for AI Engineer)")
     ledger.add_argument("--transcript", help="Timestamped transcript from the final edit")
     ledger.add_argument("--visibility", default="Unlisted")
