@@ -38,7 +38,7 @@ description: Batch YouTube Studio upload workflow for videos sourced from Airtab
    - Advance through Video elements and Checks.
    - Select `Unlisted`.
    - Save and wait until the row appears as `Unlisted / None` or known restriction.
-6. Record each YouTube link in a ledger and report:
+6. Record each YouTube link in a ledger and report. Pass the channel ID verified in Studio to the ledger helper. For AI Engineer pass the exact staged `--file` and optionally `--transcript`. The helper calls `aie-upload-handoff` after saving the upload ID. If the handoff fails, rerun the ledger command with that same URL and cut. Keep both inputs until the writing transcript is saved.
    - Uploaded count and new links.
    - Any restrictions, especially copyright.
    - Blocked/unavailable source rows with exact reason.
