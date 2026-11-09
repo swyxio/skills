@@ -7,6 +7,8 @@ import argparse
 import csv
 import json
 import re
+import subprocess
+from urllib.parse import urlsplit, parse_qs
 from pathlib import Path
 from typing import Any
 
@@ -162,6 +164,7 @@ def update_ledger(args: argparse.Namespace) -> None:
     if exists:
         with path.open(newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
+    rows = [row for row in rows if row["youtube_url"] != args.youtube_url]
     rows.append(
         {
             "title": args.title,
@@ -178,6 +181,23 @@ def update_ledger(args: argparse.Namespace) -> None:
         writer.writeheader()
         writer.writerows(rows)
     print(json.dumps({"ledger": str(path), "rows": len(rows)}, indent=2))
+    # The ledger is durable before a writer or network failure can interrupt the handoff.
+    if args.channel_id == "UCLKPca3kwwd-B59HNr-_lvA" and args.status == "uploaded":
+        url = urlsplit(args.youtube_url)
+        if url.hostname == "youtu.be":
+            video_id = url.path.lstrip("/")
+        elif url.hostname in {"youtube.com", "www.youtube.com"} and url.path == "/watch":
+            video_id = parse_qs(url.query).get("v", [""])[0]
+        else:
+            raise ValueError("Expected the saved AIE watch URL")
+        if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id) or not args.file:
+            raise ValueError("An AIE ledger handoff needs the verified video ID and final cut")
+        command = ["aie-upload-handoff", "--channel-id", args.channel_id, "--video-id", video_id,
+                   "--file", str(Path(args.file).resolve(strict=True)), "--title", args.title]
+        if args.transcript:
+            command.extend(["--transcript", args.transcript])
+        subprocess.run(command, check=True)
+
 
 
 def main() -> None:
@@ -200,6 +220,9 @@ def main() -> None:
     ledger.add_argument("--ledger", required=True)
     ledger.add_argument("--title", required=True)
     ledger.add_argument("--youtube-url", required=True)
+    ledger.add_argument("--channel-id", required=True, help="Immutable channel ID verified in Studio")
+    ledger.add_argument("--file", help="The exact staged final cut (required for AI Engineer)")
+    ledger.add_argument("--transcript", help="Timestamped transcript from the final edit")
     ledger.add_argument("--visibility", default="Unlisted")
     ledger.add_argument("--playlist", default="")
     ledger.add_argument("--restriction", default="None")

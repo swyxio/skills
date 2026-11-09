@@ -10,6 +10,10 @@ Usage:
 """
 
 import argparse
+import hashlib
+import json
+import os
+import subprocess
 import mimetypes
 import re
 import sys
@@ -72,6 +76,23 @@ def upload_video(youtube, video_path: Path, title: str, description: str,
     return response
 
 
+AIE_CHANNEL = "UCLKPca3kwwd-B59HNr-_lvA"
+
+
+def cut_digest(file: Path) -> str:
+    with file.open("rb") as source:
+        return hashlib.file_digest(source, "sha256").hexdigest()
+
+
+def finish_writing(file: Path, video_id: str, title: str, transcript: str | None):
+    command = ["aie-upload-handoff", "--channel-id", AIE_CHANNEL, "--video-id", video_id,
+               "--file", str(file), "--title", title]
+    if transcript:
+        command.extend(["--transcript", transcript])
+    print(f"Handing saved YouTube upload {video_id} to the writer.", flush=True)
+    subprocess.run(command, check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Upload a video to YouTube via the Data API v3"
@@ -92,6 +113,7 @@ def main():
         help=f"Path to OAuth client_secret.json (default: {DEFAULT_CREDENTIALS})",
     )
 
+    parser.add_argument("--transcript", help="Timecoded transcript for the final AIE cut")
     args = parser.parse_args()
 
     video_path = validate_video(args.file)
@@ -104,6 +126,15 @@ def main():
     print(f"Privacy: {args.privacy}")
 
     youtube = build_youtube_client(Path(args.credentials))
+    receipt_file = video_path.with_name(video_path.name + ".aie-upload.json")
+    if receipt_file.exists():
+        receipt = json.loads(receipt_file.read_text())
+        channels = youtube.channels().list(part="id", mine=True).execute().get("items", [])
+        if any(channel["id"] == AIE_CHANNEL for channel in channels):
+            if receipt["channelId"] != AIE_CHANNEL or receipt["cutSha256"] != cut_digest(video_path):
+                raise ValueError("Final cut differs from the saved AIE upload")
+            finish_writing(video_path, receipt["id"], title, args.transcript)
+            return
     response = upload_video(
         youtube,
         video_path=video_path,
@@ -118,7 +149,15 @@ def main():
     print("Upload complete.")
     print(f"  Video ID: {video_id}")
     print(f"  URL: https://www.youtube.com/watch?v={video_id}")
-    print(f"  Studio: https://studio.youtube.com/video/{video_id}/edit")
+    print(f"  Studio: https://studio.youtube.com/video/{video_id}/edit", flush=True)
+    if response.get("snippet", {}).get("channelId") == AIE_CHANNEL:
+        # Record the successful upload before the independently retryable handoff.
+        receipt = {"id": video_id, "channelId": AIE_CHANNEL, "cutSha256": cut_digest(video_path)}
+        with receipt_file.open("x", encoding="utf-8") as output:
+            json.dump(receipt, output)
+            output.flush()
+            os.fsync(output.fileno())
+        finish_writing(video_path, video_id, title, args.transcript)
 
 
 if __name__ == "__main__":
