@@ -1,131 +1,109 @@
 ---
 name: annotated-video-production
-description: Plan, edit, render, or audit annotated interviews and host commentary, including source captures, demos, pull quotes, and narration-timed animation. Use for episode edits or cue-board review; not standalone transcription, thumbnails, uploads, or unrelated motion graphics.
+description: Create, revise, or audit on-screen annotations for interviews and host commentary. Use for source inserts, demos, lower thirds, cue boards, previews, and annotated renders. Excludes standalone transcription, audio mastering, thumbnails, and publishing.
 ---
 
 # Annotated video production
 
-Make the conversation easier to follow with visuals that earn their place.
-Resume from the current cut, timebase, cue selections, saved assets and feedback.
-Use the existing project record; preserve source footage and review versions.
-Revisit only work affected by a changed cut or asset.
+Start with the current cut, its timebase, the selected cues and any review notes.
+Preserve the source footage. Reuse existing assets, decisions and renderer.
 
-This skill owns editorial treatment and review. Use `transcribe-anything` for
-missing ASR, `podcast-publishing-assistant` for copy/chapters/release handoff, and
-`latent-space-thumbnail-director` for LS thumbnails. Use source-specific download
-skills for acquisition and upload/API skills for publication. Retain the existing
-renderer; use `hyperframes`/`general-video` only when that engine fits the work.
-Pass the exact media version, edit map, decisions and authorized scope at handoff.
+## Start with the requested deliverable
 
-## Edit the conversation
+- **Fix one shot.** Open the affected cue with enough dialogue to hear the lead-in
+  and see the exit. Adjust the treatment and check the encoded passage, including
+  any camera cut that changes placement. If a shared treatment caused the defect,
+  check its other uses within the requested scope.
+- **Plan or revise a board.** Follow the [cue and review guide](references/capture-and-cues.md).
+  Deliver captured proposals and visible, researched alternatives. For a returned
+  board, reconcile the choices with the version the reviewer saw and apply their
+  notes to comparable cues where appropriate.
+- **Preview a treatment.** Render the requested interval, or select the shortest
+  passage that lets the reviewer judge the decision. Show a transition from before
+  it starts until the new shot settles. Include the surrounding dialogue and
+  identify the range on the current cut.
+- **Render the episode.** Match selected cues to the actual renderer inputs,
+  including both beats of any selected sequence. Carry the requested treatments
+  through the whole cut. Use the [encoded review checklist](references/render-review.md)
+  before handing over the versioned output and any omissions or unchecked portions.
+  An authorized full render can proceed directly.
+- **Audit an existing edit.** Inspect the requested passages or full output using
+  the same checklist. Return timestamped findings tied to the cut you watched.
 
-When episode editing is requested, choose intelligible cold-open moments that
-connect to the subject, followed by the requested intro/title/music. Default to
-light polish; propose larger tangent or repetition cuts with timestamps unless
-that editorial discretion was delegated. Preserve meaning, qualifications and
-disclosures. Review joins with surrounding dialogue and maintain a source-to-output
-edit map for captions, chapters and overlays.
+Publication is a separate action. For a local edit, hand off the requested
+board, preview, findings or rendered file.
 
-Settle requested commentary cleanup before final overlay timing. Cut isolated
-coughs at natural joins; remove an “um” only when cadence survives. Muting or room
-tone can work in a pause but must not leave an unnatural hole or visibly silent
-mouth movement. Do not strip every breath or hesitation.
+## Choose what viewers need to see
 
-Caption cold opens and social clips; full-episode subtitles are optional. Use
-selective branded lower thirds for key terms, especially ideas the host picks up
-on. Verify guest identity against the shot; attribute name and company, not the
-event as their affiliation. Keep source captions distinct from dialogue captions.
+Listen to the claim and its response. What would a viewer understand better by
+seeing the work? Keep the camera when the speaker's delivery or the listener's
+reaction carries the point. For a full episode, look for useful cues throughout,
+including later monologues. Let the material determine their number.
 
-For people-led title cards, use faithful real-face references, flattering open-eye
-frames and authentic logos. Respect requested logo positions. Select clips only
-when clip production is in scope.
+Find the exact artifact or action. For a recollection, look for the guest's
+contemporary posts. For a number, find the reporting or table behind it. For a
+demo, inspect the relevant part of the recording, including attachments to the
+original post. A game's title screen identifies the game. Footage of the badge
+being built shows the work the guest is describing. More [editorial examples](examples/editorial-pairs.md)
+illustrate these decisions.
 
-## Research and capture
+Use a real capture for a claim about actual behavior. An illustration can explain
+a mechanism or analogy. Label a reconstruction when it could pass for evidence.
+When the claim is about a range of results, gather enough documented examples to
+show the range. If the chosen source is unavailable, record the gap and continue
+with the usable material.
 
-Cover the episode's substantial new points and monologues without an insert quota.
-For a candidate, identify the listener's question and how the visual answers it.
-Search the guest's own posts, demos, articles and named talks first, then primary
-sources and useful explanations. Use X follows/lists and Latent Space AINews when
-helpful. Later sources are acceptable with their dates; avoid repeated warnings.
+Choose the reveal order by the viewer's task. Lead with a finished result when
+it gives viewers a reason to follow the demo. When the guest poses a puzzle,
+show the choices and give viewers a beat to look before revealing the answer.
+For a mechanism, establish the starting condition, then play the action as the
+guest describes it. Use the [animation guide](references/animated-annotations.md)
+when motion carries the explanation.
 
-Offer distinct treatments where useful: actual product/source footage, an
-explanation, a strong spoken quote, or a fitting cultural reference. Find the
-specific scene or original work rather than a generic substitute. Search for real
-logos, photographs, charts and existing diagrams before defaulting to boxes and
-arrows. Consider analogy scenes or layered imagegen/3D treatments when they clarify
-the mechanism; complexity alone is not an improvement. A sequence or
-callback can serve the argument better than another unrelated card.
+## Cut and compose around the dialogue
 
-Deliver a board of exact captured assets beside episode cues, with genuinely
-useful alternatives and unresolved gaps. A URL or prose suggestion is not a
-captured visual. Read [capture-and-cues.md](references/capture-and-cues.md) when
-building the board or reconciling review JSON: it owns cue fields, full source
-URLs, revision/timebase tracking and review-round semantics. Use free-text
-comments; on a returned review, blank means keep the proposed cue, not permission
-to render or publish. Keep old feedback separate from new comments. Show alternatives expanded by default,
-with their visual, rationale and tradeoff; prefer different explanatory approaches
-over cosmetic variants. Include original/proposed playback of the same excerpt
-with dialogue for timing-sensitive decisions.
+Settle any requested speech edits before timing overlays. Preserve the speaker's
+meaning and qualifications, audition the joins, and map source times to the
+edited cut. Remove a cough or hesitation where the cadence and visible mouth
+movement permit it. Flag substantial cuts for review unless already delegated.
 
-Inspect saved media, including post attachments. Reuse local originals before
-recapturing. Start demos with the result; land articles on the relevant passage
-before scrolling and allow reading time. Prefer actual playback/recordings when
-they explain more than a still. A pan over a screenshot is not a recorded demo.
-After reasonable recovery, omit unavailable inserts and report them; continue
-unless the missing visual is indispensable. Never silently replace it with prose.
+Establish enough context to recognize a source, then direct attention to the
+detail named. On a paper, that can mean starting on the title and figure, then
+pushing in on a component as the guest names it. Keep highlights attached to
+their targets through pans or zooms. Credit the source briefly on screen and
+keep the full link in the cue record.
 
-## Compose for comprehension
+Give the viewer one main thing to read or watch. Protect the active speaker's
+face, meaningful reactions and the part of the demonstration that matters.
+Use existing camera or screen tracks when they help. Change the shot once its
+contribution is clear. Let an image take the full frame when it needs the space.
 
-Sample representative camera angles instead of exhaustively tracking static
-shots. Choose camera, screenshare, cutaway or split view at meaningful spoken
-beats. Separate camera/screen tracks help reframing when available; a usable
-composite does not require raw exports.
+For a pull quote, verify the words and speaker against the footage. Give a
+complete thought readable line breaks, an accurate attribution and time to land.
+A paraphrased explanation belongs in editorial text. Keep captions distinct
+from both. Use licensed music or sound effects for requested intros and
+meaningful transitions, keeping the dialogue clear.
 
-- Protect the active speaker's eyes and mouth; listeners may be covered. Reposition or end inserts when a camera cut invalidates placement.
-- Enlarge useful detail and fit the asset's aspect ratio. Crop empty margins; avoid stretching, letterboxing and nested borders. Keep page titles, chart axes or interface context needed to understand the crop.
-- Emphasize complete passages with padding and contrast, tracking highlights through scrolling. Prefer focused crops or light emphasis to heavy boxes crossing text.
-- Use concise author/source attribution and readable domains on video; keep exact URLs in the board and show notes. Avoid redundant logos and internal labels such as “DISCUSSION SUMMARY” or “not a benchmark.” Include context naturally when it matters.
-- Verify pull-quote words and timing against footage. Do not replace available photos, interfaces or charts with generic title/body cards.
+## Latent Space house style
 
-Build animated explanations with the narration: reveal meaningful entities and
-relationships, preserve continuity through cuts, and let the payoff land. Read
-[animated-annotations.md](references/animated-annotations.md) for progressive
-diagrams, generated layers, scroll motion and retiming.
+Apply these defaults on Latent Space episodes. For other productions, follow
+their own visual identity.
 
-Use music for requested intros/outros and selected major transitions. Match SFX
-to meaningful actions rather than every cut; vary them and make them noticeable
-without masking dialogue. Use appropriately licensed sound. Listen to the encoded
-mix at normal volume and check true peak: no clipping does not prove good balance.
-If only audio needs repair, remux without re-encoding the picture. Reduce noise
-conservatively. Optional SFX inspiration: [editing examples](https://www.youtube.com/watch?v=B6z4PaXImDs).
+- **Logo.** Keep the show mark visible across camera shots and takeovers in a
+  clear right-hand corner. Count a mark already present in the footage once.
+- **Picture-in-picture.** When a takeover benefits from the guest's presence,
+  ease the live interview into a framed lower-right PiP and keep the dialogue
+  in sync. Let it settle across related inserts, then return on a spoken beat.
+  Move it or omit it when that corner contains evidence the viewer needs.
+- **Chapter rail.** Span the usable width with previous, current and upcoming
+  topics. Use quiet, silent progress bars. Completed segments stay filled, the
+  current one fills smoothly, and upcoming ones stay empty. Omit percentages
+  and countdowns. Hide the rail for a clean full-screen moment and resume at
+  its true position on the final edited timeline.
+- **Quotes and terms.** Use the space above the rail selectively. Set an
+  editorial pull quote or short explanation over a feathered dark gradient
+  with enough contrast to read on a phone. Emphasize a meaningful phrase as
+  it is spoken and let the rest of the line stay still. Caption cold opens and
+  social clips. Full-episode subtitles follow the brief.
 
-## Preview, review, finish
-
-Planning ends with the captured-reference board. Include short playable interview
-context with audio for representative or timing-sensitive cues; distinguish source
-clips from proposed compositions. For an initial preview, use the requested
-interval or first ten minutes, stating whether it includes the intro. A one-minute
-reel across beginning/middle/end is an optional fast check. Full-render authorization
-means continue through the full output; previews add no approval gate.
-
-Apply clear framing, margin and timing feedback across comparable cues, while
-keeping tentative or cue-specific choices scoped. After returned review JSON, infer
-possible reusable preferences and present a compact proposal list with supporting
-comments, alternative interpretations and intended scope. Ask before adopting or
-committing these as durable skill/preferences changes; applying episode-specific
-feedback does not require reopening decisions already authorized. Preserve approved quality and
-variety throughout; later sections do not get text fallbacks for convenience.
-
-Before rendering, reconcile selections with actual renderer inputs. Review the
-encoded result using [render-review.md](references/render-review.md): inspect every
-insert, play moving inserts and their sound, and sample untouched conversation.
-Check readability at small viewing size. If playback is unavailable, provide
-playable previews and report the unchecked portions; do not claim stills verified
-motion or sound. Repair shared defects across affected cues when authorized.
-
-Stop at the requested outcome: findings for an audit, board for planning, verified
-interval for a preview, or full output for a full-render request. Report omissions
-and playback limits with the versioned output and updated cue/edit record.
-A local render is not an updated upload; release is a separate authorized action.
-Optional [code examples](references/code-examples.md) support boards, overlays and
-frame extraction without replacing the established renderer.
+For implementation starting points, see the [board, render and frame-extraction examples](references/code-examples.md).

@@ -1,44 +1,73 @@
-# Assets and cue records
+# Capture and review cues
 
-Use the existing JSON/table and review board. Each cue needs:
+## Record the source and the decision
 
-- Stable ID, source cut/timebase, start/end, topic and verified speaker where known; the viewer's likely question and the intended visual answer.
-- Source URL, author/product/date, and exact requested visual.
-- Local asset path/type, clip in/out or crop/scroll stops; capture/inspection status.
-- Intended treatment, caption/link, camera placement, user selection.
-- Render version/evidence, disposition, and internal source relationship or uncertainty.
+Use the project's existing cue record. Identify the episode cut and timebase,
+stable cue ID, episode in/out, topic and speaker if verified. Record what the
+viewer should see and why. For each selected shot, include the source and
+credit, local asset path, source in/out or crop, and spoken entry or handoff.
+Keep episode timestamps distinct from the clip's own timestamps. Mark
+ASR-located times as provisional until checked against the footage.
 
-Keep “found,” “captured,” “visually verified,” and “rendered” distinct. Preserve omitted cues with their reason.
+Inspect the saved asset. A post may put the useful demo in an attachment.
+Sticky headers can hide paragraphs. A capture can include a spinner or a crop
+that misses the selected passage. Record whether a source was found, captured,
+visually verified and used in the render. Leave a missing asset's path empty
+and record the omission. Keep the actual selection and rendered version on the
+cue so the editor can trace a decision through to delivery.
 
-For posts, inspect attachments and relevant images, not just text. For charts, retain axes, legend, and comparison. For articles, retain enough source context while enlarging the useful passage. Reject blank media, spinners, cookie banners, unrelated replies, and paused player tiles presented as demos.
+## Build the board
 
-Before rendering, reconcile each selected image/chart/demo with the actual media input. Text substitutions need an editorial reason; download failure or rendering convenience is insufficient. Check every selected item in multi-product comparisons, rather than representing the whole comparison with one slogan.
+- Show what the current cut already contains and whether the proposed treatment
+  retains, reframes, replaces or sequences it. Put the actual image, playable
+  clip or clearly identified storyboard on the card.
+- Place each alternative next to or below its proposal in normal page flow.
+  Keep its visual and short editorial pitch visible by scrolling on desktop
+  and phone. Avoid disclosure widgets, including open `details` elements.
+  Link to production notes with full source URLs, meaningful fragments,
+  credits and exact timing. Use a natural spoken beat to describe it on the card.
+- For a decision about timing, provide the original and composed versions of
+  the same excerpt with matching in/out and dialogue. Play one at a time.
+  Distinguish source playback from the proposed interview mix.
 
-## Captured-reference previz board
+### Research a worthwhile alternative
 
-- Resolve the original post, talk, article or demo; retain both the episode cue and the source clip’s own in/out. A quotation repeated by somebody else is an alternative, not the guest’s original post.
-- Put the actual captured asset on the card. Give moving sources playable excerpts; for representative or timing-sensitive choices, add a short composition with the real interview audio. Keep source audio separate from the proposed dialogue mix. Label sampled/ASR-located timing as provisional.
-- Inspect existing inserts on the current cut before adding a new one. Show whether the proposal retains, reframes, replaces or sequences that footage, and use recurring source visuals as deliberate callbacks.
-- Visually inspect saved captures and encoded preview frames. Full-page captures can fail around sticky/animated heroes; clipped screenshots can disagree with DOM coordinates. Recover with a verified viewport capture and checked crop. Preserve chart axes and legends, complete highlighted text and attribution; wait for source animations to settle before selecting a still.
-- Record unresolved captures with no usable asset path; never fill their card or manifest with an unrelated image. Offer genuinely different captured alternatives separately from ideas still needing production. Keep the current round’s comments distinct from historical feedback in the export.
+Watch the lead-in, claim and response. What might the proposed shot leave
+unclear? Find another way to answer that question in a particular document
+passage, chart cell, action or moment from the guest's work. Describe what
+viewers will see and what it helps them understand. Include a tradeoff only
+if it helps the reviewer choose. Reserve minor crop and timing changes for
+the tweak controls. A camera reaction can earn an alternative in its own right.
 
-- Display alternatives openly, with actual media, a reason to use each and a tradeoff. A sourced chart versus a spatial analogy is a useful choice; three recolors rarely are. Label uncaptured alternatives honestly.
-- For timing-sensitive cues, show original and proposed compositions of the same excerpt with dialogue and matching in/out context. Keep one audio player active at a time. Show the user's comment and what changed alongside playback; source footage alone is not the proposed composition.
+For example, a banker describes how a value in the wrong spreadsheet cell
+fooled a grader. One treatment can follow the grader's search for “100,” then
+show the required net-income row and year when the banker explains the error.
+It lets the viewer see how the grader accepted the wrong answer. Identify an
+illustrated worksheet as a reconstruction.
 
-## Review rounds and comment semantics
+## Interpret and preserve feedback
 
-- Keep cue IDs stable, but identify the board’s review round, source cut/timebase and each proposal revision. Use project + round in browser-storage keys. Do not restore the preceding round’s textarea values into a revised board.
-- Start current-round comment fields empty. Display prior comments separately as read-only history, labeled with their round and whether they were addressed, superseded or remain unresolved. State what changed in the current proposal. Unresolved earlier requests remain visibly unresolved; never present them as fresh user comments or silently call them fixed.
-- Use free text for feedback and alternative selection; no decision dropdown or mandatory keep/cut controls. When the user returns the review, blank means keep the current proposed cue. Interpret comments in context, including tentative language, and preserve the raw text alongside any agent interpretation. Blank does not supply a missing asset, establish an unperformed check, or authorize a separate render/publication action.
-- Export current comments, round ID, cue/proposal revisions and timebase separately from history/resolutions. Reconcile against the reviewed version before applying a returned file; do not merge stale feedback into new comments. A submitted review may record the blank-default keep explicitly, but merely opening a board or waiting is not a submitted review.
-- Show each complete source URL as the link text, wrapping long URLs instead of truncating or hiding them behind “Exact source.” Include the actual URL for each alternative and retain meaningful timestamps/fragments. This is a review-board requirement; readable on-video attribution can still use a concise domain with the complete link in the source record.
+- Offer the proposal, each named alternative, Combine, revise, find another idea
+  and omit. Keep tweaks and a free-text field independently available. Offer a
+  way to attach the current preview time to a note.
+- Label Combine **Show A then B**. Preserve both variant IDs, give each treatment
+  a readable beat and use the dialogue to choose the handoff. The second beat
+  can land at a later callback. Show examples together when the reviewer asks
+  for a simultaneous comparison.
+- A specific note controls the requested change even with Keep selected. A note
+  or tweak alone requests an edit. On a submitted board, an untouched cue keeps
+  the current proposal. A later default Keep with a crop note preserves an
+  earlier explicit Combine or Alternative while revising its crop.
+- Key saved state by project, round and proposal revision. Start new comment
+  fields empty. Show prior wording, choices and resolutions as read-only history,
+  including outstanding requests. Preserve stable cue and variant IDs, revisions,
+  timebase, current choices, tweak values, attached times and verbatim notes on
+  reload and export. Match a returned file to the board that produced it.
+- Apply explicit feedback to the episode. When asked to update the skill,
+  distinguish a stated preference from an inference and support it with the
+  actual comment or choice. An untouched default gives little evidence of taste.
 
-## Proposed learning from returned reviews
-
-Apply authorized cue edits, then separately propose reusable interpretations from
-the review JSON. For each proposed preference show the raw comment/cue IDs,
-interpretation, plausible alternative reading, scope and confidence, and the exact
-skill/preference change suggested. Separate explicit directions from inference;
-blank keeps are not strong evidence of general taste. Ask the user which proposals
-to adopt before writing durable preferences or committing inferred rules. Do not
-make this optional learning step block the episode edit.
+Before sharing a board, inspect a real card at desktop and phone widths. Confirm
+the alternatives, controls, sources and free-text field are accessible. Reload
+and export representative combined, note-only and untouched cues to check that
+the decisions survive. Opening a board alone records no editorial approval.

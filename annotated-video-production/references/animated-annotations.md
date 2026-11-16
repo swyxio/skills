@@ -6,6 +6,23 @@ than a box labeled dashboard. Icons carry meaning; they are not decoration.
 Reveal steps as spoken, then hold the final relationship long enough to understand.
 Reuse distinctive visuals when an earlier idea returns.
 
+For a timing correction, start from the approved animation. Preserve the art,
+framing and other motion. In the catching analogy, keep the ball on its approved
+path and start the hand moving while several landing points still look plausible.
+Compare the old and revised clips at normal speed with the narration, starting
+before the hand moves and continuing through the catch.
+
+For a new mechanism, stage the condition the viewer needs to see before its
+consequence. If an explanation drags or stutters, try a different visual encoding.
+For rectified flow, for example, show the two paths side by side and trace the
+same start and end before adding motion.
+
+When the point is the range or consistency of a result, show several sourced
+examples together, such as matched before/after restoration pairs in a gallery.
+Keep each pair aligned and large enough to inspect. Caption the difference a
+viewer should notice and credit the source. Drop housekeeping labels such as
+“published portrait pair.”
+
 Avoid equally weighted text-box grids and looping arrows for a simple sequence.
 Start compact rather than covering the speaker with an empty panel. If crowded,
 stage, simplify or reframe instead of shrinking everything. Judge whether the

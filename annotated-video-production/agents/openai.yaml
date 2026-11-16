@@ -1,4 +1,4 @@
 interface:
   display_name: "Annotated Video Production"
-  short_description: "Edit and review conversation overlays and animation"
-  default_prompt: "Use $annotated-video-production to resume this episode's edits or annotations, reuse its current cut and feedback, and deliver the requested board, preview, render, or audit."
+  short_description: "Plan, revise, render, or audit conversation overlays"
+  default_prompt: "Use $annotated-video-production for the requested overlay fix, board, preview, render, or audit. Use the current cut and review decisions."
