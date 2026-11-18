@@ -20,10 +20,12 @@ inserts and transitions with their audio, and sample untouched conversation.
 - Compare annotated figures with the source in both wide and close views.
   Follow the highlight through the move. Check complete quotations, speaker
   attribution, reading time and the alignment of emphasis with speech.
-- Watch reveals and exits at normal speed. For a puzzle or mechanism, make sure the setup
-  lands before its consequence. For a result-first demo, check the viewer has
-  time to see the result. On a PiP takeover, play the shrink, hold and return to check
-  framing and lip sync against the uninterrupted dialogue.
+- Play reveals and exits at normal speed with narration. Check that each
+  number lands on its spoken cue, a referenced episode appears when named, and
+  each selected demo plays through the action viewers need to see. For a puzzle
+  or mechanism, check that the setup lands before its consequence. Allow time
+  to see a result before cutting away. On a PiP takeover, play the shrink, hold
+  and return to check framing and lip sync.
 - If the mix changed, listen across the joins at normal volume and check true
   peak. Effects should leave dialogue intelligible. If the mix is the only
   correction, remux the new audio with the existing picture.
@@ -38,8 +40,10 @@ The bar should resume at the elapsed position in both cases.
 
 On a Latent Space edit, compare the encode with the [house style](../SKILL.md#latent-space-house-style).
 Check the logo across camera and takeover cuts, the progress bars, and quote
-contrast on bright and dark shots. A lower third may disappear when the picture
-needs the space.
+contrast on bright and dark shots. During screen shares, check that the share
+takes over the frame and its labels and cursor stay visible around the lower
+third and speaker insets. If there is a standalone host intro, play the
+handoff through the show opener and theme into the first interview line.
 
 ## Hand off
 

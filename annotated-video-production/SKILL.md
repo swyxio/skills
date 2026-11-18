@@ -43,9 +43,12 @@ including later monologues. Let the material determine their number.
 Find the exact artifact or action. For a recollection, look for the guest's
 contemporary posts. For a number, find the reporting or table behind it. For a
 demo, inspect the relevant part of the recording, including attachments to the
-original post. A game's title screen identifies the game. Footage of the badge
-being built shows the work the guest is describing. More [editorial examples](examples/editorial-pairs.md)
-illustrate these decisions.
+original post. Show a referenced episode on the spoken mention using its
+published artwork or a short excerpt. Keep the episode title and guest
+identifiable. For a launch sequence, establish the original announcement, then
+play the launch footage and selected demos. Choose footage that shows the
+action. If a clip is unavailable, flag any still used in its place. See the
+[editorial examples](examples/editorial-pairs.md).
 
 Use a real capture for a claim about actual behavior. An illustration can explain
 a mechanism or analogy. Label a reconstruction when it could pass for evidence.
@@ -95,6 +98,13 @@ their own visual identity.
   ease the live interview into a framed lower-right PiP and keep the dialogue
   in sync. Let it settle across related inserts, then return on a spoken beat.
   Move it or omit it when that corner contains evidence the viewer needs.
+- **Screen shares.** In remote interviews, let the active share take over the
+  frame. Overlay the topic lower third and keep both speakers in small
+  hexagonal insets. Preserve the share's aspect ratio. Reframe the source or
+  move or hide an overlay if it covers labels, controls or cursor activity.
+- **Show opener.** When a standalone host intro leads into the main interview,
+  place the existing Latent Space opener and its original theme at the handoff.
+  Use the clean show asset for the current episode.
 - **Chapter rail.** Span the usable width with previous, current and upcoming
   topics. Use quiet, silent progress bars. Completed segments stay filled, the
   current one fills smoothly, and upcoming ones stay empty. Omit percentages

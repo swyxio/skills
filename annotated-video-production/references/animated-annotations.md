@@ -6,6 +6,12 @@ than a box labeled dashboard. Icons carry meaning; they are not decoration.
 Reveal steps as spoken, then hold the final relationship long enough to understand.
 Reuse distinctive visuals when an earlier idea returns.
 
+For a sequence of numbers, reveal each endpoint, comparison value, or forecast
+on the words that introduce it. Keep units and time periods visible and
+distinguish reported figures from estimates through labels and styling. Choose
+a form that makes the relationship clear: a marked line for a price range,
+paired bars for a comparison, or a compact callout for one number.
+
 For a timing correction, start from the approved animation. Preserve the art,
 framing and other motion. In the catching analogy, keep the ball on its approved
 path and start the hand moving while several landing points still look plausible.

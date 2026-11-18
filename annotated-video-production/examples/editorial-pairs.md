@@ -4,7 +4,7 @@ Use these examples when deciding which shot to use, how to frame it, and when
 it should change. Keep the set small. Replace a weaker pair when a later review
 illustrates the same decision more clearly.
 
-Evidence: `jay-parikh-overlay-choices-r1.json`, round `jay-universe-r1`.
+Evidence for pairs 1–5: `jay-parikh-overlay-choices-r1.json`, round `jay-universe-r1`.
 The comments below are verbatim user feedback. Weak treatments illustrate the
 reported issues; better treatments are proposals, not verified edit results.
 No before/after media is attached yet. When a pair has been edited and reviewed,
@@ -81,3 +81,16 @@ frame pairs alone can demonstrate framing, not a successful hold or transition.
 Cue `13` also illustrates feedback precedence: its written replacement request
 controls the edit despite the Keep label. Blank keeps and tentative acceptance
 such as cue `10`'s "not sure but i guess ok" are weak evidence of general taste.
+
+## 6. Identify the reference, then show what happened
+
+- **Weak:** Introduce a previous episode with a generic title card. Cover a
+  model launch with a benchmark and stills from the selected demos.
+- **Better:** Bring in the published Jamin Ball episode artwork when he is
+  named. For Fable 5.2, show the original announcement, cut to the launch
+  film, then play *Oil Paint* gameplay and the *Portals* fly-through.
+- **Why:** The episode artwork identifies the callback. The demo clips show
+  the brush-stroke game in play and the movement through a portal.
+- **Evidence:** Tanay Lightning Pod intro feedback asked for the Jamin Ball
+  insert and the original Fable launch footage followed by the selected
+  moving demos. This pair describes the requested treatment.
