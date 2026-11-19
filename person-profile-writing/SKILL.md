@@ -69,6 +69,19 @@ Choose chronology or another structure according to what best explains the
 person. Source-poor profiles should remain brief. Extensive evidence justifies
 more development only when it adds understanding.
 
+## Length and research coverage
+
+Set length guidance in the destination's editorial contract, proportional to the
+available evidence and reader purpose. For a substantial public biography,
+250–600 words can be an initial planning range, not a minimum or acceptance
+threshold. Shorter supported profiles are valid; longer profiles need distinct
+useful material. Never add generic career prose to reach a count.
+
+Distinguish a thin evidence base from an incomplete search. Check obvious
+self-controlled, employer and authored-work sources before concluding that a
+subject has little public history. Record material coverage gaps privately;
+do not disguise missing research with a long talk summary.
+
 ## Evaluate profile batches
 
 For a generation pipeline, calibrate on a sample spanning evidence-rich and

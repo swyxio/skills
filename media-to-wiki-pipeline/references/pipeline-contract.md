@@ -117,6 +117,14 @@ Keep full-source hashes distinct from actual native request hashes. Raw requests
 
 Before adopting an interrupted run, inspect actual owner/process and stage evidence. Reconcile unknown model or publication delivery before a justified retry. Preserve originals; do not mint new fingerprints to bypass ambiguity.
 
+## QA ownership
+
+Use [QA placement and reuse](qa-contract.md) for preparation, item acceptance,
+batch integration and live delivery checks. Separate validators and reviewers are
+useful; separate completion databases are not. Their version-bound findings feed
+the existing per-entity ledger. Batch scripts select scope and supply evidence;
+canonical page contracts and skills own the editorial standards.
+
 ## Publication and live acceptance
 
 Assemble immutable accepted snapshots with required enrollments, retaining unrelated records and media. Validate affected identity/content/route joins and preservation before publishing. Use the destination’s existing guarded activation mechanism: for shared pointers, one exclusive publisher with conditional writes against the observed prior version/ETag; for transactional stores, an equivalent revision check. Persist actual readback. Reconcile every pointer after a partial multi-pointer delivery; do not replay settled writes.
