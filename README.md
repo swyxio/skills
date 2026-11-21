@@ -122,6 +122,7 @@ the suite merely because it will ship or could be made more robust.
       <p><strong>Operability</strong></p>
       <ul>
         <li><a href="./observability-hardening">observability-hardening</a> — <strong>Question-driven visibility.</strong> Uses the cheapest existing or new privacy-safe signal to answer named production questions without requiring every telemetry type.</li>
+        <li><a href="./production-migration">production-migration</a> — <strong>Live database changes.</strong> Reviews and verifies confirmed schema changes, data migrations, and backfills using the project’s own tooling.</li>
         <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Minimal ship proof.</strong> Audits the smallest sufficient release controls, prefers authoritative provider facts, and removes redundant ceremony.</li>
         <li><a href="./vercel-production-cost-review">vercel-production-cost-review</a> — <strong>Material cost diagnosis.</strong> Answers a defined Vercel billing question by investigating the few dominant drivers before authorizing any remediation.</li>
       </ul>
