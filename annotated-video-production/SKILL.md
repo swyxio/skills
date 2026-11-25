@@ -102,6 +102,12 @@ their own visual identity.
   frame. Overlay the topic lower third and keep both speakers in small
   hexagonal insets. Preserve the share's aspect ratio. Reframe the source or
   move or hide an overlay if it covers labels, controls or cursor activity.
+- **Host intro overlays.** In recording notes, specify which side of the
+  finished frame to leave open. Frame the host slightly off-center with room
+  beside them for a chart, clip, episode artwork or URL. During the edit,
+  use the open left or right side and bring each visual in on the spoken cue.
+  Keep intro graphics out of the lower-third area. Protect the host's face
+  and gestures, and cut away briefly when a source needs the full frame.
 - **Show opener.** When a standalone host intro leads into the main interview,
   place the existing Latent Space opener and its original theme at the handoff.
   Use the clean show asset for the current episode.

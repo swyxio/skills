@@ -42,8 +42,13 @@ On a Latent Space edit, compare the encode with the [house style](../SKILL.md#la
 Check the logo across camera and takeover cuts, the progress bars, and quote
 contrast on bright and dark shots. During screen shares, check that the share
 takes over the frame and its labels and cursor stay visible around the lower
-third and speaker insets. If there is a standalone host intro, play the
-handoff through the show opener and theme into the first interview line.
+third and speaker insets.
+
+For a standalone host intro, play the side overlays through the host's movement
+and any jump cuts. At phone size, check that graphics sit beside the host,
+leave the bottom of the frame clear for captions, and give viewers time to read
+key figures and URLs. Play the handoff through the show opener and theme into
+the first interview line.
 
 ## Hand off
 
