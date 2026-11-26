@@ -1,133 +1,112 @@
 ---
 name: podcast-publishing-assistant
-description: Transcribe long-form audio, YouTube videos, podcasts, interviews, or panels; summarize them; extract chapter markers; and draft publishing assets like titles, YouTube descriptions, show notes, and tweet/X copy. Use when a user shares a YouTube link or audio/video file and asks for transcription, diarization, summaries with timestamps, chapter markers, show notes, titles, descriptions, promo copy, or social posts. Especially use for Whisper-based workflows, source-audio-first podcast processing, and any request to turn a recorded conversation into publishable assets.
+description: Draft or update podcast write-ups, chapters, title/hook options, show notes, and X promotion; prepare podcast posts and verify requested release states. Not standalone ASR, video editing, or thumbnail artwork.
 ---
 
-# Podcast Publishing Assistant
+# Podcast publishing assistant
 
-Use this skill for podcast or interview publishing workflows.
+Resume the existing episode and requested deliverables, reusing approved media,
+copy, transcripts and overlay sources. Preserve user edits. Keep the current
+master/version, edit map, approved angle/cover, destination IDs and release states
+in the existing episode record, not a second tracking system.
 
-Apply `swyx-writing` to summaries, titles, descriptions, show notes, newsletter
-blurbs, and social copy. Do not apply it to verbatim transcripts or speaker
-labels. This skill owns transcription, timing, chapter, and publishing-pack
-requirements.
+Use `swyx-writing` for editorial copy, not verbatim transcripts or speaker labels.
+Route missing ASR to `transcribe-anything`, edits and annotations to
+`annotated-video-production`, and LS artwork to `latent-space-thumbnail-director`. Route every new thumbnail preview or variant through that skill and built-in `$imagegen`, including when an episode arrives with producer-supplied artwork. Reuse approved supplied art as-is when no change is requested.
+Prefer source audio; captions serve an explicitly requested rough pass. Anonymous
+ASR labels do not establish named identities. Publishing consumes the approved
+edit; it does not silently introduce editorial cuts.
 
-## Core rules
+## Choose the angle
 
-- Prefer source audio over platform captions.
-- Do not rely on YouTube captions unless the user explicitly asks for the fastest possible rough pass.
-- For Whisper or API transcripts, be honest about uncertainty. Do not claim true diarization unless the tool actually produced it.
-- If the user has a formatting preference, preserve it exactly on later turns.
-- Default chapter output for swyx: YouTube timestamp format only, start times only, followed by a 2 to 10 word headline.
+For a new YouTube package or X launch angle, offer at least four distinct options
+unless the user specifies otherwise. Pair YouTube titles with thumbnail hooks;
+recommend one and briefly argue against each, including overemphasis on a minor
+segment. Apply the user's selection or delegated choice; do not reopen it on
+resume. Continue independent copy and chapter work while a choice is pending.
 
-## Workflow
+For parallel packaging, start the thumbnail brainstorm alongside upload and copy.
+Follow the thumbnail director’s text workshop before ImageGen. Approval of the
+episode edit, upload, or overall package leaves the thumbnail angle open until
+swyx selects it or explicitly delegates that decision.
 
-1. Fetch source audio first.
-   - For YouTube URLs, use `yt-dlp` to extract audio.
-   - Prefer MP3 output for compatibility.
+Prefer specific theses and mechanisms over vague promises. Keep recurring series
+identity first. Thumbnail hooks should be thoughtful sentence/title case, with a
+concise role, company or verified milestone where useful. Attribute guest claims.
+Write one coherent description by default; alternatives, clips and quote cards
+are optional unless requested, not mandatory launch-pack filler.
 
-2. Transcribe with a fallback ladder.
-   - First try the OpenAI Whisper API when `OPENAI_API_KEY` is available.
-   - The OpenAI audio transcription upload cap is about 25 MB. Expect long episodes to exceed it.
-   - If the file is too large, compress before retrying, for example mono 16 kHz MP3 around 32 kbps.
-   - If API transcription still fails, fall back to local Whisper.
-   - If a script exists but is not executable, invoke it with `bash` rather than failing on permissions.
+Before a substantial write-up, review the available creator brief, relevant prior
+LS episodes and primary sources behind the chosen angle. Build a concrete argument
+with supporting links and useful images, rather than a topic-by-topic recap.
+Distinguish a guest's requested talking points from editorial commitments and
+verified claims. Keep research targeted; do not turn a copy revision into a broad
+reported essay unless requested.
 
-3. Keep the user updated during long jobs.
-   - Brief progress notes are enough: downloading, compressing, transcribing, packaging.
-   - If a fallback happens, say what failed in one line and continue.
+## Timing and source fidelity
 
-4. Produce the publishing pack.
-   - Summary tuned for someone deciding whether to watch or listen.
-   - Key takeaways or key arguments.
-   - 5 title ideas when asked.
-   - 5 description ideas when asked.
-   - Chapter timestamps.
-   - Optional: tweet thread, show notes, key quotes, newsletter blurb.
+Align chapters and transcript to the approved edit, including commentary, intro,
+cold open and cuts. Use the edit map and verify against media or a synchronized
+transcript. Do not assume a revision shifts every timestamp by one constant.
+Approximate times are draft-only until verified. Format chapters as start time
+plus a 2–10 word headline, in normal text rather than headings:
+`0:00 Intro and origin story`. Verify quoted words and named speakers; identify
+automated transcript uncertainty without rewriting it into polished commentary.
 
-5. Package timestamps correctly.
-   - Prefer real timestamps if the transcription source provides segments.
-   - If the transcript is a single plain-text blob, estimate coarse chapter times conservatively and label them as approximate if needed.
-   - For swyx, default to this exact style:
-     - `0:00` Intro and origin story
-     - `3:30` How the brand grew
+## Podcast post and media
 
-## Transcript quality notes
+Resume the named platform or existing draft, whether Beehiiv or Substack. For a
+complete podcast post, use the approved MP3, episode-specific write-up, full
+transcript and available video embed. Use the approved thumbnail as episode cover
+when supported, adapting the crop without distorting faces or text.
 
-- OpenAI Whisper API often returns plain text unless a segment-rich response format is requested elsewhere.
-- Plain text transcripts are good for summaries and rough chapters, but weak for precise diarization.
-- When speaker labels are needed without true diarization, reconstruct heuristically from turn-taking and identify this clearly as approximate.
+Before the transcript, place bulleted show notes with a short description and
+verified link for each relevant guest, company or source. Reuse research from
+the edit selectively. Order: show notes → chapters → transcript.
 
-## Launch template
+Before releasing a new Latent Space episode with an edited host intro, complete
+the [final-export listening check](../annotated-video-production/references/render-review.md#listen-to-the-exported-intro).
 
-When a user wants publishing help, default to a reusable launch pack.
+Verify the exact destination publication/post/episode, saved audio and cover,
+embed and requested visibility. **Newsletter post, podcast/RSS episode, YouTube
+and X have independent release states.** A Beehiiv post draft does not prove the
+episode is absent from RSS. Keep each unpublished, scheduled or live only as
+authorized, and confirm video embeds are accessible to their intended audience
+before release.
 
-### Standard launch pack
+After media replacement, verify the saved attachment by filename and duration or
+playback; upload completion alone is insufficient. Preserve prior media locally.
+Update affected transcript, chapters, embed and promo links to the new edit;
+report stale or unverified dependencies instead of calling the package ready.
 
-1. YouTube titles
-   - Provide 3 to 4 options.
-   - Prefer thesis first, guest second.
-   - Keep them specific, not generic.
+## X promotion
 
-2. YouTube descriptions
-   - Provide 3 to 4 options.
-   - Each should include:
-     - one short framing paragraph
-     - 3 to 6 concrete bullets on what the audience will learn
-     - chapter markers in YouTube timestamp format when available
+Ground each angle in the episode write-up and specific moments, supplying verified
+source timestamps for review. Lead with a concrete idea, story or tension and tag
+verified guest accounts with relevant roles. Use the angle-selection rules above.
 
-3. X main post
-   - Provide 3 to 4 options.
-   - Structure:
-     - hook or thesis
-     - guest credibility line
-     - 3 to 6 concrete bullets
-     - link placeholder or actual link
+For a full native-video launch, attach the approved episode, put verified chapters
+in the **same main post as the video**, and include domain and YouTube links. Use
+a long post when supported; check timestamps against that uploaded edit and their
+clickability. Replies can carry extra context, but are not equivalent to chapters
+beside the video. Explain actual platform limits rather than silently moving them.
 
-4. X follow-up reply
-   - Provide 1 concise timestamps-only reply unless the user asks for more.
-   - Use YouTube timestamp format only, start times only, 2 to 10 word headlines.
+For clips, choose a useful opening and accurate captions that work without sound.
+Offer link-led alternatives when helpful. When requested, provide clip windows
+and quote-card candidates with their editorial rationale; mark provisional timing.
 
-5. Native clip ideas
-   - Provide 3 to 4 options.
-   - For each clip idea, include:
-     - clip theme
-     - why it works as promo
-     - rough timestamp window if known
+For inspiration, consult [X examples](references/x-podcast-promo-inspiration.md)
+or research comparable announcements from followed accounts. Confirm whose follows
+a filter uses. Treat visible views/likes as descriptive, not proof of listens or
+causal evidence for a format; account for post age and audience differences.
+Do not make fresh inspiration research a prerequisite to an already chosen post.
 
-6. Quote card ideas
-   - Provide 3 to 4 options.
-   - Prefer clean, arguable lines with strong standalone meaning.
+## Finish at the requested state
 
-### Packaging guidance
+Deliver the requested copy, draft or authorized publication, with destination links
+and verified state where applicable. Do not expand a single deliverable into an
+entire launch pack or treat a draft as permission to publish.
 
-- Distinguish between:
-  - what the episode is about
-  - why it matters now
-- Prefer concrete bullets over abstract topic labels.
-- For X, optimize for curiosity plus utility, not just announcement tone.
-- For YouTube, optimize for searchable thesis plus guest credibility.
-- If the audience is technical, specificity beats hype.
-
-## Output format
-
-Default output order:
-1. Short summary
-2. Key takeaways
-3. Chapter timestamps
-4. 3 to 4 title options
-5. 3 to 4 description options
-6. 3 to 4 X post options
-7. 3 to 4 clip ideas
-8. 3 to 4 quote card ideas
-
-## Scripts
-
-- `scripts/transcribe_youtube.sh`: download audio from YouTube, shrink oversized audio for Whisper API, and fall back cleanly.
-
-## Notes
-
-- Prefer speed first, but do not fake certainty.
-- If a transcript path is broken, say what failed and continue with the next fallback.
-- For long episodes, give the user a progress update before the final packaging pass.
-- If the user says a format like “always give me YouTube timestamp format”, treat that as a sticky preference for the rest of the task.
+The existing `scripts/transcribe_youtube.sh` helper remains available for audio
+acquisition/transcription; inspect suitability before use. `transcribe-anything`
+owns current ASR choices and recovery.
