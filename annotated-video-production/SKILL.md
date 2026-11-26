@@ -28,7 +28,7 @@ Load only the skill needed for the current action. Resolve named skills from the
 | Acquire or compare cuts | `download-video` or source-specific downloader acquires media. Here, compare duration, opening, audio, continuity, and representative footage; record chosen cut and timebase. |
 | Transcript / editorial context | `transcribe-anything` for ASR; `podcast-publishing-assistant` for chapters and publishing copy. Use transcript to locate topics, then verify speaker and timing against footage. |
 | Research / select / capture overlays | This skill; produce selected cues and verified assets. |
-| Design / preview / full render | This skill owns treatment and acceptance. Retain the existing renderer; use `design-apps-with-imagegen` for requested exploration. Route custom HyperFrames composition work through `hyperframes`/`general-video` when that engine is appropriate. |
+| Design / preview / full render | This skill owns treatment and acceptance. Retain the existing renderer; use `design-apps-with-imagegen` for requested exploration. |
 | Audit existing annotated output | Enter directly at encoded-result review below; return findings without assuming a rerender. |
 | Titles / descriptions / thumbnails | `podcast-publishing-assistant` for copy; `latent-space-thumbnail-director` for LS artwork. Pass episode facts, series identity, chosen hooks, real-face references, and official brand assets. |
 | Upload / metadata / release | Relevant YouTube upload/API skill owns execution and account/channel verification. Pass exact output, metadata, channel, and authorized visibility. Record returned video ID and verified state. |

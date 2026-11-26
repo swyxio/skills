@@ -135,8 +135,8 @@ When a dedicated Chrome binding fails, preserve the same live Chrome session:
 
 1. Reuse the existing browser binding unless an explicit disconnect occurred.
 2. Distinguish claimed tabs from user-visible tabs. `tabs.list() === []` can mean only that no tabs are claimed.
-3. Use the adapter's user-visible tab inventory and match a saved stable ID, URL/resource ID, or exact title plus origin/account marker.
-4. Bind or claim the existing tab through the adapter's documented interface when necessary.
+3. Use the adapter's user-visible tab inventory and match a saved stable ID, URL/resource ID, or exact title plus origin/account marker. In the Codex Chrome adapter, enumerate `chrome.user.openTabs()` and match the exact saved `id`, then `providerTabId`, then stable URL/resource ID, then exact title plus origin/account marker.
+4. Bind or claim the existing tab through the adapter's documented interface when necessary. In the Codex Chrome adapter, call `chrome.user.claimTab(id)` before claimed-tab lookup.
 5. Verify URL/resource and account markers after claiming.
 6. Read Chrome-specific troubleshooting before declaring the binding unavailable.
 7. If enumeration or claim remains unavailable, coordinate shared focus, inspect `com.google.Chrome` with native Computer Use, activate the verified tab, then retry tab-bound control.
