@@ -89,6 +89,12 @@ The [partial captures](references/partial-media-captures.md) preserve inspected
 media when the complete post text is not yet verified; they do not count as
 finished examples.
 
+Each image in `references/media/` has a same-named `.md` transcript with the
+post text, author, date, metrics, chart values and a short visual description.
+Read the transcript first to find and quote an example. Open the image itself
+when its layout, typography, framing or visual hook matters to the draft, or when
+the transcript seems incomplete. When you add an image, add its transcript too.
+
 ## Shapes observed so far
 
 - Direct product launch: name the release, say what it does and how to try it,
