@@ -60,6 +60,8 @@ external dependency, conflicting edits, or production-sensitive risk.
 
 ## Worktree storage and cleanup
 
+- Default to one worktree per active PR, not per task or agent. Read-only investigation and review do not need a new worktree. Reuse an existing checkout for related changes, follow-ups, and retries, with one writer at a time. Create a separate worktree only for independent work that must run in parallel or when reuse would disturb another task's uncommitted changes.
+- Remove the worktree you created once its PR merges and it is clean. A daily job (`~/.local/bin/worktree-autoclean`) removes merged, clean, idle worktrees as a backstop.
 - For large runs, check free space, reuse existing inputs, and clear disposable outputs after verification.
 - When freeing space, rank worktrees, build caches, and simulators within scope. Remove confirmed disposable items, report free space before and after, and identify recurring sources of growth. On this Mac, `~/.local/bin/worktree-space --all <repo>` ranks a repo's checkouts.
 - Before removing a checkout, check active chats and dependent jobs, confirm its changes are merged or saved, and verify an independent copy of unique files, including original media and ignored research. On this Mac, use `~/.local/bin/worktree-run retire-check`.
