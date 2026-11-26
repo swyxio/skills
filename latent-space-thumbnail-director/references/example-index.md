@@ -38,3 +38,15 @@ The examples are approved for overall direction and production discipline. They 
 - Dropping a person or company to obtain a cleaner composition is unacceptable when complete coverage was requested.
 - Four directions with the same structure and different colors are not meaningfully different directions.
 - Broad topic labels and screenshot collages create information density without a strong curiosity gap.
+
+## Resend workshop
+
+For *Designing for Agents — Zeno Rocha, Resend*, swyx chose three headlines for a thumbnail-only test:
+
+- **AEO for Founders** (lead) names the practice and who can use it. The opening story gives it stakes: a coding agent chose Resend even though the host already had email infrastructure.
+- **Agent Experience** names the design discipline. Zeno’s pricing example earns the headline: an agent mispriced 1.2 million emails using the slider, and he shipped a Markdown table.
+- **Why Agents love Resend** names the product and the behavior the interview investigates.
+
+“Your API has two users” hid the subject behind a riddle. “It picked you. Can it use you?” made the viewer decode both pronouns. In either case, use the recognizable term directly. A good demo can supply the visual or support the choice in the workshop without becoming extra text on the thumbnail.
+
+These are approved editorial choices. Watch-time results are a separate observation.
