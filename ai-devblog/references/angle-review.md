@@ -1,15 +1,14 @@
 # Reader and angle reference
 
-Use this when the intended audience or angle needs thought. Infer what the
-reader knows and wants from the request and evidence. A useful default is an
-adjacent engineer who knows the domain but not the project. Ask the user only
-when a consequential choice is genuinely unclear or they want to choose.
+Use this checkpoint before drafting any post, including a short note. If the
+reader, prior knowledge, or desired outcome is open, suggest a reader profile
+and ask the user to confirm it. Use choices the user has already made.
 
 Before drafting, identify the reader's likely starting belief, the evidence-led
 belief or action the post should enable, and facts to leave for another piece.
-Choose the angle that best combines truth, reader value, specificity, and a
-clear mechanism. If offering options, give each a distinct title, promise, and
-tradeoff; use [story modes](story-modes.md) for inspiration.
+If the angle is open, recommend one and wait for the user’s choice before
+drafting, even if only one angle fits. When several angles fit, give each
+a distinct title, promise, and tradeoff. See [story modes](story-modes.md).
 
 After drafting, compare the actual subject and conclusion with the title, deck,
 opening, primary visual, and evidence. If the premise changes, propagate it

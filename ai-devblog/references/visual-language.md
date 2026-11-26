@@ -10,6 +10,7 @@ the examples as decorative templates.
 - [Choose the production sequence](#choose-the-production-sequence)
 - [Use the house style](#use-the-house-style)
 - [Organize before styling](#organize-before-styling)
+- [Fit the article](#fit-the-article-not-a-phone-shaped-canvas)
 - [Canonical examples](#canonical-examples)
 - [Review the result](#review-the-result)
 
@@ -92,6 +93,32 @@ Default to static explanation with an inspectable conclusion. Add interaction on
 
 If a diagram needs more than roughly twelve visible nodes, first split it into
 an overview and one detail figure. Keep a stable reading axis across both.
+
+## Fit the article, not a phone-shaped canvas
+
+Choose the diagram's orientation and proportions to suit the relationship
+being explained and the space where it will be read. Aspect ratio is an
+explanatory decision, not a house-style preference. Do not impose one canvas
+shape on workflows, hierarchies, timelines, and comparisons.
+
+Before/after content should normally be landscape: put before on the left and
+after on the right, with matched alignment and scale so the change is visible
+at a glance. Readers should see both states together rather than scroll between
+them. Use this organization for scattered-tools-to-one-folder comparisons too.
+Depart from it only when the content or rendering constraints make another
+layout clearer. Use the available reading-column width and adjust proportions
+to the content instead of prescribing a fixed aspect ratio.
+
+For example, show three scattered tools in a compact group on the left, their
+connections converging in the middle, and the unified project folder on the
+right. The connectors should explain the relationship; colored text boxes
+alone do not make an illustration.
+
+Design mobile separately when the landscape version would make labels too
+small: reflow the same topology, provide a compact alternate layout, or use
+local horizontal scrolling when exact alignment matters. Do not make every
+viewport use a portrait diagram or cap a desktop figure to a narrow mobile
+width. Keep vertical layouts when the actual hierarchy or sequence earns them.
 
 ## Canonical examples
 
@@ -276,6 +303,8 @@ Before visual QA, check whether a central relationship is still hidden in prose;
 
 - the answer is visible without reading the surrounding paragraph;
 - the dominant path is visually obvious and follows one axis;
+- the desktop figure uses the reading width efficiently; a compact workflow
+  shows its inputs and outcome together, with a legible mobile treatment;
 - labels are short, legible, and use one term per concept;
 - colors preserve the semantic mapping and remain redundant with other cues;
 - connectors do not cross labels or imply false sequence or ownership;
