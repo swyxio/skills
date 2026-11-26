@@ -1,0 +1,7 @@
+{
+  "timebase": "example-cut.mp4",
+  "cues": [
+    {"id": "cue-01", "start": 20, "duration": 6},
+    {"id": "cue-02", "start": 60, "duration": 8}
+  ]
+}

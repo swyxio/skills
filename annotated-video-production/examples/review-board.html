@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overlay review</title>
+<style>
+  body { max-width: 920px; margin: auto; padding: 24px; background: #17121e; color: #f9f6fb; font: 16px/1.5 system-ui; }
+  section { margin: 18px 0; padding: 20px; border: 1px solid #5b4669; border-radius: 12px; }
+  label { display: block; margin-top: 12px; } textarea { box-sizing: border-box; width: 100%; padding: 10px; margin-top: 5px; }
+  textarea { min-height: 80px; } button { padding: 10px 16px; } a { color: #e1b1ff; overflow-wrap: anywhere; } img, video { max-width: 100%; max-height: 250px; display: block; margin: 6px 0; }
+  .comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .meta { color: #d4c7de; } li { margin-bottom: 12px; }
+  fieldset {border:0; padding:0; margin:14px 0} legend,.review-note-head label{font-weight:650}
+  .choice-pill{display:inline-block;margin:5px 5px 0 0;position:relative}
+  .choice-pill input{position:absolute;opacity:0}
+  .choice-pill span{display:inline-block;padding:7px 11px;cursor:pointer;color:#f1ebfa;background:#2b2136;border:1px solid #766386;border-radius:5px}
+  .choice-pill input:checked+span{background:#ead9ff;color:#321d4a;border-color:#d3b4ef}
+  .choice-pill input:focus-visible+span{outline:3px solid #b9deff;outline-offset:2px}
+  .review-note-head{display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .review-note-head label{margin:0}
+</style>
+<h1>Overlay review</h1>
+<p>Example data only. Replace it with verified cues, sources, and assets for your episode.</p>
+<p id="storage-status">Comments save for this review round. Choose a treatment, mark a tweak or leave a note. Untouched cues keep A on a returned review.</p>
+<button id="export">Download this review</button>
+<main id="cues"></main>
+<aside id="sources"><h2>Source notes</h2></aside>
+<script src="review-controls.js"></script>
+<script>
+// Keep cue IDs stable; change round_id for a new review and proposal_revision for changed proposals.
+const board = {
+  id: 'example-finance-episode', round_id: 'r02', timebase: 'example-cut.mp4', cues: [
+    {id: 'cue-01', proposal_revision: 'r02', time: '00:20', speaker: 'Guest', topic: 'How a tax-model assumption propagates',
+     visual: 'A · Follow the guest through the live workbook to the affected calculation.', status: 'example storyboard',
+     source: 'https://joinhandshake.com/research/benchmarks/articles/atlas-finance-evaluating-ai-agents-inside-a-bank/',
+     changed: 'The editor now holds on the cell where the assumption enters the model.',
+     context: 'Illustrative edit window: 00:16–00:28, with two seconds of dialogue either side.',
+     before: {media: '', status: 'Supply the matching original excerpt.'},
+     after: {media: '', status: 'Supply the proposed edit with dialogue.'},
+     history: [],
+     alternatives: [
+       {id: 'published-case', revision: 'b1', title: 'Trace the assumption from the client email into Python',
+        status: 'shot plan; capture the two rows before review', media: '',
+        source: 'https://joinhandshake.com/research/benchmarks/articles/atlas-finance-evaluating-ai-agents-inside-a-bank/',
+        beats: ['On “existing goodwill,” hold Figure 3’s highlighted client input so the viewer can read it.',
+                'On “subtracts,” line up the input with the expression stepup = excess − existing_goodwill. Return to the speaker for the consequence.'],
+        pitch: 'Follow the goodwill figure from the client email into the subtraction. You can see where the assumption enters the model.',
+        tradeoff: 'The figure describes published Project Osprey. Use it as a named comparison when the filmed workbook belongs to a different case.'}
+     ]}
+  ]
+};
+const key = 'overlay-review:' + board.id + ':' + board.round_id;
+let comments = {};
+try { const stored = JSON.parse(localStorage.getItem(key) || '{}');
+  if (stored && typeof stored === 'object' && !Array.isArray(stored)) comments = stored; }
+catch { document.querySelector('#storage-status').textContent = 'Could not load saved comments; export your work before leaving.'; }
+const root = document.querySelector('#cues');
+function element(tag, text) {
+  const el = document.createElement(tag);
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function save() {
+  try { localStorage.setItem(key, JSON.stringify(comments)); }
+  catch { document.querySelector('#storage-status').textContent = 'Browser storage unavailable; download your comments before leaving.'; }
+}
+function link(parent, href) {
+  if (!href) return;
+  const a = element('a', href); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; parent.append(a);
+}
+function playback(item, title) {
+  const panel = element('div'); panel.append(element('h4', title));
+  if (item?.media) {
+    const player = element('video'); player.src = item.media;
+    player.controls = true; player.preload = 'metadata'; player.playsInline = true;
+    panel.append(player);
+  } else panel.append(element('p', item?.status || 'Preview unavailable'));
+  return panel;
+}
+// Prevent overlapping dialogue without forcing both clips to buffer or play together.
+document.addEventListener('play', event => {
+  if (event.target.tagName === 'VIDEO') {
+    document.querySelectorAll('video').forEach(player => {
+      if (player !== event.target) player.pause();
+    });
+  }
+}, true);
+for (const cue of board.cues) {
+  const saved = comments[cue.id];
+  const valid = saved?.proposal_revision === cue.proposal_revision;
+  const initial = valid ? {action:saved.action || null, alternativeId:saved.alternativeId || null,
+    tweaks:saved.tweaks || [], note:saved.note ?? saved.comment ?? ''} : {};
+  comments[cue.id] = {proposal_revision:cue.proposal_revision, ...initial};
+  const section = element('section');
+  section.append(element('h2', `${cue.time} · ${cue.speaker} · ${cue.topic}`));
+  section.append(element('p', `${cue.visual} (${cue.status})`));
+  link(section, cue.source);
+  const comparison = element('div'); comparison.className = 'comparison';
+  comparison.append(playback(cue.before, 'Original'), playback(cue.after, 'Proposed composition'));
+  section.append(element('p', cue.context || 'Use matching excerpts with dialogue.'), comparison);
+  if (cue.changed) section.append(element('p', 'Changed this round: ' + cue.changed));
+  for (const previous of cue.history || []) {
+    const history = element('details');
+    history.append(element('summary', `Previous review · ${previous.round_id} · ${previous.status}`),
+      element('p', previous.comment), element('p', 'Resolution: ' + previous.resolution));
+    // Unresolved history stays visible; it never populates the current comment.
+    history.open = previous.status === 'unresolved';
+    section.append(history);
+  }
+  const list = element('ul');
+  for (const alternative of cue.alternatives) {
+    const li = element('li');
+    const letter = String.fromCharCode(66 + cue.alternatives.indexOf(alternative));
+    li.append(element('strong', letter + ' · ' + alternative.title), element('div', alternative.status));
+    if (alternative.media) {
+      const media = element(alternative.kind === 'video' ? 'video' : 'img');
+      media.src = alternative.media;
+      if (alternative.kind === 'video') { media.controls = true; media.preload = 'metadata'; }
+      else media.alt = alternative.title;
+      li.append(media);
+    }
+    li.append(element('p', alternative.pitch));
+    const notesId = cue.id + '-' + alternative.id + '-sources';
+    const noteLink = element('a', 'Sources and edit notes');
+    noteLink.href = '#' + notesId; li.append(noteLink);
+    const sourceNote = element('section'); sourceNote.id = notesId;
+    sourceNote.append(element('h3', alternative.title));
+    for (const beat of alternative.beats || []) sourceNote.append(element('p', beat));
+    sourceNote.append(element('p', alternative.tradeoff));
+    link(sourceNote, alternative.source);
+    document.querySelector('#sources').append(sourceNote);
+    list.append(li);
+  }
+  section.append(element('h3', 'Alternatives'), list);
+  const controls = element('div');
+  OverlayReview.mount(controls, {id:cue.id, alternatives:cue.alternatives, initial,
+    player:comparison.querySelector('div:nth-child(2) video'),
+    save: state => {comments[cue.id] = {...state, proposal_revision:cue.proposal_revision}; save();}});
+  section.append(controls); root.append(section);
+}
+document.querySelector('#export').addEventListener('click', () => {
+  const data = {timebase: board.timebase, board_id: board.id, round_id: board.round_id,
+    reviews: board.cues.map(cue => ({cue_id: cue.id, ...comments[cue.id],
+      comment: comments[cue.id].note || '', disposition: OverlayReview.decision(comments[cue.id]),
+      alternatives: cue.alternatives.map(({id, revision}) => ({id, revision}))})),
+    proposals: board.cues.map(({history, ...proposal}) => proposal),
+    history: board.cues.map(cue => ({cue_id: cue.id, entries: cue.history || []}))};
+  const a = element('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  a.download = board.id + '-' + board.round_id + '-review.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+</script>
+</html>
