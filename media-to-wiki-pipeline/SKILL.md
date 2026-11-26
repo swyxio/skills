@@ -11,6 +11,7 @@ Read the references relevant to the task:
 
 - [Page contracts and quality](references/page-contracts.md) before selecting page types, drafting or accepting a new corpus. It supplies portable editorial defaults, including organization and topic pages; examples illustrate quality rather than substitute for these criteria.
 - [Source adapters](references/source-adapters.md) when selecting or normalizing sources. Recording clocks and media recovery apply only to recorded input.
+- [QA placement and reuse](references/qa-contract.md) when defining item acceptance, batch integration, portrait search or version-bound live verification. Keep these outcomes in the existing ledger, not a separate completion system.
 - [Stage and release contracts](references/pipeline-contract.md) when implementing, operating, resuming or refreshing a corpus. Map actual project drivers before repairing them; intended behavior is not proof of implementation.
 
 ## Decisions that govern progression
