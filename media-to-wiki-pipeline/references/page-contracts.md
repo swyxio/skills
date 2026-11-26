@@ -39,6 +39,12 @@ coverage outcome, not evidence that supported organization prose is incomplete.
 
 Help a reader understand a bounded subject and navigate its most useful sources. Define scope, aliases and exclusions; distinguish genuinely different concepts rather than merging labels by keyword overlap. Explain mechanisms, use cases, tradeoffs and important distinctions with concrete sourced examples.
 
+Open an encyclopedic entry with a declarative definition. Give the reader a concrete example and trace how the subject developed. Use dated primary sources for historical claims, especially claims about who coined a term or introduced a method. Put recurring reader questions in a sourced FAQ after the article has explained the concepts the answers depend on.
+
+Use search evidence to choose vocabulary and find gaps. Check which page a query actually reaches. A search for a speaker’s method can justify a link from their profile to a technical chapter. Keep a broad discipline at its existing destination and cover named tools or methods within it until a distinct reader need warrants a separate entry. Search across titles and source texts as well as tags: a collection can omit the original talk about its own subject. Cite the passage that supports the claim.
+
+Place a diagram or screenshot beside the passage it explains. Caption what to notice, credit its creator and link to the original figure, slide or recording timestamp. Link people, projects and organizations where their contribution enters the explanation. Include a landscape chart when the sources establish relationships that the reader can use to understand the field.
+
 Synthesize complementary sources and conflicting positions without fabricating agreement, causal relationships or completeness. Distinguish chronology/version differences from genuine disagreements. A corpus is not automatically representative of a field, and source frequency is not evidence of consensus or importance.
 
 Offer an annotated reading/listening path: explain what each selected source adds, for whom it is useful and, where warranted, what to read first. Prefer useful coverage to an exhaustive list. A keyword introduction followed by cards is not a substantive topic synthesis. A sparse corpus may support a brief source guide rather than a comprehensive explainer; label that scope honestly.
