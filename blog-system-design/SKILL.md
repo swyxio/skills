@@ -62,10 +62,23 @@ Do not create duplicate routes for visual variants of the same article.
 Keep a dated, chronological release history with durable version fragments;
 link recent changes from the devblog index and related posts from the relevant
 releases. Link articles back to their release when that relationship is known.
-Keep each visible change understandable at a glance, then use native
-`details`/`summary` for useful explanation, screenshots, evidence, caveats, and
-links. Bold meaningful claims and use ordinary Markdown where appropriate.
-Do not make readers expand a disclosure to learn the essential change.
+
+For changelogs and in-app update windows, lead with the **shipped feature**,
+then give one sentence about what the reader can now do. Keep both visible.
+Put implementation notes behind a native `details`/`summary` disclosure.
+Hover can preview the detail. Readers can also open it by click, tap or
+keyboard.
+
+Under **Details**, explain how the shipped version achieves the result. Check
+the release source for a mechanism, constraint or edge case a reader could
+verify. For example, **Copy a chart as PNG** lets you paste a titled chart into
+a document. Its detail can say “Smol rebuilds the saved Vega-Lite chart on a
+720-pixel-wide canvas and renders it at 2× resolution.”
+
+Consider a real screenshot when a visual change is easier to recognize than
+describe. Crop to the relevant control or result, use safe sample data, give
+it descriptive alt text and let readers enlarge the thumbnail. A keyboard
+shortcut or background fix can often be explained in text alone.
 
 Reconstruct claims from releases, source and verification records. An old entry
 describes what shipped then; label subsequent changes, models and unverified
