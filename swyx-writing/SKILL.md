@@ -74,6 +74,10 @@ voice. Let the evidence earn the drama, humor, and degree of informality.
 Remove patterns that make the writing feel produced by a template:
 
 - repeated `not X, but Y`, `X is not Y`, and perfectly balanced reversals;
+- obvious or repetitive disclaimers that tell readers a game's money is
+  fictional, an example is made up, or a model is synthetic. Put consequential
+  assumptions and shipped-versus-planned status where they help a decision;
+  don't keep announcing what the reader already understands;
 - uniform triads, symmetrical sections, bold thesis restatements, and mandatory
   recaps;
 - every heading, paragraph, and sentence competing to be an aphorism;
@@ -96,10 +100,14 @@ when it sounds intentional and remains easy to understand.
 
 ## Attribute without writing about attribution
 
-Put links and evidence beside the claim they support. Make the person, system,
-event, or idea the grammatical subject whenever possible. Prefer `The release
-controller deploys the Worker` to `The evidence establishes a release authority
-boundary`.
+In publishable prose, attach each source link to the words it supports. Use a
+natural phrase such as the announcement verb, benchmark result, quote, or earlier
+episode title. For example, write `Nvidia [announced](announcement-url) his return.`
+Preserve the author's existing link destinations when editing their copy.
+
+Make the person, system, event, or idea the grammatical subject whenever possible.
+Prefer `The release controller deploys the Worker` to `The evidence establishes
+a release authority boundary`.
 
 Do not begin sentences with `According to`, `The documentation says`, or `The
 available evidence shows` unless the source itself is the subject. State the
@@ -148,7 +156,8 @@ not serve as proof that work happened.
    steps, weak examples, and artifacts without interpretation.
 3. **Line:** replace abstractions with actors and verbs, vary rhythm naturally,
    remove repeated antithesis and conclusions, and cut anything that supplies
-   neither information, judgment, voice, nor pace.
+   neither information, judgment, voice, nor pace. In publishable prose, move
+   trailing source labels onto the phrases they support.
 
 Factual verification is separate from the editorial passes. When confusion risk
 is high, give an uninvolved reader only the draft and ask what it is about, what
