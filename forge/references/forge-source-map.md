@@ -7,6 +7,7 @@ active Alpha product; do not treat this reference as a copied API manual.
 
 | Need | First source | Read this part |
 | --- | --- | --- |
+| Canonical remote, pull requests, Actions, and release authority | The target repository's `AGENTS.md` and release docs, plus `sf help pr merge` and `sf help actions inspect` | Which workflows apply, how to verify the exact PR head, and who can merge or deploy |
 | Agent orientation, auth, CLI/API, Git, Deploy | [`llms.txt`](https://forge.smol.ai/llms.txt) | “Start here,” “Agent Git Authentication Quickstart,” “Migrate an existing repository to Forge Deploy,” and “Forge Deploy” |
 | Product boundary: GitHub-like host plus Forge/Cloudflare architecture | [Forge root README](https://forge.smol.ai/swyx/forge/blob/main/README.md) | “What This Is,” “Forge Deploy preview,” “AI Agent Integration,” and “CLI” |
 | Deploy maturity, product vocabulary, service boundaries | [Deploy overview](https://forge.smol.ai/swyx/forge/blob/main/docs/deploy/README.md) | “Current behavior and roadmap,” “Decisions already made,” and “Product vocabulary” |
@@ -17,17 +18,9 @@ active Alpha product; do not treat this reference as a copied API manual.
 | Static/site artifact limits and LFS/asset handling | [Forge Assets v1](https://forge.smol.ai/swyx/forge/blob/main/docs/deploy/assets-v1.md) and [Deploy limits](https://forge.smol.ai/swyx/forge/blob/main/docs/deploy/limits.md) | output size, file count, asset adoption, and retention constraints |
 | Monorepo project mapping or Cloudflare binding proposals | [Repository configuration](https://forge.smol.ai/swyx/forge/blob/main/docs/deploy/repository-config.md) | `.forge/config.json` is static proposal/config, not a deploy or provider apply |
 
-When the source checkout is present locally, the corresponding maintained files
-are normally at:
-
-```text
-/Users/swyx/Work/forge/llms.txt
-/Users/swyx/Work/forge/README.md
-/Users/swyx/Work/forge/docs/deploy/
-```
-
-Use the live URLs when the local checkout is unavailable or when current
-availability, terms, limits, account eligibility, or deployed behavior matters.
+If you have a local Forge source checkout at the relevant revision, use its
+`llms.txt`, `README.md`, and `docs/deploy/`. Use the live URLs to verify
+current availability, terms, limits, account eligibility, or deployed behavior.
 
 ## Source precedence
 
@@ -43,6 +36,7 @@ availability, terms, limits, account eligibility, or deployed behavior matters.
 
 ```sh
 sf auth status
+sf --version
 sf help
 sf commands --json
 sf schema --json

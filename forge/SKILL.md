@@ -1,6 +1,6 @@
 ---
 name: forge
-description: Operate or diagnose SmolForge repositories and Forge Deploy/Sites when the task requires Forge-specific CLI, authentication, manifest, or release behavior on forge.smol.ai or *.sites.smol.ai. Do not use for generic Git or Cloudflare work, public-page review, product strategy or analytics, or ordinary code changes that do not interact with Forge-hosted state.
+description: Operate or diagnose SmolForge repositories, pull requests, Actions, and Forge Deploy/Sites when the task requires Forge-specific CLI, authentication, manifest, or release behavior on forge.smol.ai or *.sites.smol.ai. Do not use for generic Git or Cloudflare work, public-page review, product strategy or analytics, or ordinary code changes that do not interact with Forge-hosted state.
 ---
 
 # Forge
@@ -20,8 +20,10 @@ hosted app inherits Forge or Cloudflare Access authentication.
 
 Classify the requested outcome before loading more process:
 
-- **Repository operation:** use ordinary Git plus Forge authentication.
-- **Customer application deployment:** use Forge Deploy and its release ledger.
+- **Repository operation:** use Git for source and the Forge CLI for pull
+  requests and Actions.
+- **Customer application deployment:** follow the repository's release
+  procedure. For an app on Forge Deploy, use its release ledger.
 - **Forge infrastructure repair:** use the smallest healthy release path; the
   control plane being repaired need not deploy its own fix.
 - **Source-only, CLI, documentation, analysis, or UI work:** do not add
@@ -41,16 +43,23 @@ current account eligibility, limits, or release state.
 Inspect syntax before constructing commands:
 
 ```sh
+sf --version
 sf help
 sf commands --json
 sf schema --json
-sf <command> --help
+sf help pr create
 ```
+
+If the installed binary lacks a required command, use a pinned package version
+that meets the repository's minimum. Smol (`smol-ai/smol2026`) requires
+`@smolai/forge` 0.7.0 or later. For example, run
+`npm exec --yes --package=@smolai/forge@0.7.0 -- sf help pr create`
+and use the same prefix for the task's other Forge commands.
 
 Identify the account, repository, default branch, and, for Deploy, project root.
 Preserve an existing GitHub remote unless the user asks to replace it.
 
-## Repository authentication
+## Repository workflow
 
 A signed-in Forge browser is not a local Git credential. Use Forge's scoped
 credential flow without exposing its token:
@@ -65,6 +74,33 @@ Keep `credential.useHttpPath` enabled. Never extract tokens from browser
 storage or another application's keychain, or put them in remotes, source,
 shell history, or output. Do not force-push, replace `origin`, change visibility,
 or broaden credential scopes without the required authorization.
+
+Read the target repository's `AGENTS.md` and release instructions. Use its
+canonical remote for branch pushes, pull requests, and CI. For Smol, that
+remote is Forge. GitHub is its mirror.
+
+After pushing the branch, open the pull request on Forge and check its head
+against the Actions run:
+
+```sh
+sf pr create <owner>/<repo> --head <branch> --base <default-branch> --title "<title>" --body "<description>" --yes
+sf pr view <owner>/<repo> <number> --json
+sf actions list <owner>/<repo> --branch <branch> --json
+sf actions inspect <owner>/<repo> <run-id> --json
+```
+
+Verify the run's head SHA and conclusion. Check the target repository's
+required checks, reviews, and any hold or release freeze before merging. If
+the repository authorizes you to merge, pass the verified PR head:
+
+```sh
+sf pr merge <owner>/<repo> <number> --sha <head-sha> --yes
+```
+
+Read the PR back to confirm the merge. For Smol, record the run ID, head SHA,
+and conclusion on the PR. Agents merge their own Smol PRs after CI passes on
+the exact head SHA, subject to holds and freezes. Smol requires a Forge PR for
+changes to `main` and reserves production deployment for maintainers.
 
 For GitHub migration, use Forge's current import flow. Preserve the package
 manager and handle Git LFS separately; importing history does not copy hosted
@@ -99,11 +135,11 @@ private data in them.
 
 ## Release and recovery
 
-Use Forge Deploy for customer applications. For Forge infrastructure, prefer
-the canonical lane while it is healthy and proportionate. Direct Wrangler is
-an authorized operator path when that lane is unavailable, unhealthy,
-implicated in the incident, or materially obstructs the bounded repair; it is
-not a shortcut around a customer application's release ledger.
+Follow the application's documented release path. For Forge infrastructure,
+prefer the canonical lane while it is healthy and proportionate. Direct
+Wrangler is an authorized operator path for an infrastructure repair when that
+lane is unavailable, unhealthy, implicated in the incident, or materially
+obstructs the bounded repair.
 
 For a direct infrastructure repair, scope one exact component, record the
 source SHA, current and rollback versions, and any migration or binding change,
